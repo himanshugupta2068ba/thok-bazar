@@ -70,12 +70,12 @@ const sellerSchema = new mongoose.Schema({
             AccountStatus.SUSPENDED,
             AccountStatus.BLOCKED,
             AccountStatus.CLOSED],
-        default: AccountStatus.ACTIVE
+        default: AccountStatus.PENDING_VERIFICATION
     }
 }, {timestamps: true});
 
-const seller= mongoose.model('Seller', sellerSchema);
-module.exports = seller;
+const Seller= mongoose.model('Seller', sellerSchema);
+module.exports = Seller;
 
 
    
