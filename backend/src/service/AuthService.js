@@ -4,12 +4,21 @@ const generateOTP=require('../util/generateOtp');
 
 class AuthService{
     async sendLoginOTP(email){
+
+       const SIGNIN_PREFIX="signin_";
+       if(email.startsWith(SIGNIN_PREFIX)){
+
         const seller=await Seller.findOne({email});
+
         if(!seller) throw new Error("Seller not found");
-        const existingVerificcationCode= await VerificationCode.findOne({email});
+       }
+
+        const existingVerificationCode= await VerificationCode.findOne({email});
+
         if(existingVerificcationCode){
             await VerificationCode.deleteOne({email});
         }
+
         const otp=generateOTP();
         const verificationCode=new VerificationCode({
             email:email,
