@@ -1,6 +1,7 @@
-const Seller=require('../model/Seller');
-const VerificationCode=require('../model/VerificationCode');
+const Seller=require('../models/Seller');
+const VerificationCode=require('../models/VerificationCode');
 const generateOTP=require('../util/generateOtp');
+const sendVerificationEmail=require('../util/sendEmail.js');
 
 class AuthService{
     async sendLoginOTP(email){
@@ -15,7 +16,7 @@ class AuthService{
 
         const existingVerificationCode= await VerificationCode.findOne({email});
 
-        if(existingVerificcationCode){
+        if(existingVerificationCode){
             await VerificationCode.deleteOne({email});
         }
 
@@ -33,3 +34,4 @@ class AuthService{
         );
     }
 }
+module.exports=new AuthService();
