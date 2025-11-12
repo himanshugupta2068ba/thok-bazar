@@ -18,12 +18,13 @@ class AuthService{
 
         if(existingVerificationCode){
             await VerificationCode.deleteOne({email});
+            // console.log("Existing verification code deleted");
         }
 
         const otp=generateOTP();
         const verificationCode=new VerificationCode({
             email:email,
-            code:otp
+            otp:otp
         });
         await verificationCode.save();
 

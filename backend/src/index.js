@@ -6,13 +6,16 @@ const cors = require('cors');
 
 const mongoose = require('mongoose');
 
-const dotenv = require('dotenv');
+// const dotenv = require('dotenv');
 
 const connectDb = require('./db/db');
 
 
 
-dotenv.config();
+// dotenv.config();
+require('dotenv').config({ path: '../.env' });
+
+
 
 app.get('/', (req, res) => {
   res.send('Werlcome to the backend server of thok-bazar!');

@@ -1,5 +1,5 @@
 const nodemailer=require('nodemailer');
-
+require('dotenv').config();
 async function sendVerificationEmail(to,subject,body){
     const transporter=nodemailer.createTransport({
        service:'Gmail',
@@ -15,7 +15,6 @@ async function sendVerificationEmail(to,subject,body){
         subject:subject,
         text:body
     };
-
     await transporter.sendMail(mailOptions);
 }
 module.exports=sendVerificationEmail;

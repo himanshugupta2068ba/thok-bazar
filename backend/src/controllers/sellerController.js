@@ -1,8 +1,8 @@
 const UserRole = require("../domain/UserRole");
 const VerificationCode = require("../models/VerificationCode");
 const SellerService = require("../service/SellerService");
+const jwtprovider = require("../util/jwtprovider");
 
-// const 
 class SellerController{
     async getSellerProfile(req,res){
         //bearer token
@@ -67,12 +67,13 @@ class SellerController{
     async verifyLoginOtp(req,res){
         try{
             const {otp,email}=req.body;
-            const seller=await SellerService.getSellerByEmail({email});
+            const seller=await SellerService.getSellerByEmail(email);
 
             const verificationCode=await VerificationCode.findOne({email});
             if(!verificationCode || verificationCode.otp!=otp){
                 throw new Error("Invalid OTP")
             }
+            console.log("jwtprovider:",jwtprovider);
             const token=jwtprovider.createJwt({email});
 
             const authResponse={
