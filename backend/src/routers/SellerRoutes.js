@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const SellerController = require('../controllers/sellerController');
+const sellerMiddleware = require('../middlewares/sellerAuthMiddleware');
 
-router.get('/profile', SellerController.getSellerProfile);
+router.get('/profile',sellerMiddleware, SellerController.getSellerProfile);
 router.post('/', SellerController.createSeller);
 router.get('/', SellerController.getAllSeller);
-router.put('/', SellerController.updateSeller);
+router.put('/', sellerMiddleware,SellerController.updateSeller);
 
-router.post("/verify/login-otp", SellerController.verifyLoginOtp);
+router.post("/verify/login-otp",sellerMiddleware, SellerController.verifyLoginOtp);
 
 module.exports = router;

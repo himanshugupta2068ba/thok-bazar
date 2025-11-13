@@ -24,6 +24,7 @@ app.get('/', (req, res) => {
 const sellerRoutes = require('./routers/SellerRoutes');
 const adminRoutes = require('./routers/AdminRouter');
 const authrouter=require('./routers/AuthRouter');
+const userRouter=require('./routers/UserRouter');
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -31,6 +32,7 @@ app.use(bodyParser.json());
 app.use('/sellers', sellerRoutes);
 app.use('/admin', adminRoutes);
 app.use('/auth',authrouter);
+app.use('/users',userRouter);
 const ports = process.env.PORT || 5000;
 
 app.listen(ports, async() => {

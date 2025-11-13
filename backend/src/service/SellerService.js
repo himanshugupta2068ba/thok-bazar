@@ -46,11 +46,17 @@ class SellerService {
     return seller;
     }
 
-    async updateSeller(existingSeller,sellerData){
-        return await Seller.findByIdAndUpdate(existingSeller._id,sellerData,{
-            new:true //return updated otherwise give oldseller
-        })
-    }
+ async updateSeller(existingSeller, sellerData) {
+    return await Seller.findByIdAndUpdate(
+        existingSeller._id,
+        { $set: sellerData },      // <— PARTIAL UPDATE
+        {
+            new: true,
+            runValidators: false   // <— avoid validating required fields
+        }
+    );
+}
+
 
     async updateSellerStatus(sellerId,status){
         return await Seller.findByIdAndUpdate(sellerId,

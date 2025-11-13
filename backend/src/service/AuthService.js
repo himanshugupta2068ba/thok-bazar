@@ -34,5 +34,9 @@ class AuthService{
             `Your One Time Password(OTP) for login is ${otp}. It is valid for 10 minutes.`
         );
     }
+
+    // async createUser(req){
+
+    // }
 }
 module.exports=new AuthService();

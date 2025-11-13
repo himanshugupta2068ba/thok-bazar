@@ -7,6 +7,10 @@ class SellerController{
     async getSellerProfile(req,res){
         //bearer token
         try{
+
+            const  profile=await req.seller;
+            // console.log("profile:",profile);
+
             const jwt=req.headers.authorization.split(" ")[1];
             const seller=await SellerService.getSellerProfile(jwt);
             res.status(200).json(seller);       
