@@ -2,16 +2,18 @@ const Seller=require('../models/Seller');
 const VerificationCode=require('../models/VerificationCode');
 const generateOTP=require('../util/generateOtp');
 const sendVerificationEmail=require('../util/sendEmail.js');
+const jwtprovider = require("../util/jwtprovider");
+const User = require('../models/user');
 
 class AuthService{
     async sendLoginOTP(email){
 
        const SIGNIN_PREFIX="signin_";
        if(email.startsWith(SIGNIN_PREFIX)){
-
+        email=email.substring(SIGNIN_PREFIX.length);
         const seller=await Seller.findOne({email});
-
-        if(!seller) throw new Error("Seller not found");
+        const user=await User.findOne({email});
+        if(!seller && !user) throw new Error("Seller or User not found");
        }
 
         const existingVerificationCode= await VerificationCode.findOne({email});
