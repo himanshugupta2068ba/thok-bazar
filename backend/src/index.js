@@ -25,6 +25,9 @@ const sellerRoutes = require('./routers/SellerRoutes');
 const adminRoutes = require('./routers/AdminRouter');
 const authrouter=require('./routers/AuthRouter');
 const userRouter=require('./routers/UserRouter');
+const productRoutes=require('./routers/ProductRoutes');
+const SellerProductRoutes=require('./routers/SellerProductRoutes');
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -33,6 +36,8 @@ app.use('/sellers', sellerRoutes);
 app.use('/admin', adminRoutes);
 app.use('/auth',authrouter);
 app.use('/users',userRouter);
+app.use('/products', productRoutes);
+app.use('/seller-products', SellerProductRoutes);
 const ports = process.env.PORT || 5000;
 
 app.listen(ports, async() => {

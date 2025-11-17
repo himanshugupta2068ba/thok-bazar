@@ -2,6 +2,7 @@ const UserRole = require("../domain/UserRole");
 const VerificationCode = require("../models/VerificationCode");
 const SellerService = require("../service/SellerService");
 const jwtprovider = require("../util/jwtprovider");
+const AuthService = require("../service/AuthService");
 
 class SellerController{
     async getSellerProfile(req,res){
@@ -89,6 +90,16 @@ class SellerController{
             return res.status(200).json(authResponse);
         }catch(error){
             res.status(error instanceof Error? 404 : 500).json({message:error.message})
+        }
+    }
+
+    async sendLoginOtp(req,res){
+        try{
+            const {email}=req.body;
+            await AuthService.sendLoginOTP(email);
+            res.status(200).json({message:"OTP sent successfully"});
+        }catch(error){
+            res.status(500).json({error:error.message});
         }
     }
 }

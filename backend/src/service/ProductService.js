@@ -1,5 +1,6 @@
-
-const calculateDiscountPercentage = require('../utils/discountCalculator');
+const Product = require('../models/Product');
+const Category = require('../models/Category');
+const calculateDiscountPercentage = require('../util/discountCalculator');
 class ProductService{
    async createProduct(req,seller){
         // Logic to create a new product
@@ -52,4 +53,97 @@ class ProductService{
         return true;
     }
     
+    async updateProduct(productId,updateProductData){
+
+        try{
+            const product=await Product.findByIdAndUpdate(productId,updateProductData,{new:true});
+            if(!product){
+                throw new Error('Product not found');
+            }
+            return product;
+        }catch(error){
+            throw new Error('Error updating product: ' + error.message);
+        }
+    }
+
+    async findProductbyId(productId){
+        const product=await Product
+        .findById(productId)
+        .populate('category')
+        .populate('sellerId','name email');
+        if(!product){
+            throw new Error('Product not found');
+        }
+        return product;
+    }
+
+    async searchProducts(query){
+        try{
+            const products=await Product.find({title:{$regex:query,$options:'i'}});
+            return products;
+        }catch(error){
+            throw new Error('Error searching products: ' + error.message);
+        }
+    }
+
+    async getProductBySeller(sellerId){
+        return await Product.find({sellerId:sellerId});
+    }
+
+    async getAllProducts(req){
+        const filterQuery={};
+ 
+        if(req.category){
+            const category=await Category.findOne({categoryId:req.category});
+
+            if(!category){
+                return{
+                    content:[],
+                    totalpages:0,
+                    totalElement:0
+                }
+            }
+            filterQuery.category=category._id.toString();
+        }
+
+        if(req.color){
+            filterQuery.color=req.color;
+        }
+
+        if(req.minPrice && req.maxPrice){
+            filterQuery.sellingPrice={$gte:req.minPrice,$lte:req.maxPrice};
+        }
+
+        if(req.minDiscount){
+            filterQuery.discountPercentage={$gte:req.minDiscount};
+        }
+        if(req.size){
+            filterQuery.size=req.size;
+        }
+        let sortQuery={};
+        if(req.sort=="price_low"){
+            sortQuery.sellingPrice=1;
+        }else if(req.sort=="price_high"){
+            sortQuery.sellingPrice=1;
+        }
+
+        const product=await Product.find(filterQuery)
+        .sort(sortQuery)
+        .skip((req.pageNumber)*10)
+        .limit(10);
+
+        const totalElement=await Product.countDocuments(filterQuery);
+        const totalpages=Math.ceil(totalElement/10);
+
+        const response={
+            content:product,
+            totalpages:totalpages,
+            totalElement:totalElement
+        };
+
+        return response;
+
+    }
 }
+
+module.exports=ProductService;
