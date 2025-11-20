@@ -2,13 +2,36 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const calculateDiscountPercentage = require('../util/discountCalculator');
 class ProductService{
+
+      async createOrGetCategory(categoryId, level, parentId = null) {
+    let category = await Category.findOne({ categoryId });
+
+    if (!category) {
+        category = new Category({
+            name: categoryId,        // 🔥 Required fix
+            categoryId: categoryId,
+            parentCategory: parentId,
+            level: level
+        });
+
+        category = await category.save();
+    }
+
+    return category;
+}
+
+
    async createProduct(req,seller){
         // Logic to create a new product
         try{
+           console.log(seller);
             const discountPercentage = calculateDiscountPercentage(req.body.mrpPrice, req.body.sellingPrice);
             const category1 = await this.createOrGetCategory(req.body.categoryId, 1);
+           
             const category2 = await this.createOrGetCategory(req.body.subCategoryId, 2, category1._id);
             const category3 = await this.createOrGetCategory(req.body.subSubCategoryId, 3, category2._id);
+            // console.log("Categories created/retrieved:", category1, category2, category3);
+            // console.log(req.body);
             const product = new Product({
                 title: req.body.title,
                 description: req.body.description,
@@ -22,6 +45,7 @@ class ProductService{
                 color: req.body.color,
                 size: req.body.size
             });
+            // console.log("Product to be saved:", product);
             await product.save();
             return product;
 
@@ -29,19 +53,7 @@ class ProductService{
             throw new Error('Error creating product: ' + error.message);
         }
     }
-    async createOrGetCategory(categoryId,level,parentId=null){
-        // Logic to create or get category
-        let category=await Category.findOne({categoryId:categoryId});
-        if(!category){
-            category=new Category({
-                categoryId:categoryId,
-                parentCategory:parentId,
-                level:level
-            });
-            category=await category.save();
-        }
-        return category;
-    }
+  
 
     async deleteProduct(productId,seller){
         // Logic to delete a product

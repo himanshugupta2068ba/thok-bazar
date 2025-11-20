@@ -8,6 +8,6 @@ router.post('/', SellerController.createSeller);
 router.get('/', SellerController.getAllSeller);
 router.put('/', sellerMiddleware,SellerController.updateSeller);
 router.post('/send/login-otp', SellerController.sendLoginOtp);
-router.post("/verify/login-otp",sellerMiddleware, SellerController.verifyLoginOtp);
+router.post('/verify/login-otp', SellerController.verifyLoginOtp);
 
 module.exports = router;

@@ -19,10 +19,11 @@ class SellerProductController{
 
     async createProduct(req,res){
         try{
-            await createProductSchema.validate(req.body);
+            // await createProductSchema.validate(req.body);
             const seller=req.user;
+            console.log(seller);
             const productService=new ProductService();
-            const product=await productService.createProduct(req.body,seller);
+            const product=await productService.createProduct(req,seller);
             res.status(201).json(product);
         }catch(error){
             res.status(500).json({message:'Error creating product: '+error.message});

@@ -2,7 +2,7 @@ const jwtprovider = require("../util/jwtprovider");
 const UserService = require("../service/UserService");
 
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async(req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer')) {
@@ -13,7 +13,7 @@ const authMiddleware = (req, res, next) => {
             return res.status(401).json({ message: "Invalid token" });
         }
         let email = jwtprovider.getEmailFromjwt(token);
-        const user = UserService.getUserByEmail(email);
+        const user =await UserService.findUserByEmail(email);
 
         if (!user) {
             return res.status(401).json({ message: "User not found" });

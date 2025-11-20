@@ -73,7 +73,7 @@ class SellerController{
         try{
             const {otp,email}=req.body;
             const seller=await SellerService.getSellerByEmail(email);
-
+// console.log("seller:",seller);
             const verificationCode=await VerificationCode.findOne({email});
             if(!verificationCode || verificationCode.otp!=otp){
                 throw new Error("Invalid OTP")
