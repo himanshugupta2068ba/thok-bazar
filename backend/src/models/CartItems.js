@@ -4,7 +4,7 @@ const cartItemsSchema=new Schema({
     cart:{
         type:Schema.Types.ObjectId,
         ref:"Cart",
-        required:trusted
+        required:true
     },
     product:{
         type:Schema.Types.ObjectId,
@@ -35,4 +35,4 @@ const cartItemsSchema=new Schema({
 
 })
 const CartItem=mongoose.model("CartItem",cartItemsSchema);
-mongoose.exports=CartItem
+module.exports=CartItem

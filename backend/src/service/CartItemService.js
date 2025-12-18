@@ -1,4 +1,6 @@
-class CartItem{
+const CartItem=require("../models/CartItems")
+
+class CartItemService{
     async removeCartItem(userId, cartItemId){
       const cartItem=await this.findCartItemById(cartItemId);
 
@@ -19,16 +21,19 @@ class CartItem{
 
     async updateCartItem(userId, cartItemId,cartItemData){
       const cartItem=await this.findCartItemById(cartItemId);
-
-      if(cartItem.userId.toString()==userId.toString){
+      console.log(cartItemData || "No data");
+      if(cartItem.userId.toString()==userId.toString()){
         const update={
             quantity:cartItemData.quantity,
-            mrpPrice:cartItemData.quantity*cartItemData.product.mrpPrice,
-            p[]\
+            // mrpPrice:cartItemData.quantity*cartItemData.product.mrpPrice,
+            // sellingPrice:cartItemData.quantity*cartItemData.product.sellingPrice
         }
+        return await CartItem.findByIdAndUpdate(cartItemId,update,{new:true}).populate("product");
       }else{
         throw new Error("Unauthorized acesses")
       }
     }
 
 }
+
+module.exports=new CartItemService();

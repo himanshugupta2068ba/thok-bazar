@@ -1,5 +1,7 @@
 const Cart=require("../models/Cart")
-const {calculateDiscountPercentage}=require("../util/discountCalculator")
+const CartItem=require("../models/CartItems")
+const Product=require("../models/Product")
+const calculateDiscountPercentage=require("../util/discountCalculator")
 
 class CartService{
    
@@ -23,9 +25,9 @@ class CartService{
             totalDiscountedPrice
         );
         
-        let cartItems=await CartItem.find({cart:cart._id}).populate("product");
+        let cartItems=await CartItem.findOne({cart:cart._id}).populate("product");
         cart.cartItems=cartItems;
-        return cart;
+        return cartItems;
     }
 
     async addCartItem(user,product,size,quantity){
@@ -50,6 +52,9 @@ class CartService{
             await cartItem.save();
             return cartItem;
         }
+        if(isPresent.quantity+quantity>product.stock){
+            throw new Error("Insufficient stock available");
+        }
         isPresent.quantity+=quantity;
         isPresent.mrpPrice+=product.mrpPrice*quantity;
         isPresent.sellingPrice+=product.sellingPrice*quantity;
@@ -57,3 +62,5 @@ class CartService{
         return isPresent;
     }
 }
+
+module.exports=new CartService();
