@@ -2,6 +2,7 @@ const User = require('../models/user');
 const Address = require('../models/address');
 const Order = require('../models/order');
 const OrderItem = require('../models/orderItem');
+const OrderStatus = require('../domain/OrderStatus');
 class OrderService{
     async createOrder(user,shippingAddress,cart){
         if(shippingAddress._id && !user.addresses.includes(shippingAddress.id)){
@@ -90,4 +91,42 @@ class OrderService{
         .populate([{path:"user"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}])
         .sort({createdAt:-1});
     }
+
+    async updateOrderStatus(orderId,newStatus){
+        
+        const order=await this.findOrderById(orderId);
+        if(!order){
+            throw new Error('Order not found');
+        }
+        orders.status=newStatus;
+        return await Order.findByIdAndUpdate(orderId,orders,{new:true}
+        ).populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
+    }
+
+        async cancelOrder(orderId,user){
+        
+        const order=await this.findOrderById(orderId);
+        if(user._id.toString()!==order.user._id.toString()){
+            throw new Error('Unauthorized to cancel this order');
+        }
+        if(!order){
+            throw new Error('Order not found');
+        }
+        order.status=OrderStatus.CANCELLED;
+        return await Order.findByIdAndUpdate(orderId,orders,{new:true}
+        ).populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
+    }
+
+    async findOrderItemById(orderItemId){
+        if(!mongoose.Types.ObjectId.isValid(orderItemId)){
+            throw new Error('Invalid order item ID');
+        }
+        const orderItem=await OrderItem.findById(orderItemId).populate('product');
+        if(!orderItem){
+            throw new Error('Order item not found');
+        }
+        return orderItem;
+    }
 }
+
+module.exports=new OrderService();
