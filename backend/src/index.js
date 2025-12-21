@@ -28,7 +28,8 @@ const userRouter=require('./routers/UserRouter');
 const productRoutes=require('./routers/ProductRoutes');
 const SellerProductRoutes=require('./routers/SellerProductRoutes');
 const CartRoutes=require('./routers/CartRoutes');
-
+const OrderRoutes=require('./routers/OrderRouter');
+const sellerOrderRoutes=require('./routers/SellerOrder');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -41,6 +42,8 @@ app.use('/users',userRouter);
 app.use('/products', productRoutes);
 app.use('/seller-products', SellerProductRoutes);
 app.use('/cart',CartRoutes);
+app.use('/orders',OrderRoutes);
+app.use('/seller-orders',sellerOrderRoutes);
 
 const ports = process.env.PORT || 5000;
 

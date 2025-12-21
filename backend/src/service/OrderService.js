@@ -1,7 +1,8 @@
+const mongoose = require('mongoose');
 const User = require('../models/user');
-const Address = require('../models/address');
-const Order = require('../models/order');
-const OrderItem = require('../models/orderItem');
+const Address = require('../models/Address');
+const Order = require('../models/Order');
+const OrderItem = require('../models/OrderItem');
 const OrderStatus = require('../domain/OrderStatus');
 class OrderService{
     async createOrder(user,shippingAddress,cart){
@@ -10,7 +11,7 @@ class OrderService{
               await User.findByIdAndUpdate(user._id,user);
         }
 
-        if(!shippingAddress.Id){
+        if(!shippingAddress._id){
             shippingAddress=await Address.create(shippingAddress)
         }
 
@@ -98,8 +99,8 @@ class OrderService{
         if(!order){
             throw new Error('Order not found');
         }
-        orders.status=newStatus;
-        return await Order.findByIdAndUpdate(orderId,orders,{new:true}
+        order.orderStatus=newStatus;
+        return await Order.findByIdAndUpdate(orderId,{orderStatus:newStatus},{new:true}
         ).populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
     }
 
@@ -112,8 +113,8 @@ class OrderService{
         if(!order){
             throw new Error('Order not found');
         }
-        order.status=OrderStatus.CANCELLED;
-        return await Order.findByIdAndUpdate(orderId,orders,{new:true}
+        order.orderStatus=OrderStatus.CANCELLED;
+        return await Order.findByIdAndUpdate(orderId,{orderStatus:OrderStatus.CANCELLED},{new:true}
         ).populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
     }
 
