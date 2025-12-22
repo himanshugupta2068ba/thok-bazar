@@ -30,6 +30,10 @@ const SellerProductRoutes=require('./routers/SellerProductRoutes');
 const CartRoutes=require('./routers/CartRoutes');
 const OrderRoutes=require('./routers/OrderRouter');
 const sellerOrderRoutes=require('./routers/SellerOrder');
+const PaymentRoutes=require('./routers/PaymentRoutes');
+const TransactionRoutes=require('./routers/TransactionROutes');
+const SellerReportRoutes=require('./routers/SellerReportRoutes');
+
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -44,6 +48,9 @@ app.use('/seller-products', SellerProductRoutes);
 app.use('/cart',CartRoutes);
 app.use('/orders',OrderRoutes);
 app.use('/seller-orders',sellerOrderRoutes);
+app.use('/payments',PaymentRoutes);
+app.use('/transactions',TransactionRoutes);
+app.use('/seller-reports',SellerReportRoutes);
 
 const ports = process.env.PORT || 5000;
 

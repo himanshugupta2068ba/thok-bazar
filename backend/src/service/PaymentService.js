@@ -1,4 +1,5 @@
-const { default: customers } = require('razorpay/dist/types/customers');
+// const { default: customers } = require('razorpay/dist/types/customers');
+const Razorpay = require("razorpay");
 const PaymentOrder=require('../models/paymentOrder');
 const razorpay=require('../config/razorpayClient');
 const PaymentStatus=require('../domain/PaymentStatus');
@@ -61,7 +62,7 @@ class PaymentService{
 
    }
 
-    async createrazorpaypaymentLink(user,amount,orderId){
+    async createRazorpaypaymentLink(user,amount,orderId){
         try{
             const paymentLinkRequest={
                 amount:amount*100,

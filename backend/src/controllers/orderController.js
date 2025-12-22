@@ -1,6 +1,7 @@
 const OrderService=require('../service/OrderService');
 const CartService=require('../service/CartService');
-
+const PaymentService=require('../service/PaymentService');
+const PaymentOrder = require('../models/paymentOrder');
 
 class OrderController{
 
@@ -12,9 +13,22 @@ class OrderController{
             const user= await req.user;
             const cart=await CartService.findUserCart(user);
             const order=await OrderService.createOrder(user,shippingAddress,cart,paymentMethod);
+            
+            const paymentOrder=await PaymentService.createOrder(user,[order]);
 
-            // const paymentOrder=await PaymentService.createOrder(user,order,paymentMethod);
-            return res.status(201).json({order});
+            const response={};
+
+            if(paymentMethod==='razorpay'){
+                const payment=await PaymentService.createRazorpaypaymentLink(user,paymentOrder.amount,order._id);
+                response.paymentLink=payment.short_url;
+                response.paymentOrderId=paymentOrder._id;
+
+                await PaymentOrder.findByIdAndUpdate(paymentOrder._id,{
+                    paymentLinkId:payment.id
+                });
+            }
+            return res.status(201).json({order,paymentDetails:response});
+            
         }catch(error){
             return res.status(500).json({message:error.message});
         }
