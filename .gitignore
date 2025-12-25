@@ -53,3 +53,34 @@ build/
 
 # Other system files
 Thumbs.db
+desktop.ini
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Yarn PnP
+.pnp
+.pnp.js
+.pnp.cjs
+.pnp.*
+
+# Tool caches & temporary
+.vite
+node_modules/.vite
+.cache
+.parcel-cache
+*.tgz
+
+# Local env files
+.env
+.env.*
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# Storybook / static builds
+storybook-static/
+out/

@@ -33,7 +33,8 @@ const sellerOrderRoutes=require('./routers/SellerOrder');
 const PaymentRoutes=require('./routers/PaymentRoutes');
 const TransactionRoutes=require('./routers/TransactionROutes');
 const SellerReportRoutes=require('./routers/SellerReportRoutes');
-
+const HomeCategoryRoutes=require('./routers/HomeCategoryRoutes');
+const dealRoutes=require('./routers/DealRoutes');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -51,6 +52,9 @@ app.use('/seller-orders',sellerOrderRoutes);
 app.use('/payments',PaymentRoutes);
 app.use('/transactions',TransactionRoutes);
 app.use('/seller-reports',SellerReportRoutes);
+app.use('/home-categories',HomeCategoryRoutes);
+app.use('/deals',dealRoutes);
+
 
 const ports = process.env.PORT || 5000;
 

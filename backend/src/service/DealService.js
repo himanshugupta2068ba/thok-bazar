@@ -1,5 +1,5 @@
 const Deal = require("../models/Deal");
-const HomeCategory = require("../models/Homecategory");
+const HomeCategory = require("../models/HomeCategory");
 
 class DealService {
 

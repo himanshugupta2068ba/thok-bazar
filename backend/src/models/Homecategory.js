@@ -1,25 +1,28 @@
-const moongoose=require('mongoose');
-const HomeCategegorySection=require('../domain/HomeCategorySection');
+const mongoose = require("mongoose");
+const HomeCategorySection = require("../domain/HomeCategorySection");
 
-const homeCategorySchema=moongoose.Schema({
-    name:{
-        type:String,
-        required:true
+const homeCategorySchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        trim: true
     },
-    image:{
-        type:String,
-        required:true
+    image: {
+        type: String,
+        required: true
     },
-    categoryId:{
-        type:String,
-        required:true
+    categoryId: {
+        type: String,
+        required: true,
+        index: true
     },
-    section:{
-        type:String,
-        enum:Object.values(HomeCategegorySection),
-        required:true
+    section: {
+        type: String,
+        enum: Object.values(HomeCategorySection),
+        required: true
     }
-},{timestamps:true});
+}, { timestamps: true });
 
-const HomeCategory=moongoose.model('HomeCategory',homeCategorySchema);
-module.exports=HomeCategory;
+module.exports =
+    mongoose.models.HomeCategory ||
+    mongoose.model("HomeCategory", homeCategorySchema);
