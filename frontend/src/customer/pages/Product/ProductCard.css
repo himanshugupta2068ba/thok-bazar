@@ -1,0 +1,16 @@
+
+/* .card{
+    @apply relative w-[250px] sm:w-[200px] md:w-[220px] lg:w-[250px] bg-white rounded-lg shadow-md overflow-hidden m-2;
+} */
+
+.card-media{
+    /* position: absolute; */
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    height: 100%;
+    transition: transform 0.3s ease-in-out;
+    cursor: pointer;
+    object-fit: cover;
+}
