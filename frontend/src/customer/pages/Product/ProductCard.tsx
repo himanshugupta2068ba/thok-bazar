@@ -25,13 +25,41 @@ export const ProductCard = ({item}:any) => {
         }
     },[ishovered]);
 
+// useEffect(() => {
+//   if (!ishovered) {
+//     setCurrentImage(0);
+//     return;
+//   }
+
+//   const interval = setInterval(() => {
+//     setCurrentImage((prev) =>
+//       prev === item.images.length - 1 ? 0 : prev + 1
+//     );
+//   }, 1000);
+
+//   return () => clearInterval(interval);
+// }, [ishovered, item.images.length]);
+
+
     return (
         <div className="group px-4 relative">
            <div className="relative w-[250px] sm:w-full h-[350px] overflow-hidden" onMouseEnter={()=>setIshovered(true)} onMouseLeave={()=>setIshovered(false)}>
 
-            {item.images.map((image:string,index:number)=>
+            {/* {item.images.map((image:string,index:number)=>
             <img src={image} key={index} className="card-media object-top" style={{transform:`translateX(${(index-currentImage)*100}%)`,}} />
-            )}
+            )} */}
+
+ {item.images.map((image: string, index: number) => (
+  <img
+    key={index}
+    src={image}
+    className="card-media object-top"
+    style={{
+      transform: `translateX(${(index - currentImage) * 100}%)`,
+    }}
+  />
+))}
+
 
            </div>
         </div>
