@@ -6,6 +6,7 @@ import { customTheme } from './Theme/custom_theme'
 import { Products } from './customer/pages/Product/Product'
 import { Footer } from './customer/Footer/Footer'
 import { ProductDetails } from './customer/pages/Product/ProductDetails/ProductDetails'
+import { Cart } from './customer/pages/Cart/cart'
 
 function App() {
   
@@ -15,7 +16,8 @@ function App() {
       {/* <Home /> */}
       {/* <Products/>
       */}
-      <ProductDetails/>
+      {/* <ProductDetails/> */}
+      <Cart/>
       <Footer/> 
   </ThemeProvider>
   )
