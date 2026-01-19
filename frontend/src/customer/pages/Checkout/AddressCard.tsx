@@ -11,7 +11,7 @@ export const AddressCard = ({
       <div>
         <Radio
           name="radio-button"
-          checked={selectedValue === value}
+          checked={selectedValue == value}
           onChange={handleChange}
           value={value}
         />
