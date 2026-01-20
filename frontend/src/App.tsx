@@ -8,12 +8,14 @@ import { Footer } from './customer/Footer/Footer'
 import { ProductDetails } from './customer/pages/Product/ProductDetails/ProductDetails'
 import { Cart } from './customer/pages/Cart/cart'
 import { Checkout } from './customer/pages/Checkout/Checkout'
+import { Navbar } from './customer/Navbar/Navbar'
 
 function App() {
   
 
   return (
   <ThemeProvider theme={customTheme}>
+    <Navbar/>
       {/* <Home /> */}
       {/* <Products/>
       */}
