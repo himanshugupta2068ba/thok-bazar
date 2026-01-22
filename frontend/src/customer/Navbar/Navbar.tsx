@@ -7,7 +7,8 @@ import { CategorySheet } from "./Category";
 export const Navbar = () => {
   const theme = useTheme();
   const isLarge = useMediaQuery(theme.breakpoints.up("lg"));
-  const [showSheet,setShowSheet]=useState(false);
+  const [showSheet, setShowSheet] = useState(false);
+  const [selectedCategory,setSelectedCategory]=useState("menu")
   return (
     <Box className="sticky top-0 left-0 right-0 bg-white blur-bg bg-opacity-80">
       <div className="flex items-center justify-between px-5 lg:px-20 h-17.5 border-b border-gray-200">
@@ -24,11 +25,14 @@ export const Navbar = () => {
           </div>
           <ul className="flex items-center font-medium text-gray-800">
             {mainCategory.map((item) => (
-              <li 
-              onMouseLeave={()=>setShowSheet(false)}
-                onMouseEnter={()=>setShowSheet(true)}
-        
-              key={item.categoryid} className="mainCategory hover:text-teal-600 cursor-pointer hover:border-b-2 h-17 px-4 border[#00927] flex items-center">
+              <li
+                onMouseLeave={() => setShowSheet(false)}
+                onMouseEnter={() => {setShowSheet(true)
+                  setSelectedCategory(item.categoryid)
+                }}
+                key={item.categoryid}
+                className="mainCategory hover:text-teal-600 cursor-pointer hover:border-b-2 h-17 px-4 border[#00927] flex items-center"
+              >
                 {item.name}
               </li>
             ))}
@@ -36,8 +40,12 @@ export const Navbar = () => {
         </div>
       </div>
       {showSheet && isLarge && (
-        <Box className="w-full h-40 bg-white border-b border-gray-200 shadow-md flex items-center justify-center">
-          <CategorySheet />
+        <Box
+          onMouseLeave={() => setShowSheet(false)}
+          onMouseEnter={() => setShowSheet(true)}
+          className="categorySheet absolute top-[4.4rem] left-20 right-20"
+        >
+          <CategorySheet selectedCategory={selectedCategory} setShowSheets={setShowSheet}/>
         </Box>
       )}
     </Box>

@@ -1,0 +1,39 @@
+export const electronicsLevelTwo=[
+
+    {
+        name:"Mobiles",
+        categoryId:"electronics-mobiles",
+        parentCategoryId:"electronics",
+        level:2
+    },
+    {
+        name:"Laptops",
+        categoryId:"electronics-laptops",
+        parentCategoryId:"electronics",
+        level:2
+    },
+    {
+        name:"Cameras",   
+        categoryId:"electronics-cameras",
+        parentCategoryId:"electronics",
+        level:2
+    },
+    {
+        name:"Audio",
+        categoryId:"electronics-audio",
+        parentCategoryId:"electronics",
+        level:2
+    },
+    {
+        name:"Accessories",
+        categoryId:"electronics-accessories",
+        parentCategoryId:"electronics",
+        level:2
+    },
+    {
+        name:"Smart Home",
+        categoryId:"electronics-smart-home",
+        parentCategoryId:"electronics", 
+        level:2
+    }
+]

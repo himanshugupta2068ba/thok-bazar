@@ -10,12 +10,12 @@ const mainCategory=[
         level:1
     },
     {
-        name:"home & living",
-        categoryid:"home-and-living",
+        name:"Home & Living",
+        categoryid:"home-living",
         level:1
     },
     {
-        name:"electronics",
+        name:"Electronics",
         categoryid:"electronics",
         level:1
     }
