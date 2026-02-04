@@ -24,7 +24,7 @@ const categoryThree:{[key:string]:any[]}={
 
 export const CategorySheet = ({selectedCategory,toggleDraweer,setShowSheets}:any) => {
 
-    const childCategory=(category:any,parentCategory:any)=>{
+    const childCategory=(category:any,parentCategoryId:any)=>{
         return category.filter((child:any)=>child.parentCategoryId===parentCategoryId)
     }
     return (
@@ -33,7 +33,13 @@ export const CategorySheet = ({selectedCategory,toggleDraweer,setShowSheets}:any
 {categoryTwo[selectedCategory]?.map((item: any, index: number) => (
   <div key={item.name} className={`p-8 lg:w-[20%] ${index%2==0?"bg-slate-50":"bg-white"}`}>
     <p className="text-teal-500 mb-3 font-semibold">{item.name}</p>
-<ul></ul>    
+<ul className="space-y-3 text-gray-300">
+    {childCategory(categoryThree[selectedCategory],item.categoryId)?.map((item:any)=><div key={item.name}>
+        <li className="cursor-pointer">
+            {item.name}
+        </li>
+    </div>)}
+    </ul>    
   </div>
 ))}
 
