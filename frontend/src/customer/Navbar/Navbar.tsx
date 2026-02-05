@@ -19,11 +19,14 @@ import {
 import "./Navbar.css";
 import mainCategory from "../../data/category/mainCategory";
 import { CategorySheet } from "./Category";
+import { useNavigate } from "react-router";
 export const Navbar = () => {
   const theme = useTheme();
   const isLarge = useMediaQuery(theme.breakpoints.up("lg"));
   const [showSheet, setShowSheet] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("menu");
+
+  const navigate=useNavigate();
   return (
     <Box className="sticky top-0 left-0 right-0 bg-white blur-bg bg-opacity-80">
       <div className="flex items-center justify-between px-5 lg:px-20 h-17.5 border-b border-gray-200">
@@ -34,7 +37,7 @@ export const Navbar = () => {
                 <Menu className="text-gray-700" sx={{ fontSize: 29 }} />
               </IconButton>
             ) : null}
-            <h1 className="logo text-shadow-lg text-lg md:text-2xl">
+            <h1 onClick={()=>navigate("/")} className="logo text-shadow-lg text-lg md:text-2xl cursor-pointer">
               Thok Bazar
             </h1>
           </div>
@@ -59,7 +62,7 @@ export const Navbar = () => {
             <Search sx={{ fontSize: 29 }} />
           </IconButton>
           {true ? (
-            <Button className="flex item-center gap-1">
+            <Button onClick={()=>navigate("/customer/profile")} className="flex item-center gap-1">
               <Avatar
                 src="https://plus.unsplash.com/premium_photo-1682090778813-3938ba76ee57?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ3Jvb218ZW58MHx8MHx8fDA%3D"
                 sx={{ width: 29, height: 29 }}
@@ -74,7 +77,7 @@ export const Navbar = () => {
           <IconButton>
             <FavoriteBorder sx={{ fontSize: 29 }} />
           </IconButton>
-          <IconButton>
+          <IconButton onClick={()=>navigate("/cart")}>
             <AddShoppingCart sx={{ fontSize: 29 }} />
           </IconButton>
           <Button

@@ -10,6 +10,7 @@ import { Cart } from './customer/pages/Cart/cart'
 import { Checkout } from './customer/pages/Checkout/Checkout'
 import { Navbar } from './customer/Navbar/Navbar'
 import { Profile } from './customer/pages/Order/Profile'
+import { Route, Routes } from 'react-router'
 
 function App() {
   
@@ -23,8 +24,17 @@ function App() {
       {/* <ProductDetails/> */}
       {/* <Cart/> */}
       {/* <Checkout/> */}
-      <Profile/>
-      <Footer/> 
+      {/* <Profile/> */}
+  
+      <Routes>
+        <Route path='/' element={<Home/>}/>
+        <Route path='/products/:categoryId' element={<Products/>}/>
+        <Route path='/product-details/:categoryId/:name/:productId' element={<ProductDetails/>}/>
+        <Route path='/cart' element={<Cart/>}/>
+        {/* <Route path='/checkout/address' element={<Checkout/>}/> */}
+        <Route path='/customer/profile/*' element={<Profile/>}/>  
+      </Routes>
+        <Footer/> 
   </ThemeProvider>
   )
 }

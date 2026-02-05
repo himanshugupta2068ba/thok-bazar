@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import "./ProductCard.css";
+import { useNavigate } from "react-router";
 
 export const ProductCard = ({ item }: any) => {
   const [currentImage, setCurrentImage] = useState(0);
 
   const [ishovered, setIshovered] = useState(false);
+
+ const navigate=useNavigate();
 
   useEffect(() => {
     let interval: any;
@@ -20,7 +23,7 @@ export const ProductCard = ({ item }: any) => {
   }, [ishovered, item.images.length]);
 
   return (
-    <div className="group px-4 relative">
+    <div onClick={()=>navigate(`/product-details/${item.categoryId || 1}/${item.name || "man shirt"}/${item.productId || 123}`)} className="group px-4 relative">
       <div
         className="relative w-62.5 sm:w-full h-87.5 overflow-hidden"
         onMouseEnter={() => setIshovered(true)}
