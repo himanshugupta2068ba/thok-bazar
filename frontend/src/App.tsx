@@ -9,6 +9,7 @@ import { ProductDetails } from './customer/pages/Product/ProductDetails/ProductD
 import { Cart } from './customer/pages/Cart/cart'
 import { Checkout } from './customer/pages/Checkout/Checkout'
 import { Navbar } from './customer/Navbar/Navbar'
+import { Profile } from './customer/pages/Order/Profile'
 
 function App() {
   
@@ -16,12 +17,13 @@ function App() {
   return (
   <ThemeProvider theme={customTheme}>
     <Navbar/>
-      <Home />
+      {/* <Home /> */}
       {/* <Products/>
       */}
       {/* <ProductDetails/> */}
       {/* <Cart/> */}
       {/* <Checkout/> */}
+      <Profile/>
       <Footer/> 
   </ThemeProvider>
   )
