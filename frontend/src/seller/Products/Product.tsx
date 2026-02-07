@@ -1,8 +1,10 @@
+import ProductTables from "./ProductTable"
 
 export const Product = () => {
   return (
-    <div className="p-5">
-        <h1 className="text-2xl font-bold">Product</h1>
-    </div>
+    <>
+        <h1 className="pb-5 text-2xl font-bold">ALL Products</h1>
+        <ProductTables />
+    </>
   )
 }

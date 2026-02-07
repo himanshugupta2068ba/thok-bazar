@@ -1,8 +1,10 @@
+import OrderTables from "./OrderTable"
 
 export const Order = () => {
   return (
-    <div className="p-5">
-        <h1 className="text-2xl font-bold">Order</h1>
-    </div>
+   <>
+   <h1 className="pb-5 font-bold text-xl">All Orders</h1>
+   <OrderTables />
+   </>
   )
 }

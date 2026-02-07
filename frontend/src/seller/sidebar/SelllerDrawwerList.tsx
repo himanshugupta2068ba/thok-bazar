@@ -105,7 +105,7 @@ export const SellerDrawwerList = ({ toggleDrawwer }: any) => {
         ))}
       </div>
          <div className="space-y-2">
-            <Divider />
+            <Divider className="py-30"/>
         {menu2.map((item, index) => (
           <div
             key={item.path}
