@@ -84,6 +84,7 @@ export const Navbar = () => {
             variant="contained"
             startIcon={<Storefront />}
             className="ml-3 bg-orange-500 hover:bg-orange-600"
+            onClick={()=>navigate("/become-seller")}
           >
             Sell on Thok Bazar
           </Button>
