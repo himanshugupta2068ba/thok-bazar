@@ -1,10 +1,11 @@
 import { TextField, Box, Typography, Button, Grid } from "@mui/material";
 import { useFormik } from "formik"
 
-export const SellerLogin=()=>{
+export const SignUp=()=>{
 
     const formik=useFormik({
         initialValues:{
+            fullname:"",
             email:"",
             otp:""
         },
@@ -15,12 +16,27 @@ export const SellerLogin=()=>{
     return(
         <Box sx={{ padding: 5 }}>
             <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color:"teal"}}>
-                Seller Login
+                SignUp
             </Typography>
             
             <form onSubmit={formik.handleSubmit}>
                 <Grid container spacing={3}>
-                    
+                        <Grid size={{ xs: 12 }}>
+                        <TextField
+                            fullWidth
+                            label="FullName"
+                            name="fullname"
+                            placeholder="Enter your fullname"
+                            type="text"
+                            value={formik.values.fullname}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.fullname && Boolean(formik.errors.fullname)}
+                            helperText={formik.touched.fullname && formik.errors.fullname}
+                            variant="outlined"
+                        />
+                    </Grid>
+
                     {/* Email */}
                     <Grid size={{ xs: 12 }}>
                         <TextField
@@ -62,7 +78,7 @@ export const SellerLogin=()=>{
                             type="submit"
                             sx={{ py: 1.5, fontSize: "1rem", fontWeight: 600 }}
                         >
-                            Login
+                            Register
                         </Button>
                     </Grid>
                 </Grid>

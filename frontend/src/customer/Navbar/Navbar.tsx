@@ -61,7 +61,7 @@ export const Navbar = () => {
           <IconButton>
             <Search sx={{ fontSize: 29 }} />
           </IconButton>
-          {true ? (
+          {false ? (
             <Button onClick={()=>navigate("/customer/profile")} className="flex item-center gap-1">
               <Avatar
                 src="https://plus.unsplash.com/premium_photo-1682090778813-3938ba76ee57?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ3Jvb218ZW58MHx8MHx8fDA%3D"
@@ -70,7 +70,7 @@ export const Navbar = () => {
               <h1>Hims</h1>
             </Button>
           ) : (
-            <Button variant="contained" startIcon={<AccountCircle />}>
+            <Button variant="contained" startIcon={<AccountCircle />} onClick={()=>navigate('/login')}>
               Login
             </Button>
           )}

@@ -4,7 +4,7 @@ import { ProfileFieldCart } from "../../customer/pages/account/ProfileFieldCart"
 
 export const Profile = () => {
   return (
-    <div className="Lg:px-20 pt-5 pb-20 space-y-20">
+    <div className="Lg:px-20 pt-5 pb-20 space-y-20 flex justify-center">
       <div className="w-full lg:w-[70%]">
         <div className="flex items-center pb-3 justify-between">
           <h1 className="font-bold text-2xl">Personal Details</h1>

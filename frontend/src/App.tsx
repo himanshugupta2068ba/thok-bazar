@@ -14,6 +14,7 @@ import { Route, Routes } from 'react-router'
 import { SellerDashboard } from './seller/SellerDashboard/SellerDashboards'
 import { BecomeSeller } from './auth/BecomeSeller/BecomeSeller'
 import { CustomerRoutes } from './routes/Customer'
+import { Auth } from './auth/Login/Auth'
 
 function App() {
   
@@ -26,7 +27,8 @@ function App() {
 <Routes>
   <Route path='/seller/*' element={<SellerDashboard/>}/>
   <Route path='/become-seller' element={<BecomeSeller/>}/>
-  <Route path='/' element={<CustomerRoutes/>}/>
+  <Route path='/login' element={<Auth/>}/>
+  <Route path='/*' element={<CustomerRoutes/>}/>
 
 </Routes>
         <Footer/> 

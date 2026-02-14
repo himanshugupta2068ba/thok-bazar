@@ -11,13 +11,13 @@ export const BecomeSeller = () => {
  {
     isloggedIn ? <SellerAccountForm/> : <SellerLogin/>
  }
- <div className="mt-10 space-y-2">
+ <div className="mt-10 space-y-2 mb-10">
     <h1 className="text-center text-sm font-medium">
-        Have an Account?
+         {isloggedIn ? "Have an account" : "Not have an Account"}
     </h1>
     <Button sx={{py:"12px"}}
         fullWidth
-        variant="contained"
+        variant="outlined"
         onClick={()=>setIsLoggedIn(!isloggedIn)}
     >
         {isloggedIn ? "Login" : "Create Account"}

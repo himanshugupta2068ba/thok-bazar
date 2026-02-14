@@ -1,7 +1,7 @@
 import { TextField, Box, Typography, Button, Grid } from "@mui/material";
 import { useFormik } from "formik"
 
-export const SellerLogin=()=>{
+export const LoginForm=()=>{
 
     const formik=useFormik({
         initialValues:{
@@ -15,7 +15,7 @@ export const SellerLogin=()=>{
     return(
         <Box sx={{ padding: 5 }}>
             <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color:"teal"}}>
-                Seller Login
+                 Login
             </Typography>
             
             <form onSubmit={formik.handleSubmit}>
