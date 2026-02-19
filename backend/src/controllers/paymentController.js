@@ -1,8 +1,9 @@
-const paymentService=require('../services/paymentService');
-const OrderService=require('../services/OrderService');
-const SellerService=require('../services/SellerService');
-const TransactionService=require('../services/TransactionService');
-const SellerReportService=require('../services/SellerReportService');
+const paymentService=require('../service/PaymentService');
+const OrderService=require('../service/OrderService');
+const SellerService=require('../service/SellerService');
+const TransactionService=require('../service/TransactionService');
+// const SellerReportService=require('../service/SellerReportService');
+const Cart=require('../models/Cart');
 
 const paymentSucessHandler=async(req,res)=>{
     const{paymentLinkId,paymentId}=req.body;
@@ -18,7 +19,7 @@ const paymentSucessHandler=async(req,res)=>{
 
                 const seller=await SellerService.getSellerById(order.seller);
 
-                const sellerReport=await SellerReportrService.getSellerReport(seller);
+                const sellerReport=await SellerReportService.getSellerReport(seller);
 
                 sellerReport.totalEarnings+=order.totalSellingPrice;
                 sellerReport.totalSales+=1;

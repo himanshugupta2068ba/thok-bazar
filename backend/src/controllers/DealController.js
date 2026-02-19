@@ -43,3 +43,5 @@ class DealController {
         }
     }
 }
+
+module.exports = new DealController();

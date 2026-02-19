@@ -1,15 +1,15 @@
-const moongoose=require('mongoose');
+const mongoose=require('mongoose');
 
-const dealSchema=new moongoose.Schema({
+const dealSchema=new mongoose.Schema({
     discount:{
-        typeo:Number,
+        type:Number,
         required:true
     },
     category:{
-        type:moongoose.Schema.Types.ObjectId,
+        type:mongoose.Schema.Types.ObjectId,
         ref:'HomeCategory',
         required:true
     }
 });
-const Deal=moongoose.model('Deal',dealSchema);
+const Deal=mongoose.model('Deal',dealSchema);
 module.exports=Deal;

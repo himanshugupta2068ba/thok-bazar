@@ -1,8 +1,15 @@
 import { TextField, Box, Typography, Button, Grid } from "@mui/material";
 import { useFormik } from "formik"
+import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
+import { useNavigate } from "react-router";
+import { signup } from "../../Redux Toolkit/featurs/Auth/authSlice";
+
 
 export const SignUp=()=>{
-
+ 
+    const auth=useAppSelector((state)=>state.auth);
+    const dispatch=useAppDispatch();
+    const navigate=useNavigate();
     const formik=useFormik({
         initialValues:{
             fullname:"",
@@ -11,17 +18,25 @@ export const SignUp=()=>{
         },
         onSubmit:(values)=>{
             console.log(values);
+            dispatch(signup({...values, navigate}))
         }
     })
+
+    const handleSendOtp=()=>{
+        dispatch(signup({email:formik.values.email, navigate}))
+    }
     return(
+        <>   
+        {/* <Navbar/> */}
         <Box sx={{ padding: 5 }}>
+            
             <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color:"teal"}}>
                 SignUp
             </Typography>
             
-            <form onSubmit={formik.handleSubmit}>
+            <div>
                 <Grid container spacing={3}>
-                        <Grid size={{ xs: 12 }}>
+                      {auth.otpSent &&  <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
                             label="FullName"
@@ -35,7 +50,7 @@ export const SignUp=()=>{
                             helperText={formik.touched.fullname && formik.errors.fullname}
                             variant="outlined"
                         />
-                    </Grid>
+                    </Grid>}
 
                     {/* Email */}
                     <Grid size={{ xs: 12 }}>
@@ -55,7 +70,7 @@ export const SignUp=()=>{
                     </Grid>
 
                     {/* OTP */}
-                    <Grid size={{ xs: 12 }}>
+                { auth.otpSent &&   <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
                             label="OTP"
@@ -69,7 +84,7 @@ export const SignUp=()=>{
                             variant="outlined"
                         />
                     </Grid>
-
+}
                     {/* Submit Button */}
                     <Grid size={{ xs: 12 }}>
                         <Button
@@ -77,12 +92,14 @@ export const SignUp=()=>{
                             variant="contained"
                             type="submit"
                             sx={{ py: 1.5, fontSize: "1rem", fontWeight: 600 }}
+                            onClick={() => auth.otpSent ? formik.handleSubmit() : handleSendOtp()}
                         >
                             Register
                         </Button>
                     </Grid>
                 </Grid>
-            </form>
+            </div>
         </Box>
+            </>
     )
 }

@@ -1,4 +1,6 @@
-const TransactionService = require('../services/TransactionService');
+// const TransactionService = require('../service/TransactionService');
+
+const TransactionService = require("../service/TransactionService");
 
 
 class TransactionController {

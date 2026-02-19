@@ -1,8 +1,11 @@
 import { TextField, Box, Typography, Button, Grid } from "@mui/material";
 import { useFormik } from "formik"
+import { useAppSelector } from "../../Redux Toolkit/store";
 
 export const LoginForm=()=>{
 
+    const {auth}=useAppSelector((state)=>state);
+        
     const formik=useFormik({
         initialValues:{
             email:"",
@@ -39,7 +42,7 @@ export const LoginForm=()=>{
                     </Grid>
 
                     {/* OTP */}
-                    <Grid size={{ xs: 12 }}>
+                   {auth.otpSent &&  <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
                             label="OTP"
@@ -52,7 +55,7 @@ export const LoginForm=()=>{
                             helperText={formik.touched.otp && formik.errors.otp}
                             variant="outlined"
                         />
-                    </Grid>
+                    </Grid>}
 
                     {/* Submit Button */}
                     <Grid size={{ xs: 12 }}>

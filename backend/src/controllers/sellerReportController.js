@@ -1,4 +1,4 @@
-const SellerReportService = require('../services/sellerReportService');
+const SellerReportService = require('../service/sellerReportService');
 
 class SellerReportController {
     

@@ -1,4 +1,4 @@
-const Transaction = require('../model/Transaction');
+const Transaction = require('../models/Transaction');
 const OrderService = require('./OrderService');
 const SellerService = require('./SellerService');
 
