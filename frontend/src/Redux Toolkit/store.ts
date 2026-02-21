@@ -2,9 +2,11 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { thunk } from 'redux-thunk';
 import {useDispatch, useSelector, type TypedUseSelectorHook} from "react-redux"
 import authSlice from './featurs/Auth/authSlice';
+import userSlice from './featurs/coustomer/userSlice';
 
 const rootReducer = combineReducers({
     auth:authSlice,
+    user:userSlice
 })
 
 const store = configureStore({

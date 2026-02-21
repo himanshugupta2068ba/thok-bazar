@@ -20,12 +20,18 @@ import "./Navbar.css";
 import mainCategory from "../../data/category/mainCategory";
 import { CategorySheet } from "./Category";
 import { useNavigate } from "react-router";
+import { useAppSelector } from "../../Redux Toolkit/store";
 export const Navbar = () => {
+  const {user}=useAppSelector((state)=>state);
   const theme = useTheme();
   const isLarge = useMediaQuery(theme.breakpoints.up("lg"));
   const [showSheet, setShowSheet] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("menu");
-
+  // const[isLoggedIn,setIsLoggedIn]=useState(false);
+  // const jwt=localStorage.getItem("jwt");
+  // if(jwt){
+  //   setIsLoggedIn(true);
+  // }
   const navigate=useNavigate();
   return (
     <Box className="sticky top-0 left-0 right-0 bg-white blur-bg bg-opacity-80">
@@ -61,13 +67,13 @@ export const Navbar = () => {
           <IconButton>
             <Search sx={{ fontSize: 29 }} />
           </IconButton>
-          {false ? (
+          {user.user?.name ? (
             <Button onClick={()=>navigate("/customer/profile")} className="flex item-center gap-1">
               <Avatar
                 src="https://plus.unsplash.com/premium_photo-1682090778813-3938ba76ee57?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ3Jvb218ZW58MHx8MHx8fDA%3D"
                 sx={{ width: 29, height: 29 }}
               />
-              <h1>Hims</h1>
+              <h1>{user.user?.name}</h1>
             </Button>
           ) : (
             <Button variant="contained" startIcon={<AccountCircle />} onClick={()=>navigate('/login')}>

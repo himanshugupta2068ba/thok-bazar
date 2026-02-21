@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 
 const connectDb = require('./db/db');
 
-
+app.use((cors()));
 
 // dotenv.config();
 require('dotenv').config({ path: '../.env' });
@@ -36,7 +36,7 @@ const SellerReportRoutes=require('./routers/SellerReportRoutes');
 const HomeCategoryRoutes=require('./routers/HomeCategoryRoutes');
 const dealRoutes=require('./routers/DealRoutes');
 
-app.use(cors());
+// app.use(cors());
 app.use(bodyParser.json());
 
 

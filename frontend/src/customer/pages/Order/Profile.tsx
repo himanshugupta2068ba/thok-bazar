@@ -4,6 +4,8 @@ import { OrderDetails } from "./OrderDetails";
 import { Route, Routes, useNavigate } from "react-router";
 import { UserProfile } from "../account/UserProfile";
 import { AddressCard } from "../Checkout/AddressCard";
+import { useAppDispatch } from "../../../Redux Toolkit/store";
+import { logout } from "../../../Redux Toolkit/featurs/Auth/authSlice";
 
 const menu = [
   { name: "Orders", link: "/customer/profile/orders" },
@@ -15,6 +17,16 @@ const menu = [
 
 export const Profile = () => {
   const navigate=useNavigate();
+  const dispatch = useAppDispatch();
+  const handleCLick=(link:string)=>{
+    if(link==="/logout"){
+      dispatch(logout());
+      // navigate("/login");
+      window.location.href="/";
+    }else{
+      navigate(link);
+    }
+  }
   // const location = useLocation();
   return (
     <div className="px-5 lg:px-52 min-h-screen mt-10">
@@ -24,9 +36,9 @@ export const Profile = () => {
       <Divider />
       <div className="grid grid-cols-2 lg:grid-cols-3 lg:min-h-[78vh]">
         <div className="col-span-1 lg:border-r border-gray-200 lg:pr-5 py-5 h-full flex flex-row flex-wrap lg:flex-col gap-3">
-          {menu.map((item, index) => (
+          {menu.map((item) => (
             <div
-            onClick={()=>navigate(item.link)}
+            onClick={handleCLick.bind(null,item.link)}
               className={`hover:bg-teal-500 p-3 cursor-pointer`}
               key={item.link}
             >

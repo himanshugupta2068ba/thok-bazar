@@ -7,7 +7,14 @@ const User = require('../models/user');
 
 class AuthService{
     async sendLoginOTP(email){
+        const isValidEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
+if (!email || !isValidEmail(email)) {
+  throw new Error("Invalid email format");
+}
+console.log("Received email for OTP:", email);
        const SIGNIN_PREFIX="signin_";
        if(email.startsWith(SIGNIN_PREFIX)){
         email=email.substring(SIGNIN_PREFIX.length);
@@ -15,8 +22,12 @@ class AuthService{
         const user=await User.findOne({email});
         if(!seller && !user) throw new Error("Seller or User not found");
        }
+const validator = require("validator");
 
-        const existingVerificationCode= await VerificationCode.findOne({email});
+if (!validator.isEmail(email)) {
+  throw new Error("Invalid email");
+}
+        const existingVerificationCode= await VerificationCode.findOne({email}) ;
 
         if(existingVerificationCode){
             await VerificationCode.deleteOne({email});

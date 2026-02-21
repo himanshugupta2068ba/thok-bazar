@@ -38,7 +38,7 @@ class UserService{
 
     async signin(req){
         const {email,password,otp}=req.body;
-
+    
         const user = await User.findOne({email});
         if(!user){
             throw new Error("User not found");

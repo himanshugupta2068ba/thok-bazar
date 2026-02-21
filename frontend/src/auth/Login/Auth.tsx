@@ -1,12 +1,14 @@
 import { useState } from "react"
 import { SignUp } from "./SignUpForm";
 import { LoginForm } from "./LoginForm";
-import { Button } from "@mui/material";
+import { Button, Snackbar } from "@mui/material";
+import { useAppSelector } from "../../Redux Toolkit/store";
 
 
 export const Auth=()=>{
 
     const [isLogin,setIsLogin]=useState(false);
+    const {auth}=useAppSelector((state)=>state);
     const backgroundImage = 'https://images.unsplash.com/photo-1470790376778-a9fbc86d70e2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGxvZ2luJTIwcGFnZXxlbnwwfHwwfHx8MA%3D%3D';
     
     return(
@@ -34,6 +36,14 @@ export const Auth=()=>{
                     </div>
                 </div>
             </div>
+
+        <Snackbar
+            open={auth.otpSent}
+            autoHideDuration={6000}
+            // onClose={handleClose}
+            message="Otp sent to your email"
+        />
+
         </div>
     )
 }

@@ -1,30 +1,75 @@
-import { TextField, Box, Typography, Button, Grid } from "@mui/material";
+import { TextField, Box, Typography, Button, Grid, Alert } from "@mui/material";
 import { useFormik } from "formik"
 import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
-import { useNavigate } from "react-router";
-import { signup } from "../../Redux Toolkit/featurs/Auth/authSlice";
+import { sendLoginSignupOtp, signup, clearError } from "../../Redux Toolkit/featurs/Auth/authSlice";
+import {  useNavigate } from "react-router";
 
 
 export const SignUp=()=>{
  
+     const navigate=useNavigate();
     const auth=useAppSelector((state)=>state.auth);
     const dispatch=useAppDispatch();
-    const navigate=useNavigate();
     const formik=useFormik({
         initialValues:{
             fullname:"",
             email:"",
             otp:""
-        },
+        }, validate: (values) => {
+    const errors: any = {};
+
+    if (!values.email) {
+      errors.email = "Email is required";
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)
+    ) {
+      errors.email = "Invalid email format";
+    }
+
+    return errors;
+  },
         onSubmit:(values)=>{
             console.log(values);
-            dispatch(signup({...values, navigate}))
+            dispatch(sendLoginSignupOtp(values))
         }
     })
 
     const handleSendOtp=()=>{
-        dispatch(signup({email:formik.values.email, navigate}))
+        console.log(formik.values.email);
+        dispatch(clearError());
+        dispatch(sendLoginSignupOtp({email:formik.values.email}))
     }
+
+    const getErrorMessage = () => {
+        if (!auth.error) return null;
+        if (typeof auth.error === 'string') return auth.error;
+        if (typeof auth.error === 'object' && (auth.error as any)?.error) return (auth.error as any).error;
+        if (typeof auth.error === 'object' && (auth.error as any)?.message) return (auth.error as any).message;
+        return "An error occurred";
+    };
+    // const handleCreateAcoount=()=>{
+    //     dispatch(signup({signupRequest:formik.values}))
+    // }
+    const handleCreateAccount = async () => {
+  try {
+    dispatch(clearError());
+    const result = await dispatch(signup({signupRequest:formik.values})).unwrap();
+
+    // store JWT
+    localStorage.setItem("jwt", result.jwt);
+
+    // optional: store role
+    localStorage.setItem("role", result.role);
+
+    // navigate to home
+    navigate("/");
+    
+    // Force page reload to trigger fetchUserProfile in App.tsx
+    window.location.href = "/";
+  } catch (error) {
+    console.log("Signup failed:", error);
+  }
+};
     return(
         <>   
         {/* <Navbar/> */}
@@ -33,6 +78,13 @@ export const SignUp=()=>{
             <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color:"teal"}}>
                 SignUp
             </Typography>
+            
+            {/* Error Alert */}
+            {auth.error && getErrorMessage() && (
+                <Alert severity="error" sx={{ marginBottom: 2 }} onClose={() => dispatch(clearError())}>
+                    {getErrorMessage()}
+                </Alert>
+            )}
             
             <div>
                 <Grid container spacing={3}>
@@ -87,16 +139,36 @@ export const SignUp=()=>{
 }
                     {/* Submit Button */}
                     <Grid size={{ xs: 12 }}>
-                        <Button
+                        {!auth.otpSent && <Button
                             fullWidth
                             variant="contained"
                             type="submit"
+                            disabled={auth.loading}
                             sx={{ py: 1.5, fontSize: "1rem", fontWeight: 600 }}
-                            onClick={() => auth.otpSent ? formik.handleSubmit() : handleSendOtp()}
+                            onClick={() => handleSendOtp()}
                         >
-                            Register
-                        </Button>
+                            {auth.loading ? "Please wait..." : "Register"}
+                        </Button>}
+                        {auth.otpSent && <Button
+                            fullWidth
+                            variant="contained"
+                            type="submit"
+                            disabled={auth.loading}
+                            sx={{ py: 1.5, fontSize: "1rem", fontWeight: 600 }}
+                            onClick={() => handleCreateAccount()}
+                        >
+                            {auth.loading ? "Please wait..." : "Create Account"}
+                        </Button>}
                     </Grid>
+                    {Boolean(auth.error) && (
+                        <Grid size={{ xs: 12 }}>
+                            <Typography color="error" variant="body2">
+                                {typeof auth.error === "object" && auth.error !== null
+                                    ? String((auth.error as { error?: string; message?: string }).error || (auth.error as { error?: string; message?: string }).message || "Something went wrong")
+                                    : String(auth.error)}
+                            </Typography>
+                        </Grid>
+                    )}
                 </Grid>
             </div>
         </Box>

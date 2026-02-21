@@ -4,10 +4,10 @@ import { Routes } from "react-router"
 import Home from "../customer/pages/Home/Home"
 import { Products } from "../customer/pages/Product/Product"
 import { ProductDetails } from "../customer/pages/Product/ProductDetails/ProductDetails"
-import { Profile } from "../seller/Account/Profile"
 import { Cart } from "../customer/pages/Cart/cart"
 import { Checkout } from "../customer/pages/Checkout/Checkout"
 import { Navbar } from "../customer/Navbar/Navbar"
+import { Profile } from "../customer/pages/Order/Profile"
 
 export const CustomerRoutes = () => {
     return (
