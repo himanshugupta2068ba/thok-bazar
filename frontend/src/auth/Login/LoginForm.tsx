@@ -115,6 +115,7 @@ export const LoginForm=()=>{
                             onClick={auth.otpSent?(e)=>formik.handleSubmit(e as any):handleSentOtp}
                         >
                             {auth.otpSent ? "Login" : "Send OTP"}
+                            {auth.loading ? "Please wait..." : "Login"}
                         </Button>
                     </Grid>
                 </Grid>

@@ -39,8 +39,9 @@ class CartController{
 
     async deleteCartItemHandler(req,res){
         try{
+            const user=await req.user;
             const cartItemId=req.params.cartItemId;
-            await CartItemService.deleteCartItemById(user._id,cartItemId);
+            await CartItemService.removeCartItem(user._id,cartItemId);
             res.status(200).json({message:"Cart item deleted successfully"});
         }catch(error){
             res.status(500).json({error:error.message});

@@ -1,12 +1,21 @@
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { thunk } from 'redux-thunk';
+import { combineReducers, configureStore } from '@reduxjs/toolkit'; 
 import {useDispatch, useSelector, type TypedUseSelectorHook} from "react-redux"
 import authSlice from './featurs/Auth/authSlice';
 import userSlice from './featurs/coustomer/userSlice';
+import productSlice from './featurs/coustomer/productSlice';
+import orderSlice from './featurs/coustomer/orderSlice';
+import cartSlice from './featurs/coustomer/cartSlice';
+import couponSlice from './featurs/coustomer/couponSlice';
+import HomeCategorySlice from './featurs/coustomer/homeCategorySlice';
 
 const rootReducer = combineReducers({
     auth:authSlice,
-    user:userSlice
+    user:userSlice,
+    product:productSlice,
+    order:orderSlice,
+    cart:cartSlice,
+    coupon:couponSlice,
+    homeCategory:HomeCategorySlice
 })
 
 const store = configureStore({
