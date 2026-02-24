@@ -41,7 +41,7 @@ class SellerProductController{
     }
     async updateProduct(req,res){
         try{
-            await updateProductSchema.validate(req.body);
+            // await updateProductSchema.validate(req.body);
             const productService=new ProductService();
             const product=await productService.updateProduct(req.params.productId,req.body);
             res.status(200).json(product);

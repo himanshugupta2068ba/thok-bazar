@@ -63,7 +63,7 @@ class SellerController{
      async updateSellerAccountStatus(req,res){
         try{
             const updatedSeller=await SellerService.updateSellerStatus(req.params.id,req.params.status);
-            res.status(200).json(seller);       
+            res.status(200).json(updatedSeller);       
         }catch(error){
            res.status(error instanceof Error? 404 : 500).json({message:error.message})
         }
