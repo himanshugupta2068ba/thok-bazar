@@ -5,3 +5,5 @@ const sellerMiddleware=require('../middlewares/sellerAuthMiddleware');
 const TransactionController=require('../controllers/TransactionController');
 
 router.get('/seller',sellerMiddleware,TransactionController.getTransactionsBySeller);
+
+module.exports=router;

@@ -19,20 +19,19 @@ class DealService {
                 category:category._id
             });
             const savedDeal=await newDeal.save();
-            return await savedDeal.findById(savedDeal._id).populate({path:'category'});
+            return await Deal.findById(savedDeal._id).populate({path:'category'});
         }catch(err){
             throw new Error(err.message);
         }
     }
 
     async updateDeal(deal,id){
-        const existingDeal=await HomeCategory.findById(id).populate({path:'category'});
+        const existingDeal=await Deal.findById(id).populate({path:'category'});
         if(existingDeal){
-            return await Deal.findByIdAndUpdate(
-                existingDeal._id,
+            return await Deal.findByIdAndUpdate(existingDeal._id,
                 {discount:deal.discount},
                 {new:true}
-            )
+            ).populate({path:'category'});
         }
         throw new Error('Deal not found');
     }

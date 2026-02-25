@@ -7,7 +7,7 @@ class TransactionController {
 
     async getTransactionsBySeller(req, res) {
         try{
-            const seller=await req.seller;
+            const seller=await req.user;
             const transactions=await TransactionService.getTransactionsBySeller(seller._id);
             return res.status(200).json({transactions:transactions});
 

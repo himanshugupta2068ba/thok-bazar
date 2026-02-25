@@ -1,5 +1,5 @@
 const SellerService = require("../service/SellerService");
-const UserService = require("../service/UserService");
+// const UserService = require("../service/UserService");
 const jwtprovider = require("../util/jwtprovider");
 
 const sellerMiddleware=async(req,res,next)=>{
@@ -18,7 +18,7 @@ const sellerMiddleware=async(req,res,next)=>{
 
         let email=jwtprovider.getEmailFromjwt(token);
 
-        const user=UserService.getSellerByEmail(email);
+        const user=await SellerService.getSellerByEmail(email);
 
         if(!user){
             return res.status(401).json({message:"User not found"});

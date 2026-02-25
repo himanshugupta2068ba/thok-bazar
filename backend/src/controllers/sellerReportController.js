@@ -1,10 +1,10 @@
-const SellerReportService = require('../service/sellerReportService');
+const SellerReportService = require('../service/SellerReportService');
 
 class SellerReportController {
     
     async getSellerReport(req, res) {
         try {
-            const seller = await req.seller;
+            const seller = await req.user;
             const sellerReport = await SellerReportService.getSellerReport(seller._id);
             return res.status(200).json({ sellerReport: sellerReport });
         } catch (error) {

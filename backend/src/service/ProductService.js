@@ -102,6 +102,24 @@ class ProductService{
         return await Product.find({sellerId:sellerId});
     }
 
+    async getProductsBySellerId(sellerId,pageNumber=0){
+        const page = Number(pageNumber) || 0;
+        const query = { sellerId: sellerId };
+        const products = await Product.find(query)
+            .sort({createdAt:-1})
+            .skip(page * 10)
+            .limit(10);
+
+        const totalElement = await Product.countDocuments(query);
+        const totalpages = Math.ceil(totalElement / 10);
+
+        return {
+            content: products,
+            totalpages,
+            totalElement
+        };
+    }
+
     async getAllProducts(req){
         const filterQuery={};
  
@@ -139,9 +157,11 @@ class ProductService{
             sortQuery.sellingPrice=1;
         }
 
+        const pageNumber = Number(req.pageNumber ?? req.page ?? 0) || 0;
+
         const product=await Product.find(filterQuery)
         .sort(sortQuery)
-        .skip((req.pageNumber)*10)
+        .skip(pageNumber*10)
         .limit(10);
 
         const totalElement=await Product.countDocuments(filterQuery);

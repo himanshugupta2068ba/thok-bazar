@@ -42,7 +42,7 @@ class SellerController{
 
      async updateSeller(req,res){
         try{
-            const existingSeller=await req.seller;
+                const existingSeller=await req.user;
             const seller=await SellerService.updateSeller(existingSeller,req.body)
             res.status(200).json(seller);       
         }catch(error){

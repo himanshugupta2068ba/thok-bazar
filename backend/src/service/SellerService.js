@@ -26,6 +26,14 @@ class SellerService {
     return await newSeller.save();
    }
 
+    async getAllSeller(status){
+        const query = {};
+        if(status){
+            query.accountStatus = status;
+        }
+        return await Seller.find(query).sort({createdAt:-1});
+    }
+
     async getSellerProfile(jwt){
         const email=jwtprovider.getEmailFromjwt(jwt);
         return this.getSellerByEmail(email);

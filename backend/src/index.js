@@ -35,6 +35,7 @@ const TransactionRoutes=require('./routers/TransactionROutes');
 const SellerReportRoutes=require('./routers/SellerReportRoutes');
 const HomeCategoryRoutes=require('./routers/HomeCategoryRoutes');
 const dealRoutes=require('./routers/DealRoutes');
+const couponRoutes=require('./routers/CouponRoutes');
 
 // app.use(cors());
 app.use(bodyParser.json());
@@ -54,6 +55,7 @@ app.use('/transactions',TransactionRoutes);
 app.use('/seller-reports',SellerReportRoutes);
 app.use('/home-categories',HomeCategoryRoutes);
 app.use('/deals',dealRoutes);
+app.use('/coupons',couponRoutes);
 
 
 const ports = process.env.PORT || 5000;

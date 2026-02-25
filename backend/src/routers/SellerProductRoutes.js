@@ -1,7 +1,7 @@
 const express=require('express');
 const router=express.Router();
 const SellerProductController=require('../controllers/ProductController');
-const authenticateSeller=require('../middlewares/authMiddleware');
+const authenticateSeller=require('../middlewares/sellerAuthMiddleware');
 
 router.get('/',authenticateSeller,SellerProductController.getProductBySellerId);
 

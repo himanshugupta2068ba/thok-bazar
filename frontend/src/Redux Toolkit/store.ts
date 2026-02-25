@@ -12,6 +12,10 @@ import sellerSlice from './featurs/seller/sellerAuthentication';
 import sellerOrderSlice from './featurs/seller/sellerOrderSlice';
 import sellerProductSlice from './featurs/seller/sellerProductSlice';
 import sellerDataSlice from './featurs/seller/sellerSlice';
+import transactionSlice from './featurs/seller/transactionSlice';
+import adminSlice from './featurs/admin/adminSlice';
+import dealSlice from './featurs/admin/DealSlice';
+import adminCouponSlice from './featurs/admin/couponSlice';
 
 const rootReducer = combineReducers({
     auth:authSlice,
@@ -21,13 +25,19 @@ const rootReducer = combineReducers({
     cart:cartSlice,
     coupon:couponSlice,
     homeCategory:HomeCategorySlice,
-
+    
 
     //seller reducer
     seller:sellerSlice,
     sellerOrders:sellerOrderSlice,
     sellerProducts:sellerProductSlice,
-    sellerData:sellerDataSlice
+    sellerData:sellerDataSlice,
+    sellerTransactions:transactionSlice,
+
+    //adminreducer
+    adminSlice:adminSlice,
+    deals:dealSlice,
+    adminCoupons:adminCouponSlice
 })
 
 const store = configureStore({

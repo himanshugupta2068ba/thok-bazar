@@ -10,7 +10,8 @@ class SellerProductController{
         try{
             const seller=req.user;
             const productService=new ProductService();
-            const products=await productService.getProductsBySellerId(seller._id,req.query.page);
+            const pageNumber = req.query.pageNumber ?? req.query.page ?? 0;
+            const products=await productService.getProductsBySellerId(seller._id,pageNumber);
             res.status(200).json(products);
         }catch(error){
             res.status(500).json({message:'Error fetching products: '+error.message});
