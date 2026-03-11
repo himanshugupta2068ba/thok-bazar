@@ -39,7 +39,7 @@ class SellerService {
         return this.getSellerByEmail(email);
     }
     async getSellerByEmail(email){
-        const seller=await Seller.findOne({email:email})
+        const seller=await Seller.findOne({email:email}).populate("pickupAddress")
         if(!seller){
             throw new Error("Seller Not found");
         }

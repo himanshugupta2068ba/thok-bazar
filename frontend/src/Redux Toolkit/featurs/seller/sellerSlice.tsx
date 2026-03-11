@@ -33,6 +33,7 @@ export const fetchSellerProfile = createAsyncThunk<any, any>(
             Authorization: `Bearer ${jwt}`,
         },
       });
+      console.log("Fetched seller profile:", response.data);
       return response.data;
     } catch (error: any) {
             return rejectWithValue(getErrorMessage(error));

@@ -59,9 +59,9 @@ export const verifyLoginOtp = createAsyncThunk<any, any>(
       if (response.data?.jwt) {
         localStorage.setItem("sellerJwt", response.data.jwt);
       }
-
+// console.log("Login response:", response.data);
       if (typeof data.navigate === "function") {
-        data.navigate("/seller/dashboard");
+        data.navigate("/seller/account");
       }
 
       return response.data;

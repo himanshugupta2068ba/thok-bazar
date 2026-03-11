@@ -8,8 +8,10 @@ import {
   Receipt,
   ShoppingBag,
 } from "@mui/icons-material";
-import { Divider, ListItem, ListItemIcon, ListItemText } from "@mui/material";
+import { Divider, ListItemIcon, ListItemText } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
+import { useAppDispatch } from "../../Redux Toolkit/store";
+import { logoutSeller } from "../../Redux Toolkit/featurs/seller/sellerAuthentication";
 
 const menu = [
   {
@@ -68,10 +70,12 @@ const menu2 = [
 export const SellerDrawwerList = ({ toggleDrawwer }: any) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
   const handleLogout = () => {
-    localStorage.removeItem("sellerToken");
+    dispatch(logoutSeller());
     if (toggleDrawwer) toggleDrawwer(false);
-    navigate("/seller/login");
+    navigate("/");
   };
 
   const handleCLick = (path: string) => {
@@ -85,7 +89,7 @@ export const SellerDrawwerList = ({ toggleDrawwer }: any) => {
   return (
     <div className="w-75 h-full flex flex-col justify-between border-r border-gray-200 gap-5 py-10">
       <div className="space-y-2">
-        {menu.map((item, index) => (
+        {menu.map((item) => (
           <div
             key={item.path}
             className="pr-9 cursor-pointer"
@@ -106,7 +110,7 @@ export const SellerDrawwerList = ({ toggleDrawwer }: any) => {
       </div>
          <div className="space-y-2">
             <Divider className="py-30"/>
-        {menu2.map((item, index) => (
+        {menu2.map((item) => (
           <div
             key={item.path}
             className="pr-9 cursor-pointer"

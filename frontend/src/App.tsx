@@ -19,6 +19,7 @@ import { Dashboard } from './admin/Dashboard/Dashboard'
 import { useAppDispatch, useAppSelector } from './Redux Toolkit/store'
 import { useEffect } from 'react'
 import { fetchUserProfile } from './Redux Toolkit/featurs/coustomer/userSlice'
+import { fetchSellerProfile } from './Redux Toolkit/featurs/seller/sellerSlice'
 
 function App() {
   
@@ -27,8 +28,14 @@ function App() {
 
   useEffect(()=>{
     const jwt = auth.jwt?.trim() || localStorage.getItem("jwt");
+    const sellerJwt= localStorage.getItem("sellerJwt");
+
+    if(sellerJwt){
+      dispatch(fetchSellerProfile(sellerJwt));
+    }
     if(jwt){
       dispatch(fetchUserProfile(jwt));
+      // dispatch(fetchSellerProfile());
     }
   },[auth.jwt,dispatch])
 

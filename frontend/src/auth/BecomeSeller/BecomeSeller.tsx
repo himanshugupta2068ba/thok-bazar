@@ -9,7 +9,7 @@ export const BecomeSeller = () => {
    <div className="grid md:gap-10 grid-cols-3 min-h-screen">
     <section className="lg:col-span-1 md:col-span-2 col-span-3 shadow-lg rounded-b-md ml-3">
  {
-    isloggedIn ? <SellerAccountForm/> : <SellerLogin/>
+     isloggedIn ? <SellerAccountForm onSuccess={() => setIsLoggedIn(false)} /> : <SellerLogin/>
  }
  <div className="mt-10 space-y-2 mb-10">
     <h1 className="text-center text-sm font-medium">

@@ -8,6 +8,7 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Button, IconButton } from '@mui/material';
 import { Edit } from '@mui/icons-material';
+import { useAppSelector } from '../../Redux Toolkit/store';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -29,25 +30,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-function createData(
-  name: string,
-  calories: number,
-  fat: number,
-  carbs: number,
-  protein: number,
-) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
-
 export default function ProductTables() {
+  const { products } = useAppSelector((state) => state.sellerProducts);
+
   return (
     <TableContainer component={Paper}>
       <Table sx={{ minWidth: 700 }} aria-label="customized table">
@@ -62,21 +47,21 @@ export default function ProductTables() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
-            <StyledTableRow key={row.name}>
+          {products.map((row: any) => (
+            <StyledTableRow key={row._id || row.id}>
               <StyledTableCell component="th" scope="row">
-                <div>
-                    {[1,1,1,1].map((i) => (
-                        <img key={i} src="https://avatars.githubusercontent.com/u/196467988?v=4" alt="product" className='w-10 h-10 rounded-full object-cover'/>
+                <div className='flex items-center gap-2'>
+                    {(row.images?.length ? row.images : ["https://via.placeholder.com/40"]).slice(0, 3).map((img: string, index: number) => (
+                        <img key={`${row._id || row.id}-${index}`} src={img} alt="product" className='w-10 h-10 rounded-full object-cover'/>
                     ))}
                 </div>
               </StyledTableCell>
-              <StyledTableCell align="right">{row.calories}</StyledTableCell>
-              <StyledTableCell align="right">{row.fat}</StyledTableCell>
-              <StyledTableCell align="right">{row.carbs}</StyledTableCell>
+              <StyledTableCell align="right">{row.title || "-"}</StyledTableCell>
+              <StyledTableCell align="right">{row.mrpPrice ?? "-"}</StyledTableCell>
+              <StyledTableCell align="right">{row.sellingPrice ?? "-"}</StyledTableCell>
               <StyledTableCell align="right">
                 <Button size='small'>
-                    in_stock
+                    {row.stock > 0 ? "in_stock" : "out_of_stock"}
                 </Button>
               </StyledTableCell>
                   <StyledTableCell align="right">
@@ -86,6 +71,13 @@ export default function ProductTables() {
                   </StyledTableCell>
             </StyledTableRow>
           ))}
+          {!products.length && (
+            <StyledTableRow>
+              <StyledTableCell colSpan={6} align="center">
+                No products found
+              </StyledTableCell>
+            </StyledTableRow>
+          )}
         </TableBody>
       </Table>
     </TableContainer>

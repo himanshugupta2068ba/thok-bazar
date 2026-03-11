@@ -19,8 +19,9 @@ console.log("Received email for OTP:", email);
        if(email.startsWith(SIGNIN_PREFIX)){
         email=email.substring(SIGNIN_PREFIX.length);
         const seller=await Seller.findOne({email});
+        console.log("seller:",seller);
         const user=await User.findOne({email});
-        if(!seller && !user) throw new Error("Seller or User not found");
+        if(!seller || !user) throw new Error("Seller or User not found");
        }
 const validator = require("validator");
 
