@@ -10,7 +10,8 @@ import {
   Select,
 } from "@mui/material";
 import { AddPhotoAlternate, Close } from "@mui/icons-material";
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
 import mainCategory from "../../data/category/mainCategory";
 import { menLevelTwo } from "../../data/category/level2/menlevelTwo";
@@ -24,6 +25,13 @@ import { homethirdlevel } from "../../data/category/level3/homelivinglevel3";
 import { electronicthirdlevel } from "../../data/category/level3/electronicslevel3";
 
 import { colours } from "../../data/Filters/colour";
+import { uploadToCloudiniary } from "../../util/uploadToCloudNarry";
+import {
+  clearSellerProductError,
+  clearSellerProductMessage,
+  createSellerProduct,
+} from "../../Redux Toolkit/featurs/seller/sellerProductSlice";
+import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
 
 const sizes = ["S", "M", "L", "XL", "XXL"];
 
@@ -31,7 +39,7 @@ const categories2: { [key: string]: any[] } = {
   men: menLevelTwo,
   women: womenLevelTwo,
   kids: [],
-  homeliving: homelivingLevelTwo,
+  "home-living": homelivingLevelTwo,
   beauty: [],
   electronics: electronicsLevelTwo,
 };
@@ -40,13 +48,29 @@ const categories3: { [key: string]: any[] } = {
   men: menthirdlevel,
   women: womenthirdlevel,
   kids: [],
-  homeliving: homethirdlevel,
+  "home-living": homethirdlevel,
   beauty: [],
   electronics: electronicthirdlevel,
 };
 
 export const AddProduct = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [uploadedImages, setUploadedImages] = useState(false);
+  const { loading, error, successMessage } = useAppSelector(
+    (state) => state.sellerProducts,
+  );
+
+  const jwtToken =
+    useAppSelector((state) => state.seller?.jwt) ||
+    localStorage.getItem("sellerJwt");
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearSellerProductError());
+      dispatch(clearSellerProductMessage());
+    };
+  }, [dispatch]);
 
   const formik = useFormik({
     initialValues: {
@@ -60,19 +84,60 @@ export const AddProduct = () => {
       category3: "",
       colors: "",
       sizes: "",
-      images: ["https://avatars.githubusercontent.com/u/196467988?v=4"],
+      images: [],
     },
     onSubmit: (values) => {
-      console.log(values);
+      if (!jwtToken) {
+        console.error("Seller not authenticated. Please login again.");
+        return;
+      }
+
+      dispatch(createSellerProduct({ productData: values, jwt: jwtToken }))
+        .unwrap()
+        .then(() => {
+          formik.resetForm();
+          navigate("/seller/products");
+        })
+        .catch((submitError: unknown) => {
+          console.error("Create product failed:", submitError);
+        });
     },
   });
 
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    formik.setFieldValue("category2", "");
+    formik.setFieldValue("category3", "");
+  }, [formik.values.category]);
+
+  useEffect(() => {
+    formik.setFieldValue("category3", "");
+  }, [formik.values.category2]);
+
+  const handleImageChange = async (event: any) => {
+    const selectedFiles = Array.from(event.target.files || []) as File[];
+    if (!selectedFiles.length) return;
+
+    setUploadedImages(true);
+
+    try {
+      const uploadedUrls = await Promise.all(
+        selectedFiles.map((file) => uploadToCloudiniary(file)),
+      );
+
+      formik.setFieldValue("images", [...formik.values.images, ...uploadedUrls]);
+    } catch (error) {
+      console.error("Image upload failed:", error);
+    } finally {
+      setUploadedImages(false);
+      event.target.value = "";
+    }
+
     console.log("Selected files:", event.target.files);
   };
 
   const handleRemoveImage = (index: number) => {
-    console.log("Remove image at index:", index);
+    const updatedImages = formik.values.images.filter((_, i) => i !== index);
+    formik.setFieldValue("images", updatedImages);
   };
 
  const childCategoryOptions = (category: any[] = [], parentCategoryId: any) => {
@@ -85,6 +150,8 @@ export const AddProduct = () => {
   return (
     <div className="p-5">
       <h1 className="text-2xl font-bold text-center">Add Product</h1>
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {successMessage && <p className="mt-3 text-sm text-green-600">{successMessage}</p>}
 
       <form onSubmit={formik.handleSubmit}>
         <Grid container spacing={3} className="mt-5">
@@ -287,7 +354,7 @@ export const AddProduct = () => {
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <Button type="submit" variant="contained">
+            <Button type="submit" variant="contained" disabled={loading || uploadedImages}>
               Add Product
             </Button>
           </Grid>

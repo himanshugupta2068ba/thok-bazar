@@ -7,8 +7,14 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Button, IconButton } from '@mui/material';
-import { Edit } from '@mui/icons-material';
-import { useAppSelector } from '../../Redux Toolkit/store';
+import { Delete, Edit } from '@mui/icons-material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import {
+  deleteSellerProduct,
+  updateSellerProduct,
+} from '../../Redux Toolkit/featurs/seller/sellerProductSlice';
+import { useAppDispatch, useAppSelector } from '../../Redux Toolkit/store';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -31,7 +37,49 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 export default function ProductTables() {
-  const { products } = useAppSelector((state) => state.sellerProducts);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { products, loading } = useAppSelector((state) => state.sellerProducts);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const jwtToken = localStorage.getItem("sellerJwt");
+
+  const handleDelete = async (productId: string) => {
+    if (!jwtToken || !productId) return;
+
+    const shouldDelete = window.confirm("Delete this product?");
+    if (!shouldDelete) return;
+
+    try {
+      setProcessingId(productId);
+      await dispatch(deleteSellerProduct({ productId, jwt: jwtToken })).unwrap();
+    } catch (error) {
+      console.error("Delete product failed:", error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleToggleStock = async (row: any) => {
+    const productId = row?._id || row?.id;
+    if (!jwtToken || !productId) return;
+
+    const nextStock = Number(row?.stock) > 0 ? 0 : 1;
+
+    try {
+      setProcessingId(productId);
+      await dispatch(
+        updateSellerProduct({
+          productId,
+          updates: { stock: nextStock },
+          jwt: jwtToken,
+        }),
+      ).unwrap();
+    } catch (error) {
+      console.error("Update stock failed:", error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   return (
     <TableContainer component={Paper}>
@@ -42,8 +90,9 @@ export default function ProductTables() {
             <StyledTableCell align="right">Title</StyledTableCell>
             <StyledTableCell align="right">MRP Price</StyledTableCell>
             <StyledTableCell align="right">Selling Price</StyledTableCell>
-            <StyledTableCell align="right">Update stock</StyledTableCell>
+            <StyledTableCell align="right">Stock</StyledTableCell>
             <StyledTableCell align="right">Update</StyledTableCell>
+            <StyledTableCell align="right">Delete</StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -60,20 +109,38 @@ export default function ProductTables() {
               <StyledTableCell align="right">{row.mrpPrice ?? "-"}</StyledTableCell>
               <StyledTableCell align="right">{row.sellingPrice ?? "-"}</StyledTableCell>
               <StyledTableCell align="right">
-                <Button size='small'>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  disabled={loading || processingId === (row._id || row.id)}
+                  onClick={() => handleToggleStock(row)}
+                >
                     {row.stock > 0 ? "in_stock" : "out_of_stock"}
                 </Button>
               </StyledTableCell>
                   <StyledTableCell align="right">
-                    <IconButton color='primary' className='bg-teal-500'>
+                    <IconButton
+                      color='primary'
+                      className='bg-teal-500'
+                      onClick={() => navigate(`/seller/products/${row._id || row.id}/edit`)}
+                    >
                         <Edit/>
+                    </IconButton>
+                  </StyledTableCell>
+                  <StyledTableCell align="right">
+                    <IconButton
+                      color='error'
+                      disabled={loading || processingId === (row._id || row.id)}
+                      onClick={() => handleDelete(row._id || row.id)}
+                    >
+                        <Delete/>
                     </IconButton>
                   </StyledTableCell>
             </StyledTableRow>
           ))}
           {!products.length && (
             <StyledTableRow>
-              <StyledTableCell colSpan={6} align="center">
+              <StyledTableCell colSpan={7} align="center">
                 No products found
               </StyledTableCell>
             </StyledTableRow>

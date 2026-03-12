@@ -1,12 +1,18 @@
 import { useRef } from "react";
 import Slider from "react-slick";
 import { DealCard } from "./DealCard.tsx";
+import { useAppSelector } from "../../../../Redux Toolkit/store";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const Deal = () => {
   const sliderRef = useRef<Slider | null>(null);
+  const deals = useAppSelector((state) =>
+    state.homeCategory.homeCategories.filter(
+      (item: any) => item.section === "TOP_DEALS",
+    ),
+  );
 
   const settings = {
     dots: false,
@@ -20,13 +26,12 @@ const Deal = () => {
   return (
     <div className="slide-container gap-5">
       <Slider ref={sliderRef} {...settings}>
-        {Array.from({ length: 7 }).map((_, i) => (
+        {deals.map((item: any) => (
           <DealCard
-            key={i}
+            key={item._id || item.categoryId}
             deal={{
-              image:
-                "https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&auto=format&fit=crop&q=60",
-              discount: "10"
+              image: item.image,
+              name: item.name,
             }}
           />
         ))}

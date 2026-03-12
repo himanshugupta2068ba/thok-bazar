@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router"
-import { SellerDashboard } from "../seller/SellerDashboard/SellerDashboards"
 import { HomePage } from "../seller/HomePage/HomePage"
 import { Product } from "../seller/Products/Product"
 import { AddProduct } from "../seller/Products/AddProduct"
+import { EditProduct } from "../seller/Products/EditProduct"
 import { Order } from "../seller/Orders/Order"
 import { Account } from "../seller/Account/Account"
 import { Transaction } from "../seller/Transaction/Transaction"
@@ -14,6 +14,7 @@ export const SellerRoutes=()=>{
             <Route path="/" element={<HomePage/>}/>
             <Route path="/products" element={<Product/>}/>
             <Route path="/add-product" element={<AddProduct/>}/>
+            <Route path="/products/:productId/edit" element={<EditProduct/>}/>
             <Route path="/orders" element={<Order/>}/>
             <Route path="/account" element={<Account/>}/>
             <Route path="/transactions" element={<Transaction/>}/>
