@@ -46,8 +46,7 @@ export const LoginForm=()=>{
             return;
         }
         dispatch(clearError());
-        // Send with "signin_" prefix to indicate login OTP (backend requirement)
-        dispatch(sendLoginSignupOtp({email:`signin_${formik.values.email}`}));
+        dispatch(sendLoginSignupOtp({email:`signin_user_${formik.values.email}`}));
     }
 
     const getErrorMessage = () => {

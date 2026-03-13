@@ -14,17 +14,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 import mainCategory from "../../data/category/mainCategory";
-import { menLevelTwo } from "../../data/category/level2/menlevelTwo";
-import { womenLevelTwo } from "../../data/category/level2/womenlevel2";
-import { homelivingLevelTwo } from "../../data/category/level2/homelivinglevel2";
-import { electronicsLevelTwo } from "../../data/category/level2/eletronicslevel2";
-
-import { menthirdlevel } from "../../data/category/level3/menthirdlevel";
-import { womenthirdlevel } from "../../data/category/level3/womenthirdlevel";
-import { homethirdlevel } from "../../data/category/level3/homelivinglevel3";
-import { electronicthirdlevel } from "../../data/category/level3/electronicslevel3";
-
-import { colours } from "../../data/Filters/colour";
 import { uploadToCloudiniary } from "../../util/uploadToCloudNarry";
 import {
   clearSellerProductError,
@@ -32,26 +21,12 @@ import {
   createSellerProduct,
 } from "../../Redux Toolkit/featurs/seller/sellerProductSlice";
 import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
-
-const sizes = ["S", "M", "L", "XL", "XXL"];
-
-const categories2: { [key: string]: any[] } = {
-  men: menLevelTwo,
-  women: womenLevelTwo,
-  kids: [],
-  "home-living": homelivingLevelTwo,
-  beauty: [],
-  electronics: electronicsLevelTwo,
-};
-
-const categories3: { [key: string]: any[] } = {
-  men: menthirdlevel,
-  women: womenthirdlevel,
-  kids: [],
-  "home-living": homethirdlevel,
-  beauty: [],
-  electronics: electronicthirdlevel,
-};
+import {
+  getLevelThreeOptions,
+  getLevelTwoOptions,
+  getProductSpecificationFields,
+} from "../../data/product/productConfig";
+import { ProductSpecificationFields } from "./ProductSpecificationFields";
 
 export const AddProduct = () => {
   const dispatch = useAppDispatch();
@@ -82,9 +57,8 @@ export const AddProduct = () => {
       category: "",
       category2: "",
       category3: "",
-      colors: "",
-      sizes: "",
       images: [],
+      specifications: {} as Record<string, string>,
     },
     onSubmit: (values) => {
       if (!jwtToken) {
@@ -107,6 +81,7 @@ export const AddProduct = () => {
   useEffect(() => {
     formik.setFieldValue("category2", "");
     formik.setFieldValue("category3", "");
+    formik.setFieldValue("specifications", {});
   }, [formik.values.category]);
 
   useEffect(() => {
@@ -140,12 +115,19 @@ export const AddProduct = () => {
     formik.setFieldValue("images", updatedImages);
   };
 
- const childCategoryOptions = (category: any[] = [], parentCategoryId: any) => {
-  if (!parentCategoryId) return [];
-  return category.filter(
-    (c) => String(c.parentCategoryId) === String(parentCategoryId)
+  const specificationFields = getProductSpecificationFields(formik.values.category);
+  const levelTwoOptions = getLevelTwoOptions(formik.values.category);
+  const levelThreeOptions = getLevelThreeOptions(
+    formik.values.category,
+    formik.values.category2,
   );
-};
+
+  const handleSpecificationChange = (key: string, value: string) => {
+    formik.setFieldValue("specifications", {
+      ...formik.values.specifications,
+      [key]: value,
+    });
+  };
 
   return (
     <div className="p-5">
@@ -208,7 +190,6 @@ export const AddProduct = () => {
           {/* Text Inputs */}
           {[
             ["title", "Product Title"],
-            ["description", "Product Description"],
           ].map(([name, placeholder]) => (
             <Grid key={name} size={{ xs: 12, md: 6 }}>
               <input
@@ -220,6 +201,16 @@ export const AddProduct = () => {
               />
             </Grid>
           ))}
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <textarea
+              name="description"
+              placeholder="Product Description"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              className="min-h-28 w-full rounded-md border-2 border-gray-300 p-2"
+            />
+          </Grid>
 
           {[
             ["mrpPrice", "MRP Price"],
@@ -275,7 +266,7 @@ export const AddProduct = () => {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                {categories2[formik.values.category]?.map((item, i) => (
+                {levelTwoOptions.map((item, i) => (
                   <MenuItem key={i} value={item.categoryId}>
                     {item.name}
                   </MenuItem>
@@ -298,7 +289,7 @@ export const AddProduct = () => {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                {childCategoryOptions(categories3[formik.values.category],formik.values.category2)?.map((item, i) => (
+                {levelThreeOptions.map((item, i) => (
                   <MenuItem key={i} value={item.categoryId}>
                     {item.name}
                   </MenuItem>
@@ -307,54 +298,36 @@ export const AddProduct = () => {
             </FormControl>
           </Grid>
 
-          {/* Colors */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth>
-              <InputLabel id="colors-label">Colors</InputLabel>
-              <Select
-                labelId="colors-label"
-                name="colors"
-                value={formik.values.colors}
-                label="Colors"
-                onChange={formik.handleChange}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {colours.map((c, i) => (
-                  <MenuItem key={i} value={c.name}>
-                    {c.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+          {formik.values.category ? (
+            <>
+              <Grid size={{ xs: 12 }}>
+                <div className="rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+                  Category-specific details are now tailored for the selected main
+                  category, so electronics, fashion, and home products each get
+                  relevant fields.
+                </div>
+              </Grid>
 
-          {/* Sizes */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth>
-              <InputLabel id="sizes-label">Sizes</InputLabel>
-              <Select
-                labelId="sizes-label"
-                name="sizes"
-                value={formik.values.sizes}
-                label="Sizes"
-                onChange={formik.handleChange}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {sizes.map((s) => (
-                  <MenuItem key={s} value={s}>
-                    {s}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+              <ProductSpecificationFields
+                fields={specificationFields}
+                values={formik.values.specifications}
+                onChange={handleSpecificationChange}
+              />
+            </>
+          ) : null}
 
           <Grid size={{ xs: 12 }}>
-            <Button type="submit" variant="contained" disabled={loading || uploadedImages}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={
+                loading ||
+                uploadedImages ||
+                !formik.values.category ||
+                !formik.values.category2 ||
+                !formik.values.category3
+              }
+            >
               Add Product
             </Button>
           </Grid>

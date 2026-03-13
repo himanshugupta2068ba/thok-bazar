@@ -29,7 +29,7 @@ const ElectronicCategory = () => {
     };
 
     return(
-       <div className="py-5 lg:px-20 border-b">
+    <div className="py-5 lg:px-20 border-b z-0 relative">
         <Slider {...settings}>
             {electronics.map((item: any) => (
                 <ElectronicCategoryCard key={item._id || item.categoryId} ListItem={item}/>

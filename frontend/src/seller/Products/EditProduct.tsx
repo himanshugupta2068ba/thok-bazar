@@ -1,13 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useFormik } from "formik";
-import { Button, CircularProgress, Grid } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+} from "@mui/material";
 import {
   fetchSellerProducts,
   updateSellerProduct,
 } from "../../Redux Toolkit/featurs/seller/sellerProductSlice";
 import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
 import { uploadToCloudiniary } from "../../util/uploadToCloudNarry";
+import mainCategory from "../../data/category/mainCategory";
+import {
+  getLevelThreeOptions,
+  getLevelTwoOptions,
+  getProductSpecificationFields,
+  getSpecificationValue,
+  resolveCategoryPath,
+} from "../../data/product/productConfig";
+import { ProductSpecificationFields } from "./ProductSpecificationFields";
 
 export const EditProduct = () => {
   const dispatch = useAppDispatch();
@@ -29,6 +46,28 @@ export const EditProduct = () => {
     [products, productId],
   );
 
+  const resolvedCategoryPath = useMemo(() => {
+    return resolveCategoryPath(
+      product?.subSubCategory || product?.category?.categoryId || product?.subCategory,
+      product?.mainCategory,
+    );
+  }, [product]);
+
+  const initialMainCategory = product?.mainCategory || resolvedCategoryPath.mainCategory;
+  const initialSpecificationFields = getProductSpecificationFields(initialMainCategory);
+  const initialSpecifications = useMemo(() => {
+    const specifications = { ...(product?.specifications || {}) } as Record<string, string>;
+
+    initialSpecificationFields.forEach((field) => {
+      const value = getSpecificationValue(product, field.key);
+      if (value) {
+        specifications[field.key] = String(value);
+      }
+    });
+
+    return specifications;
+  }, [initialSpecificationFields, product]);
+
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -37,9 +76,11 @@ export const EditProduct = () => {
       mrpPrice: product?.mrpPrice || "",
       sellingPrice: product?.sellingPrice || "",
       stock: product?.stock ?? 0,
-      color: product?.color || "",
-      size: product?.size || "",
+      category: initialMainCategory || "",
+      category2: product?.subCategory || resolvedCategoryPath.subCategory || "",
+      category3: product?.subSubCategory || resolvedCategoryPath.subSubCategory || "",
       images: product?.images || [],
+      specifications: initialSpecifications,
     },
     onSubmit: (values) => {
       if (!jwtToken || !productId) {
@@ -56,8 +97,10 @@ export const EditProduct = () => {
             mrpPrice: Number(values.mrpPrice),
             sellingPrice: Number(values.sellingPrice),
             stock: Number(values.stock),
-            color: values.color,
-            size: values.size,
+            categoryId: values.category,
+            subCategoryId: values.category2,
+            subSubCategoryId: values.category3,
+            specifications: values.specifications,
             images: values.images,
           },
           jwt: jwtToken,
@@ -96,6 +139,32 @@ export const EditProduct = () => {
     formik.setFieldValue("images", updatedImages);
   };
 
+  const handleMainCategoryChange = (value: string) => {
+    formik.setFieldValue("category", value);
+    formik.setFieldValue("category2", "");
+    formik.setFieldValue("category3", "");
+    formik.setFieldValue("specifications", {});
+  };
+
+  const handleSubCategoryChange = (value: string) => {
+    formik.setFieldValue("category2", value);
+    formik.setFieldValue("category3", "");
+  };
+
+  const handleSpecificationChange = (key: string, value: string) => {
+    formik.setFieldValue("specifications", {
+      ...formik.values.specifications,
+      [key]: value,
+    });
+  };
+
+  const levelTwoOptions = getLevelTwoOptions(formik.values.category);
+  const levelThreeOptions = getLevelThreeOptions(
+    formik.values.category,
+    formik.values.category2,
+  );
+  const specificationFields = getProductSpecificationFields(formik.values.category);
+
   if (!product && loading) {
     return <p className="text-sm text-gray-600">Loading product...</p>;
   }
@@ -128,12 +197,12 @@ export const EditProduct = () => {
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <input
+            <textarea
               name="description"
               placeholder="Product Description"
               value={formik.values.description}
               onChange={formik.handleChange}
-              className="w-full border-2 border-gray-300 rounded-md p-2"
+              className="min-h-28 w-full rounded-md border-2 border-gray-300 p-2"
             />
           </Grid>
 
@@ -170,25 +239,83 @@ export const EditProduct = () => {
             />
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <input
-              name="color"
-              placeholder="Color"
-              value={formik.values.color}
-              onChange={formik.handleChange}
-              className="w-full border-2 border-gray-300 rounded-md p-2"
-            />
+          <Grid size={{ xs: 12, md: 4 }}>
+            <FormControl fullWidth>
+              <InputLabel id="edit-category-label">Category</InputLabel>
+              <Select
+                labelId="edit-category-label"
+                value={formik.values.category}
+                label="Category"
+                onChange={(event) => handleMainCategoryChange(String(event.target.value))}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {mainCategory.map((item) => (
+                  <MenuItem key={item.categoryid} value={item.categoryid}>
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <input
-              name="size"
-              placeholder="Size"
-              value={formik.values.size}
-              onChange={formik.handleChange}
-              className="w-full border-2 border-gray-300 rounded-md p-2"
-            />
+          <Grid size={{ xs: 12, md: 4 }}>
+            <FormControl fullWidth>
+              <InputLabel id="edit-category2-label">Category 2</InputLabel>
+              <Select
+                labelId="edit-category2-label"
+                value={formik.values.category2}
+                label="Category 2"
+                onChange={(event) => handleSubCategoryChange(String(event.target.value))}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {levelTwoOptions.map((item, index) => (
+                  <MenuItem key={`${item.categoryId}-${index}`} value={item.categoryId}>
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <FormControl fullWidth>
+              <InputLabel id="edit-category3-label">Category 3</InputLabel>
+              <Select
+                labelId="edit-category3-label"
+                value={formik.values.category3}
+                label="Category 3"
+                onChange={(event) =>
+                  formik.setFieldValue("category3", String(event.target.value))
+                }
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {levelThreeOptions.map((item, index) => (
+                  <MenuItem key={`${item.categoryId}-${index}`} value={item.categoryId}>
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <div className="rounded-2xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+              Product specifications adapt to the current main category, so you
+              can keep apparel, electronics, and home products cleanly structured.
+            </div>
+          </Grid>
+
+          <ProductSpecificationFields
+            fields={specificationFields}
+            values={formik.values.specifications}
+            onChange={handleSpecificationChange}
+          />
 
           <Grid size={{ xs: 12 }}>
             <input
@@ -221,7 +348,13 @@ export const EditProduct = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={loading || uploadingImages}
+              disabled={
+                loading ||
+                uploadingImages ||
+                !formik.values.category ||
+                !formik.values.category2 ||
+                !formik.values.category3
+              }
             >
               Update Product
             </Button>

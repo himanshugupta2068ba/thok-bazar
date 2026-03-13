@@ -2,7 +2,6 @@
 import { ThemeProvider } from '@emotion/react'
 import './App.css'
 import { customTheme } from './Theme/custom_theme'
-import { Footer } from './customer/Footer/Footer'
 import { Route, Routes } from 'react-router'
 import { SellerDashboard } from './seller/SellerDashboard/SellerDashboards'
 import { BecomeSeller } from './auth/BecomeSeller/BecomeSeller'
@@ -55,7 +54,6 @@ function App() {
    <Route path='/admin/*' element={<Dashboard/>}/>
 
 </Routes>
-        <Footer/> 
   </ThemeProvider>
   )
 }

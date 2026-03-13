@@ -64,13 +64,40 @@ class SellerProductController{
             res.status(500).json({message:'Error searching products: '+error.message});
         }
     }
-  async getAllProducts(req,res){
+    async getAllProducts(req,res){
         try{
             // const productService=new ProductService();
             const products=await productService.getAllProducts(req.query);
             res.status(200).json(products);
         }catch(error){
             res.status(500).json({message:'Error fetching products: '+error.message});
+        }
+    }
+
+    async getProductReviews(req,res){
+        try{
+            const reviews = await productService.getProductReviews(req.params.productId);
+            res.status(200).json(reviews);
+        }catch(error){
+            res.status(500).json({message:'Error fetching reviews: '+error.message});
+        }
+    }
+
+    async createProductReview(req,res){
+        try{
+            const reviews = await productService.createProductReview(req.params.productId, req.user, req.body);
+            res.status(201).json(reviews);
+        }catch(error){
+            res.status(400).json({message:'Error creating review: '+error.message});
+        }
+    }
+
+    async getSimilarProducts(req,res){
+        try{
+            const products = await productService.getSimilarProducts(req.params.productId);
+            res.status(200).json(products);
+        }catch(error){
+            res.status(500).json({message:'Error fetching similar products: '+error.message});
         }
     }
 

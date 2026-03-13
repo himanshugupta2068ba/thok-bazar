@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   AccountCircle,
   AddShoppingCart,
-  Favorite,
   FavoriteBorder,
   Menu,
   Search,
@@ -33,8 +32,17 @@ export const Navbar = () => {
   //   setIsLoggedIn(true);
   // }
   const navigate=useNavigate();
+
+  const handleMainCategoryClick = (categoryId: string) => {
+    setShowSheet(false);
+    navigate(`/products/${categoryId}`);
+  };
+
   return (
-    <Box className="sticky top-0 left-0 right-0 bg-white blur-bg bg-opacity-80">
+    <Box
+      onMouseLeave={() => setShowSheet(false)}
+      className="sticky top-0 left-0 right-0 bg-white blur-bg bg-opacity-80 z-120"
+    >
       <div className="flex items-center justify-between px-5 lg:px-20 h-17.5 border-b border-gray-200">
         <div className="flex items-center gap-9">
           <div className="flex items-center gap-2">
@@ -50,11 +58,11 @@ export const Navbar = () => {
           <ul className="flex items-center font-medium text-gray-800">
             {mainCategory.map((item) => (
               <li
-                onMouseLeave={() => setShowSheet(false)}
                 onMouseEnter={() => {
                   setShowSheet(true);
                   setSelectedCategory(item.categoryid);
                 }}
+                onClick={() => handleMainCategoryClick(item.categoryid)}
                 key={item.categoryid}
                 className="mainCategory hover:text-teal-600 cursor-pointer hover:border-b-2 h-17 px-4 border[#00927] flex items-center"
               >
@@ -98,13 +106,11 @@ export const Navbar = () => {
       </div>
       {showSheet && isLarge && (
         <Box
-          onMouseLeave={() => setShowSheet(false)}
-          onMouseEnter={() => setShowSheet(true)}
-          className="categorySheet absolute top-[4.4rem] left-20 right-20"
+          className="categorySheet absolute top-[4.4rem] left-20 right-20 z-130"
         >
           <CategorySheet
             selectedCategory={selectedCategory}
-            setShowSheets={setShowSheet}
+            onNavigate={() => setShowSheet(false)}
           />
         </Box>
       )}

@@ -5,6 +5,8 @@ import { api } from "../../../config/api";
 const initialState = {
     product:null,
     products: [],
+    totalPages: 0,
+    totalElements: 0,
     loading: false,
     error: null,
     searchProducts: [],
@@ -47,7 +49,7 @@ export const getAllProducts = createAsyncThunk<any,any>(
             const response = await api.get(`/products`,{
                 params:{
                     ...params,
-                    page: params.pageNumber || 1,
+                    pageNumber: params?.pageNumber ?? 0,
                 }
             });
             console.log("get all products",response.data);
@@ -95,6 +97,8 @@ const productSlice = createSlice({
         builder.addCase(getAllProducts.fulfilled,(state,action)=>{
             state.loading=false;
             state.products=action.payload?.content || action.payload || [];
+            state.totalPages=action.payload?.totalpages || 0;
+            state.totalElements=action.payload?.totalElement || 0;
         });
         builder.addCase(getAllProducts.rejected,(state,action:any)=>{
             state.loading=false;

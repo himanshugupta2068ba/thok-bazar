@@ -51,7 +51,7 @@ export const SellerLogin=()=>{
         }
 
         dispatch(clearSellerError());
-        const email="signin_"+formik.values.email;
+        const email="signin_seller_"+formik.values.email;
         dispatch(sendLoginOtp({ email}));
     };
 

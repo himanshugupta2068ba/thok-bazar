@@ -41,6 +41,18 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    mainCategory: {
+        type: String,
+        trim: true
+    },
+    subCategory: {
+        type: String,
+        trim: true
+    },
+    subSubCategory: {
+        type: String,
+        trim: true
+    },
     color: {
         type: String,
         trim: true
@@ -48,6 +60,10 @@ const productSchema = new mongoose.Schema({
     size: {
         type: String,
         trim: true
+    },
+    specifications: {
+        type: Object,
+        default: {}
     }
 });
 

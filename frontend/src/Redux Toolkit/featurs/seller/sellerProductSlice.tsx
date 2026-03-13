@@ -57,8 +57,9 @@ export const createSellerProduct = createAsyncThunk<any, any>(
           categoryId: productData.category,
           subCategoryId: productData.category2,
           subSubCategoryId: productData.category3,
-          color: productData.colors,
-          size: productData.sizes,
+          color: productData.specifications?.color || "",
+          size: productData.specifications?.size || "",
+          specifications: productData.specifications || {},
           images: productData.images || [],
         },
         {
