@@ -7,6 +7,7 @@ import orderSlice from './featurs/coustomer/orderSlice';
 import cartSlice from './featurs/coustomer/cartSlice';
 import couponSlice from './featurs/coustomer/couponSlice';
 import HomeCategorySlice from './featurs/coustomer/homeCategorySlice';
+import wishlistSlice from './featurs/coustomer/wishlistSlice';
 //seller reducer
 import sellerSlice from './featurs/seller/sellerAuthentication';
 import sellerOrderSlice from './featurs/seller/sellerOrderSlice';
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
     product:productSlice,
     order:orderSlice,
     cart:cartSlice,
+    wishlist:wishlistSlice,
     coupon:couponSlice,
     homeCategory:HomeCategorySlice,
     

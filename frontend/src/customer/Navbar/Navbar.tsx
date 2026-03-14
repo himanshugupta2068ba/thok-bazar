@@ -9,6 +9,7 @@ import {
 } from "@mui/icons-material";
 import {
   Avatar,
+  Badge,
   Box,
   Button,
   IconButton,
@@ -21,11 +22,13 @@ import { CategorySheet } from "./Category";
 import { useNavigate } from "react-router";
 import { useAppSelector } from "../../Redux Toolkit/store";
 export const Navbar = () => {
-  const {user}=useAppSelector((state)=>state);
+  const {user, cart, wishlist}=useAppSelector((state)=>state);
   const theme = useTheme();
   const isLarge = useMediaQuery(theme.breakpoints.up("lg"));
   const [showSheet, setShowSheet] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("menu");
+  const cartItemCount = cart.cart?.totalItems || 0;
+  const wishlistItemCount = wishlist.items?.length || 0;
   // const[isLoggedIn,setIsLoggedIn]=useState(false);
   // const jwt=localStorage.getItem("jwt");
   // if(jwt){
@@ -88,11 +91,15 @@ export const Navbar = () => {
               Login
             </Button>
           )}
-          <IconButton>
-            <FavoriteBorder sx={{ fontSize: 29 }} />
+          <IconButton onClick={()=>navigate("/wishlist")}>
+            <Badge badgeContent={wishlistItemCount} color="secondary">
+              <FavoriteBorder sx={{ fontSize: 29 }} />
+            </Badge>
           </IconButton>
           <IconButton onClick={()=>navigate("/cart")}>
-            <AddShoppingCart sx={{ fontSize: 29 }} />
+            <Badge badgeContent={cartItemCount} color="primary">
+              <AddShoppingCart sx={{ fontSize: 29 }} />
+            </Badge>
           </IconButton>
           <Button
             variant="contained"

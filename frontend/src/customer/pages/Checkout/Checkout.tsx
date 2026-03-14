@@ -12,6 +12,7 @@ import { useState } from "react";
 import { AddressForm } from "./AddressForm";
 import React from "react";
 import { PricingCard } from "../Cart/PricingCard";
+import { useAppSelector } from "../../../Redux Toolkit/store";
 
 const style = {
   position: "absolute",
@@ -37,6 +38,7 @@ const paymentGatwayList = [
 export const Checkout = () => {
   const [open, setOpen] = React.useState(false);
   const [paymentGateway,setPaymentGateway] = useState(paymentGatwayList[0].name);
+  const { cart } = useAppSelector((state) => state);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [selectedAddress, setSelectedAddress] = useState(0);
@@ -63,7 +65,7 @@ export const Checkout = () => {
           <div className="text-sm font-medium space-y-5">
             <p>Saved Adreess</p>
             <div className="border p-5 rounded-md border-gray-400 space-y-5">
-              {[1, 2, 3, 4, 5].map((item, index) => (
+              {[1, 2, 3, 4, 5].map((_, index) => (
                 <AddressCard
                   value={index}
                   selectedValue={selectedAddress}
@@ -103,7 +105,7 @@ export const Checkout = () => {
             </RadioGroup>
           </section>
           <section>
-            <PricingCard />
+            <PricingCard cart={cart.cart} />
             <div className="pt-5">
               <Button fullWidth variant="contained" color="primary">Checkout</Button>
             </div>

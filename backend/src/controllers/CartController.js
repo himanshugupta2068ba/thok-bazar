@@ -30,7 +30,6 @@ class CartController{
                 req.body.size,
                 req.body.quantity
             );
-            cartItem.save();
             res.status(200).json(cartItem);
         }catch(error){
             res.status(500).json({error:error.message});

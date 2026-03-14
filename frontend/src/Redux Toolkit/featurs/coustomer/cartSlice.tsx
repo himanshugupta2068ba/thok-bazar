@@ -26,13 +26,72 @@ const initialState: CartState = {
 
 const API_URL="/cart";
 
+const normalizeCartItem = (item: any): CartItem | null => {
+    if (!item) return null;
+
+    const product = item.product || item.productId || null;
+    const productId =
+        (typeof item.productId === "string" ? item.productId : null) ||
+        item.product?._id ||
+        item.productId?._id ||
+        item._id ||
+        item.id;
+
+    if (!productId) return null;
+
+    return {
+        ...item,
+        product,
+        productId,
+        quantity: Number(item.quantity || 1),
+        mrpPrice: Number(item.mrpPrice || product?.mrpPrice || 0),
+        sellingPrice: Number(item.sellingPrice || product?.sellingPrice || 0),
+    };
+};
+
+const calculateCartTotals = (items: CartItem[]) => {
+    const totalMrpPrice = items.reduce((total, item: any) => total + Number(item.mrpPrice || 0), 0);
+    const totalSellingPrice = items.reduce((total, item: any) => total + Number(item.sellingPrice || 0), 0);
+    const totalItems = items.reduce((total, item: any) => total + Number(item.quantity || 0), 0);
+
+    return {
+        totalMrpPrice,
+        totalSellingPrice,
+        totalItems,
+        discount:
+            totalMrpPrice > 0
+                ? Math.round(((totalMrpPrice - totalSellingPrice) / totalMrpPrice) * 100)
+                : 0,
+    };
+};
+
+const syncCartState = (cart: Cart | null, items: CartItem[]): Cart => ({
+    ...(cart || {}),
+    items,
+    cartItems: items,
+    ...calculateCartTotals(items),
+});
+
 const normalizeCartPayload = (payload: any): Cart => {
     if (!payload) return { items: [] };
-    if (Array.isArray(payload)) return { items: payload };
-    if (Array.isArray(payload.items)) return payload;
-    if (Array.isArray(payload.cartItems)) return { ...payload, items: payload.cartItems };
-    if (payload._id || payload.product) return { items: [payload] };
-    return { ...payload, items: [] };
+
+    if (Array.isArray(payload)) {
+        const items = payload.map(normalizeCartItem).filter(Boolean) as CartItem[];
+        return syncCartState(null, items);
+    }
+
+    const rawItems = payload.items || payload.cartItems;
+    if (Array.isArray(rawItems)) {
+        const items = rawItems.map(normalizeCartItem).filter(Boolean) as CartItem[];
+        return syncCartState(payload, items);
+    }
+
+    const singleItem = normalizeCartItem(payload);
+    if (singleItem) {
+        return syncCartState(null, [singleItem]);
+    }
+
+    return syncCartState(payload, []);
 };
 
 export const fetchCart = createAsyncThunk<any, any>(
@@ -106,7 +165,13 @@ export const updateCartItemQuantity=createAsyncThunk<any, any>(
 const cartSlice = createSlice({
     name:"cart",
     initialState,
-    reducers:{},
+    reducers:{
+        clearCartState:(state)=>{
+            state.cart = null;
+            state.loading = false;
+            state.error = "";
+        },
+    },
     extraReducers:(builder)=>{
         builder.addCase(fetchCart.pending,(state)=>{
             state.loading=true;
@@ -127,15 +192,33 @@ const cartSlice = createSlice({
         }); 
         builder.addCase(addItemTocart.fulfilled,(state,action)=>{
             state.loading=false;
-            const incomingItem = action.payload;
-            const currentItems = state.cart?.items || [];
-            const existingIndex = currentItems.findIndex((item: any) => item._id === incomingItem?._id);
+
+            if (Array.isArray(action.payload?.items) || Array.isArray(action.payload?.cartItems)) {
+                state.cart = normalizeCartPayload(action.payload);
+                return;
+            }
+
+            const incomingItem = normalizeCartItem(action.payload);
+            if (!incomingItem) {
+                state.error = "Unable to add item to cart";
+                return;
+            }
+
+            const currentItems = [...(state.cart?.items || [])];
+            const existingIndex = currentItems.findIndex(
+                (item: any) =>
+                    item._id === incomingItem._id ||
+                    item.productId === incomingItem.productId ||
+                    item.product?._id === incomingItem.product?._id,
+            );
+
             if (existingIndex >= 0) {
                 currentItems[existingIndex] = incomingItem;
             } else {
                 currentItems.push(incomingItem);
             }
-            state.cart = { ...(state.cart || {}), items: currentItems };
+
+            state.cart = syncCartState(state.cart, currentItems);
         });
         builder.addCase(addItemTocart.rejected,(state,action)=>{
             state.loading=false;
@@ -148,7 +231,12 @@ const cartSlice = createSlice({
         builder.addCase(removeItemFromCart.fulfilled,(state,action)=>{
             state.loading=false;
             if(state.cart?.items){
-                state.cart.items = state.cart.items.filter((item:any)=>item._id!==action.payload.cartItemId && item.productId!==action.payload.cartItemId);
+                const filteredItems = state.cart.items.filter((item:any)=>
+                    item._id!==action.payload.cartItemId &&
+                    item.productId!==action.payload.cartItemId &&
+                    item.product?._id!==action.payload.cartItemId
+                );
+                state.cart = syncCartState(state.cart, filteredItems);
             }
         }); 
         builder.addCase(removeItemFromCart.rejected,(state,action)=>{
@@ -161,10 +249,28 @@ const cartSlice = createSlice({
         });
         builder.addCase(updateCartItemQuantity.fulfilled,(state,action)=>{
             state.loading=false;
+
+            if (Array.isArray(action.payload?.items) || Array.isArray(action.payload?.cartItems)) {
+                state.cart = normalizeCartPayload(action.payload);
+                return;
+            }
+
+            const updatedItem = normalizeCartItem(action.payload);
+            if (!updatedItem) {
+                state.error = "Unable to update cart quantity";
+                return;
+            }
+
             if(state.cart && state.cart.items){
-                const index=state.cart.items.findIndex((item:any)=>item._id===action.payload._id || item.productId===action.payload.productId);
+                const nextItems = [...state.cart.items];
+                const index=nextItems.findIndex((item:any)=>
+                    item._id===updatedItem._id ||
+                    item.productId===updatedItem.productId ||
+                    item.product?._id===updatedItem.product?._id
+                );
                 if(index!==-1){
-                    state.cart.items[index]=action.payload;
+                    nextItems[index]=updatedItem;
+                    state.cart = syncCartState(state.cart, nextItems);
                 }
             }
         });
@@ -176,4 +282,5 @@ const cartSlice = createSlice({
     }
 });
 
+export const { clearCartState } = cartSlice.actions;
 export default cartSlice.reducer;

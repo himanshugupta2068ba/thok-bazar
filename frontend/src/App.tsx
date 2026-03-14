@@ -14,11 +14,14 @@ import { fetchUserProfile } from './Redux Toolkit/featurs/coustomer/userSlice'
 import { fetchSellerProfile } from './Redux Toolkit/featurs/seller/sellerSlice'
 import { createHomeCategory, fetchHomeCategories } from './Redux Toolkit/featurs/coustomer/homeCategorySlice'
 import { homeCategories } from './data/homeCategory'
+import { clearCartState, fetchCart } from './Redux Toolkit/featurs/coustomer/cartSlice'
+import { buildWishlistUserKey, initializeWishlist } from './Redux Toolkit/featurs/coustomer/wishlistSlice'
 
 function App() {
   
   const dispatch=useAppDispatch();
-  const {auth}=useAppSelector((state)=>state);
+  const {auth, user}=useAppSelector((state)=>state);
+  const wishlistUserKey = buildWishlistUserKey(auth.user, user.user);
 
   useEffect(()=>{
     const jwt = auth.jwt?.trim() || localStorage.getItem("jwt");
@@ -29,9 +32,16 @@ function App() {
     }
     if(jwt){
       dispatch(fetchUserProfile(jwt));
+      dispatch(fetchCart(jwt));
       // dispatch(fetchSellerProfile());
+    } else {
+      dispatch(clearCartState());
     }
   },[auth.jwt,dispatch])
+
+  useEffect(() => {
+    dispatch(initializeWishlist(wishlistUserKey));
+  }, [dispatch, wishlistUserKey]);
 
 
   useEffect(()=>{

@@ -1,6 +1,8 @@
 import {
   Add,
   AddShoppingCart,
+  Favorite,
+  FavoriteBorder,
   LocalShipping,
   Remove,
   Shield,
@@ -8,12 +10,17 @@ import {
   Wallet,
   WorkspacePremium,
 } from "@mui/icons-material";
-import { Button, Divider } from "@mui/material";
+import { Button } from "@mui/material";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { SimilarProduct } from "./SimilarProduct";
 import { useNavigate, useParams } from "react-router";
 import { useAppDispatch, useAppSelector } from "../../../../Redux Toolkit/store";
 import { fetchProductById } from "../../../../Redux Toolkit/featurs/coustomer/productSlice";
+import { addItemTocart } from "../../../../Redux Toolkit/featurs/coustomer/cartSlice";
+import {
+  buildWishlistUserKey,
+  toggleWishlistItem,
+} from "../../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
 import {
   getProductSpecificationFields,
   getSpecificationValue,
@@ -42,13 +49,14 @@ export const ProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { product, auth, user } = useAppSelector((state) => state);
+  const { product, auth, user, wishlist } = useAppSelector((state) => state);
   const [reviews, setReviews] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
     comment: "",
@@ -56,6 +64,7 @@ export const ProductDetails = () => {
 
   const jwt = auth.jwt?.trim() || localStorage.getItem("jwt");
   const isLoggedIn = Boolean(jwt);
+  const wishlistUserKey = buildWishlistUserKey(auth.user, user.user);
 
   useEffect(() => {
     if (!productId) return;
@@ -84,6 +93,9 @@ export const ProductDetails = () => {
   }, [productId]);
 
   const productData: any = product.product || {};
+  const isWishlisted = wishlist.items.some(
+    (wishlistItem: any) => String(wishlistItem?._id) === String(productData?._id || productId),
+  );
   const imagesList = useMemo(() => {
     if (productData?.images?.length) return productData.images;
     return images;
@@ -162,6 +174,42 @@ export const ProductDetails = () => {
       behavior: "smooth",
       block: "start",
     });
+  };
+
+  const addCurrentProductToCart = async (redirectTo: string) => {
+    if (!productId) return;
+
+    if (!jwt) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsAddingToCart(true);
+      await dispatch(
+        addItemTocart({
+          productId,
+          quantity,
+          jwt,
+        }),
+      ).unwrap();
+      navigate(redirectTo);
+    } catch (error) {
+      console.error("Failed to add item to cart", error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleAddToCart = () => addCurrentProductToCart("/cart");
+  const handleBuyNow = () => addCurrentProductToCart("/checkout/address");
+  const handleWishlistToggle = () => {
+    dispatch(
+      toggleWishlistItem({
+        item: productData,
+        userKey: wishlistUserKey,
+      }),
+    );
   };
 
   const handleSubmitReview = async (event: FormEvent<HTMLFormElement>) => {
@@ -311,11 +359,28 @@ export const ProductDetails = () => {
               variant="contained"
               color="primary"
               className="w-40 py-3 font-bold"
+              disabled={isAddingToCart}
+              onClick={handleAddToCart}
             >
-              Add to Cart
+              {isAddingToCart ? "Adding..." : "Add to Cart"}
             </Button>
-            <Button variant="outlined" color="primary" className="w-40 py-3 font-bold">
+            <Button
+              variant="outlined"
+              color="primary"
+              className="w-40 py-3 font-bold"
+              onClick={handleBuyNow}
+              disabled={isAddingToCart}
+            >
               Buy Now
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              className="py-3 font-bold"
+              onClick={handleWishlistToggle}
+              startIcon={isWishlisted ? <Favorite /> : <FavoriteBorder />}
+            >
+              {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
             </Button>
           </div>
 
