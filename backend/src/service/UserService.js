@@ -4,6 +4,7 @@ const bycrypt = require('bcrypt');
 const Cart = require('../models/Cart');
 const jwtprovider = require("../util/jwtprovider");
 const VerificationCode = require('../models/VerificationCode');
+const mongoose = require('mongoose');
 
 class UserService{
     async createUser(req){
@@ -58,7 +59,7 @@ class UserService{
 
     async findUserProfile(jwt){
         const email=jwtprovider.getEmailFromjwt(jwt);
-        const user=await User.findOne({email});
+        const user=await User.findOne({email}).populate('address');
         if(!user){
             throw new Error("User not found");
         }
@@ -71,6 +72,33 @@ class UserService{
             throw new Error("User Not found");
         }
         return user;
+    }
+
+    async deleteUserAddress(userId, addressId) {
+        if (!mongoose.Types.ObjectId.isValid(addressId)) {
+            throw new Error('Invalid address id');
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const isMapped = (user.address || []).some(
+            (id) => id.toString() === addressId.toString(),
+        );
+
+        if (!isMapped) {
+            throw new Error('Address does not belong to user');
+        }
+
+        await User.findByIdAndUpdate(userId, {
+            $pull: { address: addressId },
+        });
+
+        await Address.findByIdAndDelete(addressId);
+
+        return await User.findById(userId).populate('address');
     }
 }
 

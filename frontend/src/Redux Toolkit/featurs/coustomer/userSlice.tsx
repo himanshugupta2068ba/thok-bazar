@@ -19,6 +19,23 @@ export const fetchUserProfile= createAsyncThunk(
   },
 );
 
+export const deleteUserAddress = createAsyncThunk(
+  "/users/deleteUserAddress",
+  async ({ addressId, jwt }: { addressId: string; jwt: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/users/address/${addressId}`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data || { error: "Failed to delete address" });
+    }
+  },
+);
+
 
 interface UserState {
   user: any | null;
@@ -48,6 +65,18 @@ const userSlice = createSlice({
         builder.addCase(fetchUserProfile.rejected, (state, action: any) => {
             state.loading = false;
             state.error = action.payload || null;
+        });
+        builder.addCase(deleteUserAddress.pending, (state) => {
+          state.loading = true;
+          state.error = null;
+        });
+        builder.addCase(deleteUserAddress.fulfilled, (state, action) => {
+          state.loading = false;
+          state.user = action.payload;
+        });
+        builder.addCase(deleteUserAddress.rejected, (state, action: any) => {
+          state.loading = false;
+          state.error = action.payload || null;
         });
     },
 });

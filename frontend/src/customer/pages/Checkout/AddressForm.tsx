@@ -1,20 +1,33 @@
 import { Box, Button, Grid, TextField } from "@mui/material";
 import { useFormik } from "formik";
 
-export const AddressForm = () => {
+export const AddressForm = ({ onSave, onCancel }: any) => {
   const formik = useFormik({
     initialValues: {
       name: "",
-      street: "",
+      address: "",
       city: "",
       state: "",
-      country: "",
-      pinCode: "",
+      pincode: "",
       mobile: "",
       locality: "",
     },
     onSubmit: (values) => {
-      console.log(values);
+      const payload = {
+        name: values.name?.trim(),
+        mobile: values.mobile?.trim(),
+        locality: values.locality?.trim(),
+        address: values.address?.trim(),
+        city: values.city?.trim(),
+        state: values.state?.trim(),
+        pincode: values.pincode?.trim(),
+      };
+
+      if (onSave) {
+        onSave(payload);
+      }
+
+      formik.resetForm();
     },
   });
 
@@ -56,10 +69,10 @@ export const AddressForm = () => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              name="street"
+              name="address"
               label="Street Address"
               variant="outlined"
-              value={formik.values.street}
+              value={formik.values.address}
               onChange={formik.handleChange}
             />
           </Grid>
@@ -86,26 +99,19 @@ export const AddressForm = () => {
           <Grid size={{ xs: 6 }}>
             <TextField
               fullWidth
-              name="country"
-              label="Country"
-              variant="outlined"
-              value={formik.values.country}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <TextField
-              fullWidth
-              name="pinCode"
+              name="pincode"
               label="Pin Code"
               variant="outlined"
-              value={formik.values.pinCode}
+              value={formik.values.pincode}
               onChange={formik.handleChange}
             />
           </Grid>
-          <Grid size={{ xs: 12 }} className="text-center pt-5">
+          <Grid size={{ xs: 12 }} className="text-center pt-5 flex justify-center gap-3">
             <Button sx={{ py: "14px" }} type="submit" variant="contained">
               Save Address
+            </Button>
+            <Button sx={{ py: "14px" }} variant="outlined" onClick={onCancel}>
+              Cancel
             </Button>
           </Grid>
         </Grid>

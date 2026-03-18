@@ -9,7 +9,7 @@ import {
 import { FilterSection } from "./FilterSection";
 import { useEffect, useMemo, useState } from "react";
 import { ProductCard } from "./ProductCard";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
 import { getAllProducts } from "../../../Redux Toolkit/featurs/coustomer/productSlice";
 import {
@@ -20,10 +20,15 @@ import {
 export const Products = () => {
   const dispatch = useAppDispatch();
   const { categoryId } = useParams();
+  const location = useLocation();
   const { product } = useAppSelector((state) => state);
   const [sort, setSort] = useState("price_low");
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const searchTerm = useMemo(
+    () => new URLSearchParams(location.search).get("q")?.trim() || "",
+    [location.search],
+  );
   const mainCategoryId = useMemo(
     () => resolveMainCategoryId(categoryId),
     [categoryId],
@@ -37,7 +42,7 @@ export const Products = () => {
   useEffect(() => {
     setPage(1);
     setFilters({});
-  }, [categoryId]);
+  }, [categoryId, searchTerm]);
 
   const queryParams = useMemo(() => {
     const nextParams: Record<string, string | number> = {
@@ -45,6 +50,10 @@ export const Products = () => {
       sort,
       pageNumber: page - 1,
     };
+
+    if (searchTerm) {
+      nextParams.q = searchTerm;
+    }
 
     const selectedPriceRange = priceFilterOptions.find(
       (item) => item.value === filters.priceRange,
@@ -75,18 +84,17 @@ export const Products = () => {
     });
 
     return nextParams;
-  }, [categoryId, filters, page, sort]);
+  }, [categoryId, filters, page, searchTerm, sort]);
 
   useEffect(() => {
-    if (!categoryId) return;
-
     dispatch(getAllProducts(queryParams));
-  }, [dispatch, categoryId, queryParams]);
+  }, [dispatch, queryParams]);
 
   const title = useMemo(() => {
+    if (searchTerm) return `Search results for "${searchTerm}"`;
     if (!categoryId) return "Products";
     return categoryId.replace(/[-_]/g, " ");
-  }, [categoryId]);
+  }, [categoryId, searchTerm]);
   const formattedTitle = useMemo(
     () => title.replace(/\b\w/g, (char) => char.toUpperCase()),
     [title],

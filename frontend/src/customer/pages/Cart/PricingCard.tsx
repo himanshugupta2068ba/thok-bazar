@@ -1,5 +1,8 @@
 import { Divider } from "@mui/material";
 
+const PLATFORM_FEE = 20;
+const SHIPPING_FEE = 99;
+
 const getCartItems = (cart: any) => {
   if (Array.isArray(cart?.items)) return cart.items;
   if (Array.isArray(cart?.cartItems)) return cart.cartItems;
@@ -18,6 +21,9 @@ export const PricingCard = ({ cart }: any) => {
     Number(cart?.totalItems) ||
     items.reduce((total: number, item: any) => total + Number(item?.quantity || 0), 0);
   const productDiscount = Math.max(0, totalMrpPrice - totalSellingPrice);
+  const shippingFee = items.length ? SHIPPING_FEE : 0;
+  const platformFee = items.length ? PLATFORM_FEE : 0;
+  const payableAmount = totalSellingPrice + shippingFee + platformFee;
 
   return (
     <div className="rounded-md border border-gray-300">
@@ -32,16 +38,16 @@ export const PricingCard = ({ cart }: any) => {
         </div>
         <div className="flex items-center justify-between">
           <span>Delivery</span>
-          <span>{items.length ? "Free" : "Rs. 0"}</span>
+          <span>Rs. {shippingFee}</span>
         </div>
         <div className="flex items-center justify-between">
           <span>Platform fee</span>
-          <span>Rs. 0</span>
+          <span>Rs. {platformFee}</span>
         </div>
         <Divider />
         <div className="flex items-center justify-between border-t border-gray-300 pt-3">
           <strong>Total Amount</strong>
-          <span className="font-semibold text-teal-700">Rs. {totalSellingPrice}</span>
+          <span className="font-semibold text-teal-700">Rs. {payableAmount}</span>
         </div>
         <p className="text-sm text-teal-700">
           You save Rs. {productDiscount} on this order.

@@ -22,7 +22,11 @@ class SellerReportService{
 
 async updateSellerReport(sellerReport){
     try{
-        return await sellerReport.findByIdAndUpdate(sellerReport._id,sellerReport,{new:true});
+        return await SellerReport.findByIdAndUpdate(
+            sellerReport._id,
+            sellerReport,
+            { new: true }
+        );
     }catch(error){
         throw new Error('Error updating seller report: '+error.message);
     }

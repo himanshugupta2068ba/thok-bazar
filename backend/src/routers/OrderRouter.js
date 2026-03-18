@@ -15,5 +15,7 @@ router.get('/:orderId',authMiddleware,orderController.getOrderById);
 
 router.put('/:orderId/cancel',authMiddleware,orderController.cancelOrder);
 
+router.delete('/:orderId',authMiddleware,orderController.deleteOrder);
+
 
 module.exports = router;

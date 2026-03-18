@@ -3,7 +3,7 @@ import { Order } from "./Order";
 import { OrderDetails } from "./OrderDetails";
 import { Route, Routes, useNavigate } from "react-router";
 import { UserProfile } from "../account/UserProfile";
-import { AddressCard } from "../Checkout/AddressCard";
+import { Addresses } from "./Addresses";
 import { useAppDispatch } from "../../../Redux Toolkit/store";
 import { logout } from "../../../Redux Toolkit/featurs/Auth/authSlice";
 
@@ -50,11 +50,8 @@ export const Profile = () => {
           <Routes>
             <Route path="/" element={<UserProfile/>} />
             <Route path="orders" element={<Order />} />
-            <Route
-              path="orders/:orderId/item/:orderItemId"
-              element={<OrderDetails />}
-            />
-            <Route path="addresses" element={<AddressCard/>} />
+            <Route path="orders/:orderId" element={<OrderDetails />} />
+            <Route path="addresses" element={<Addresses/>} />
             {/* <Route path="payment-methods" element={<h1>Payment Methods</h1>}/> */}
           </Routes>
           {/* <Order /> */}

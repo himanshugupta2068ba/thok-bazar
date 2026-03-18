@@ -9,4 +9,5 @@ router.post('/signin', UserController.signin);
 router.post('/send-login-otp', UserController.sendLoginOtp);
 router.post('/send-signup-otp', UserController.sendLoginOtp);
 router.get('/profile', authMiddleware, UserController.getUserProfile);
+router.delete('/address/:addressId', authMiddleware, UserController.deleteUserAddress);
 module.exports = router;

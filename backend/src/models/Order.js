@@ -98,6 +98,16 @@ const orderSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
+    platformFee: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    shippingFee: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     discount: {
         type: Number,
         min: 0

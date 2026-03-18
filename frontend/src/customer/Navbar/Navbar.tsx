@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AccountCircle,
   AddShoppingCart,
@@ -12,6 +12,7 @@ import {
   Badge,
   Box,
   Button,
+  InputBase,
   IconButton,
   useMediaQuery,
   useTheme,
@@ -19,7 +20,7 @@ import {
 import "./Navbar.css";
 import mainCategory from "../../data/category/mainCategory";
 import { CategorySheet } from "./Category";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useAppSelector } from "../../Redux Toolkit/store";
 export const Navbar = () => {
   const {user, cart, wishlist}=useAppSelector((state)=>state);
@@ -35,6 +36,24 @@ export const Navbar = () => {
   //   setIsLoggedIn(true);
   // }
   const navigate=useNavigate();
+  const location = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setSearchTerm(params.get("q") || "");
+  }, [location.search]);
+
+  const handleSearchSubmit = () => {
+    const trimmedSearchTerm = searchTerm.trim();
+
+    if (trimmedSearchTerm) {
+      navigate(`/products?q=${encodeURIComponent(trimmedSearchTerm)}`);
+      return;
+    }
+
+    navigate("/products");
+  };
 
   const handleMainCategoryClick = (categoryId: string) => {
     setShowSheet(false);
@@ -75,7 +94,22 @@ export const Navbar = () => {
           </ul>
         </div>
         <div className="flex items-center gap-5">
-          <IconButton>
+          <div className="hidden md:flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5">
+            <Search sx={{ fontSize: 22, color: "#64748b" }} />
+            <InputBase
+              placeholder="Search products"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleSearchSubmit();
+                }
+              }}
+              sx={{ fontSize: 14, width: { md: 180, lg: 260 } }}
+            />
+          </div>
+          <IconButton onClick={handleSearchSubmit}>
             <Search sx={{ fontSize: 29 }} />
           </IconButton>
           {user.user?.name ? (

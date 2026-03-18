@@ -6,28 +6,35 @@ const PaymentOrder = require('../models/paymentOrder');
 class OrderController{
 
     async createOrder(req,res){
-        const {shippingAddress,cart}=req.body;
+        const { shippingAddress } = req.body;
         const {paymentMethod}=req.query;
-        const jwtUser=req.headers.authorization;
         try{
             const user= await req.user;
-            const cart=await CartService.findUserCart(user);
-            const order=await OrderService.createOrder(user,shippingAddress,cart,paymentMethod);
+            const cartData=await CartService.findUserCart(user);
+            const orders=await OrderService.createOrder(user,shippingAddress,cartData,paymentMethod);
+
+            if (!orders.length) {
+                return res.status(400).json({ message: 'Cart is empty or no valid seller found for checkout' });
+            }
+
+            const primaryOrder = orders[0] || null;
             
-            const paymentOrder=await PaymentService.createOrder(user,[order]);
+            const paymentOrder=await PaymentService.createOrder(user,orders);
 
             const response={};
 
             if(paymentMethod==='razorpay'){
-                const payment=await PaymentService.createRazorpaypaymentLink(user,paymentOrder.amount,order._id);
-                response.paymentLink=payment.short_url;
+                const payment=await PaymentService.createRazorpaypaymentLink(user,paymentOrder.amount,primaryOrder?._id);
+                response.paymentLink=payment.short_url || payment.url;
                 response.paymentOrderId=paymentOrder._id;
 
                 await PaymentOrder.findByIdAndUpdate(paymentOrder._id,{
                     paymentLinkId:payment.id
                 });
+            } else {
+                response.paymentOrderId = paymentOrder._id;
             }
-            return res.status(201).json({order,paymentDetails:response});
+            return res.status(201).json({order: primaryOrder, orders, paymentDetails:response});
             
         }catch(error){
             return res.status(500).json({message:error.message});
@@ -91,6 +98,17 @@ class OrderController{
             const user= await req.user;
             const order=await OrderService.cancelOrder(orderId,user);
             return res.status(200).json({order});
+        }catch(error){
+            return res.status(500).json({message:error.message});
+        }
+    }
+
+    async deleteOrder(req,res){
+        try{
+            const {orderId}=req.params;
+            const user= await req.user;
+            const deletedOrder=await OrderService.deleteOrderForUser(orderId,user);
+            return res.status(200).json({order:deletedOrder});
         }catch(error){
             return res.status(500).json({message:error.message});
         }

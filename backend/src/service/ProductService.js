@@ -342,6 +342,17 @@ class ProductService {
     async getAllProducts(req) {
         const filterQuery = {};
 
+        if (req.q) {
+            const keyword = String(req.q).trim();
+
+            if (keyword) {
+                filterQuery.$or = [
+                    { title: { $regex: keyword, $options: 'i' } },
+                    { description: { $regex: keyword, $options: 'i' } }
+                ];
+            }
+        }
+
         if (req.category) {
             const category = await Category.findOne({ categoryId: req.category });
 

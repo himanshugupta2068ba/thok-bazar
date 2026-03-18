@@ -45,6 +45,17 @@ class UserController {
         }
     }
 
+    async deleteUserAddress(req, res) {
+        try {
+            const user = req.user;
+            const { addressId } = req.params;
+            const updatedUser = await UserService.deleteUserAddress(user._id, addressId);
+            res.status(200).json(updatedUser);
+        } catch (error) {
+            this.handelErrors(error, res);
+        }
+    }
+
    async findUserByEmail(req, res) {
         try {
             const email = req.params.email;

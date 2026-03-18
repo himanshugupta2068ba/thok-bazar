@@ -4,19 +4,33 @@ const Address = require('../models/Address');
 const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const OrderStatus = require('../domain/OrderStatus');
+
+const PLATFORM_FEE = 20;
+const SHIPPING_FEE = 99;
 class OrderService{
     async createOrder(user,shippingAddress,cart){
-        if(shippingAddress._id && !user.addresses.includes(shippingAddress.id)){
-              user.addresses.push(shippingAddress._id);
-              await User.findByIdAndUpdate(user._id,user);
+        const userAddressIds = Array.isArray(user.address) ? user.address.map((id) => id.toString()) : [];
+
+        if (shippingAddress?._id) {
+            const shippingAddressId = shippingAddress._id.toString();
+            if (!userAddressIds.includes(shippingAddressId)) {
+                user.address = [...(user.address || []), shippingAddress._id];
+                await User.findByIdAndUpdate(user._id, { address: user.address });
+            }
         }
 
         if(!shippingAddress._id){
-            shippingAddress=await Address.create(shippingAddress)
+            shippingAddress=await Address.create(shippingAddress);
+            user.address = [...(user.address || []), shippingAddress._id];
+            await User.findByIdAndUpdate(user._id, { address: user.address });
         }
 
         const itemsBySeller=cart.cartItems.reduce((acc,item)=>{
-            const sellerId=item.product.seller._id.toString();
+            const sellerId=(item.product?.sellerId?._id || item.product?.sellerId)?.toString();
+
+            if (!sellerId) {
+                return acc;
+            }
 
             acc[sellerId]=acc[sellerId] || [];
             acc[sellerId].push(item);
@@ -25,10 +39,16 @@ class OrderService{
 
         const orders=new Set();
 
-        for(const [sellerId,cartItems] of Object.entries(itemsBySeller)){
-            const totalOrderPrice=cartItems.reduce((acc,item)=>{
-                return acc+item.quantity*item.sellingPrice;
+        const sellerEntries = Object.entries(itemsBySeller);
+
+        for(const [index, [sellerId,cartItems]] of sellerEntries.entries()){
+            const productOrderTotal=cartItems.reduce((acc,item)=>{
+                return acc+Number(item.sellingPrice || 0);
             },0);
+
+            const platformFee = index === 0 ? PLATFORM_FEE : 0;
+            const shippingFee = index === 0 ? SHIPPING_FEE : 0;
+            const totalOrderPrice = productOrderTotal + platformFee + shippingFee;
 
             const totalItem=cartItems.length;
 
@@ -38,9 +58,11 @@ class OrderService{
                 orderItems:[],
                 totalMrpPrice:0,
                 totalSellingPrice:totalOrderPrice,
+                platformFee,
+                shippingFee,
                 totalItems:totalItem,
                 seller:sellerId,
-                orderStatus:'Processing'
+                orderStatus:OrderStatus.PENDING
             });
 
             const orderItems=await Promise.all(cartItems.map(async(cartItem)=>{
@@ -49,14 +71,16 @@ class OrderService{
                     quantity:cartItem.quantity,
                     mrpPrice:cartItem.mrpPrice,
                     sellingPrice:cartItem.sellingPrice,
-                    size:cartItem.size,
+                    size: String(cartItem.size || cartItem.product?.size || 'N/A'),
                     userId:cart.user._id,
                 });
                 const savedOrderItem=await orderItem.save();
                 neworder.orderItems.push(savedOrderItem._id);
-                neworder.totalMrpPrice+=cartItem.mrpPrice*cartItem.quantity;
+                neworder.totalMrpPrice+=Number(cartItem.mrpPrice || 0);
                 return savedOrderItem;
             }));
+
+            neworder.discount = Math.max(0, neworder.totalMrpPrice - productOrderTotal);
 
             const savedOrder=await neworder.save();
             orders.add(savedOrder);
@@ -82,7 +106,7 @@ class OrderService{
     }
 
     async userOrdersHistory(userId){
-        return await Order.findOne({user:userId})
+        return await Order.find({user:userId})
         .populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}])
         .sort({createdAt:-1});
     }
@@ -127,6 +151,23 @@ class OrderService{
             throw new Error('Order item not found');
         }
         return orderItem;
+    }
+
+    async deleteOrderForUser(orderId, user) {
+        const order = await this.findOrderById(orderId);
+
+        if (user._id.toString() !== order.user._id.toString()) {
+            throw new Error('Unauthorized to delete this order');
+        }
+
+        if (order.orderStatus !== OrderStatus.CANCELLED) {
+            throw new Error('Only cancelled orders can be deleted');
+        }
+
+        await OrderItem.deleteMany({ _id: { $in: order.orderItems } });
+        await Order.findByIdAndDelete(orderId);
+
+        return { _id: orderId };
     }
 }
 

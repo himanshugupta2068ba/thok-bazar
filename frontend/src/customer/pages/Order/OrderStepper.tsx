@@ -11,22 +11,22 @@ const steps = [
   {
     label: "Order Placed",
     description: "Your order has been placed",
-    value: "Placed",
+    value: "PLACED",
   },
   {
     label: "Order Confirmed",
     description: "Your order has been confirmed",
-    value: "Confirmed",
+    value: "CONFIRMED",
   },
   {
     label: "Out for Delivery",
     description: "Your order is out for delivery",
-    value: "Out for Delivery",
+    value: "SHIPPED",
   },
   {
     label: "Delivered",
     description: "Your order has been delivered",
-    value: "Delivered",
+    value: "DELIVERED",
   },
 ];
 
@@ -34,20 +34,27 @@ const cancelledSteps = [
   {
     label: "Order Placed",
     description: "Your order has been placed",
-    value: "Placed",
+    value: "PLACED",
   },
   {
     label: "Order Cancelled",
     description: "Your order has been cancelled",
-    value: "Cancelled",
+    value: "CANCELLED",
   },
 ];
 
-export const OrderStepper = ({ currentStatus = "Placed", isCancelled = false }: OrderStepperProps) => {
+export const OrderStepper = ({ currentStatus = "PENDING", isCancelled = false }: OrderStepperProps) => {
   const stepsToDisplay = isCancelled ? cancelledSteps : steps;
 
+  const statusAlias: Record<string, string> = {
+    PENDING: "PLACED",
+  };
+
+  const normalizedStatus = statusAlias[currentStatus] || currentStatus;
+
   const getCurrentStep = () => {
-    return stepsToDisplay.findIndex((step) => step.value === currentStatus);
+    const stepIndex = stepsToDisplay.findIndex((step) => step.value === normalizedStatus);
+    return stepIndex >= 0 ? stepIndex : 0;
   };
 
   const activeStep = getCurrentStep();

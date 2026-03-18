@@ -1,6 +1,5 @@
 const mongoose=require('mongoose');
 const PaymentStatus=require('../domain/PaymentStatus');
-const orderController = require('../controllers/orderController');
 
 const paymentOrerSchema=new mongoose.Schema({
     amount:{
@@ -24,7 +23,11 @@ const paymentOrerSchema=new mongoose.Schema({
     orders:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Order'
-    }]
+    }],
+    paymentLinkId:{
+        type:String,
+        default:null
+    }
 })
 
 const PaymentOrder=mongoose.model('PaymentOrder',paymentOrerSchema);
