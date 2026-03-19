@@ -5,7 +5,7 @@ import { useAppSelector } from "../../../../Redux Toolkit/store"
 const HomeCategory=()=>{
     const items = useAppSelector((state) =>
         state.homeCategory.homeCategories.filter(
-            (item: any) => item.section === "SHOP_BY_BRAND",
+            (item: any) => item.section === "SHOP_BY_CATEGORY",
         ),
     );
 

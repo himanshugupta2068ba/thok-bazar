@@ -158,61 +158,61 @@ export const homeCategories = [
             "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=80",
     },
 
-    // Shop by brand
+    // Shop by category
     {
-        categoryId: "brand-apple",
-        section: "SHOP_BY_BRAND",
-        name: "Apple",
+        categoryId: "men",
+        section: "SHOP_BY_CATEGORY",
+        name: "Men",
         image:
-            "https://images.unsplash.com/photo-1616348436168-de43ad0db179?auto=format&fit=crop&w=900&q=80",
+            "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=900&q=80",
     },
     {
-        categoryId: "brand-samsung",
-        section: "SHOP_BY_BRAND",
-        name: "Samsung",
-        image:
-            "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-        categoryId: "brand-nike",
-        section: "SHOP_BY_BRAND",
-        name: "Nike",
-        image:
-            "https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-        categoryId: "brand-ikea",
-        section: "SHOP_BY_BRAND",
-        name: "IKEA",
-        image:
-            "https://images.unsplash.com/photo-1616594039964-3f2b2f705b80?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-        categoryId: "brand-sony",
-        section: "SHOP_BY_BRAND",
-        name: "Sony",
-        image:
-            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-        categoryId: "brand-zara",
-        section: "SHOP_BY_BRAND",
-        name: "Zara",
+        categoryId: "women",
+        section: "SHOP_BY_CATEGORY",
+        name: "Women",
         image:
             "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
     },
     {
-        categoryId: "brand-adidas",
-        section: "SHOP_BY_BRAND",
-        name: "Adidas",
+        categoryId: "home-living",
+        section: "SHOP_BY_CATEGORY",
+        name: "Home & Living",
         image:
-            "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=900&q=80",
+            "https://images.unsplash.com/photo-1484101403633-562f891dc89a?auto=format&fit=crop&w=900&q=80",
     },
     {
-        categoryId: "brand-dyson",
-        section: "SHOP_BY_BRAND",
-        name: "Dyson",
+        categoryId: "electronics",
+        section: "SHOP_BY_CATEGORY",
+        name: "Electronics",
         image:
-            "https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&w=900&q=80",
+            "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80",
+    },
+    {
+        categoryId: "men-top-wear",
+        section: "SHOP_BY_CATEGORY",
+        name: "Men Top Wear",
+        image:
+            "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
+    },
+    {
+        categoryId: "women-western-wear",
+        section: "SHOP_BY_CATEGORY",
+        name: "Women Western Wear",
+        image:
+            "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80",
+    },
+    {
+        categoryId: "electronics-mobiles",
+        section: "SHOP_BY_CATEGORY",
+        name: "Mobiles",
+        image:
+            "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80",
+    },
+    {
+        categoryId: "home-living-kitchen",
+        section: "SHOP_BY_CATEGORY",
+        name: "Kitchen",
+        image:
+            "https://images.unsplash.com/photo-1556909114-44e3e9699e2b?auto=format&fit=crop&w=900&q=80",
     },
 ];
