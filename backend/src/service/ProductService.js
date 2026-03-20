@@ -4,6 +4,50 @@ const Review = require('../models/Review');
 const calculateDiscountPercentage = require('../util/discountCalculator');
 
 class ProductService {
+    async decreaseStockForOrderItems(orderItems = []) {
+        await Promise.all(
+            orderItems.map(async (orderItem) => {
+                const productId = orderItem?.product?._id || orderItem?.product;
+                const quantity = Number(orderItem?.quantity || 0);
+
+                if (!productId || quantity <= 0) {
+                    return;
+                }
+
+                const product = await Product.findById(productId);
+
+                if (!product) {
+                    return;
+                }
+
+                product.stock = Math.max(0, Number(product.stock || 0) - quantity);
+                await product.save();
+            }),
+        );
+    }
+
+    async restoreStockForOrderItems(orderItems = []) {
+        await Promise.all(
+            orderItems.map(async (orderItem) => {
+                const productId = orderItem?.product?._id || orderItem?.product;
+                const quantity = Number(orderItem?.quantity || 0);
+
+                if (!productId || quantity <= 0) {
+                    return;
+                }
+
+                const product = await Product.findById(productId);
+
+                if (!product) {
+                    return;
+                }
+
+                product.stock = Number(product.stock || 0) + quantity;
+                await product.save();
+            }),
+        );
+    }
+
     async createOrGetCategory(categoryId, level, parentId = null) {
         let category = await Category.findOne({ categoryId });
 

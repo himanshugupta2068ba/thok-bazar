@@ -14,12 +14,33 @@ const initialState = {
 
 const API_URL = "/orders";
 
+const upsertOrder = (orders: any[], nextOrder: any) => {
+    if (!nextOrder?._id) return orders;
+
+    const existingIndex = orders.findIndex(
+        (order: any) => String(order?._id) === String(nextOrder._id),
+    );
+
+    if (existingIndex === -1) {
+        return [nextOrder, ...orders].sort(
+            (left: any, right: any) =>
+                new Date(right?.createdAt || 0).getTime() -
+                new Date(left?.createdAt || 0).getTime(),
+        );
+    }
+
+    const nextOrders = [...orders];
+    nextOrders[existingIndex] = nextOrder;
+    return nextOrders;
+};
+
 export const createOrder = createAsyncThunk<any, any>(
     "order/createOrder",
     async ({address,jwt,paymentGateway}, { rejectWithValue }) => {
         try {
             const response = await api.post(`${API_URL}`, {
                 shippingAddress: address,
+                paymentMethod: paymentGateway,
             }, {
                 headers: {
                     Authorization: `Bearer ${jwt}`,
@@ -155,9 +176,14 @@ const orderSlice = createSlice({
         builder.addCase(cancelOrder.fulfilled, (state, action) => {
             state.loading = false;
             const cancelledOrder = action.payload.order || action.payload;
-            state.CancelledOrders.push(cancelledOrder);
-            // Remove from active orders
-            state.orders = state.orders.filter((order: any) => order._id !== cancelledOrder._id);
+            state.CancelledOrders = upsertOrder(state.CancelledOrders, cancelledOrder);
+            state.orders = upsertOrder(state.orders, cancelledOrder);
+            if (state.orderDetails && (state.orderDetails as any)._id === cancelledOrder._id) {
+                state.orderDetails = cancelledOrder;
+            }
+            if (state.currentOrder && (state.currentOrder as any)._id === cancelledOrder._id) {
+                state.currentOrder = cancelledOrder;
+            }
         });
         builder.addCase(cancelOrder.rejected, (state, action: any) => {
             state.loading = false;
@@ -173,8 +199,14 @@ const orderSlice = createSlice({
             state.loading = false;
             const deletedOrder = action.payload.order || action.payload;
             state.orders = state.orders.filter((order: any) => order._id !== deletedOrder._id);
+            state.CancelledOrders = state.CancelledOrders.filter(
+                (order: any) => order._id !== deletedOrder._id,
+            );
             if (state.orderDetails && (state.orderDetails as any)._id === deletedOrder._id) {
                 state.orderDetails = null;
+            }
+            if (state.currentOrder && (state.currentOrder as any)._id === deletedOrder._id) {
+                state.currentOrder = null;
             }
         });
         builder.addCase(deleteOrder.rejected, (state, action: any) => {

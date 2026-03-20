@@ -34,6 +34,12 @@ const sellerSchema = new mongoose.Schema({
         },
         businessAddress:{
             type: String,
+        },
+        businessType:{
+            type: String,
+        },
+        logo:{
+            type: String,
         }
     },
     bankDetails:{

@@ -28,17 +28,16 @@ export const fetchSellerProfile = createAsyncThunk<any, any>(
   "seller/fetchProfile",
   async (jwt, { rejectWithValue }) => {
     try {
-            const response = await api.get(`/sellers/profile`, {
+      const response = await api.get(`/sellers/profile`, {
         headers: {
-            Authorization: `Bearer ${jwt}`,
+          Authorization: `Bearer ${jwt}`,
         },
       });
-      console.log("Fetched seller profile:", response.data);
       return response.data;
     } catch (error: any) {
-            return rejectWithValue(getErrorMessage(error));
+      return rejectWithValue(getErrorMessage(error));
     }
-    },
+  },
 );
 export const fetchSeller=createAsyncThunk<any, any>(
     "seller/fetchSeller",
@@ -91,6 +90,22 @@ export const fetchSellerReports=createAsyncThunk<any, any>(
                         return rejectWithValue(getErrorMessage(error));
         }
     }
+)
+
+export const updateSellerProfile = createAsyncThunk<any, any>(
+    "seller/updateSellerProfile",
+    async ({ jwt, updates }, { rejectWithValue }) => {
+        try {
+            const response = await api.put(`/sellers/`, updates, {
+                headers: {
+                    Authorization: `Bearer ${jwt}`,
+                },
+            });
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(getErrorMessage(error));
+        }
+    },
 )
 
 const sellerSlice = createSlice({
@@ -151,9 +166,21 @@ const sellerSlice = createSlice({
             })
             .addCase(fetchSellerReports.fulfilled, (state, action) => {
                 state.loading = false;
-                state.reports = action.payload;
+                state.reports = action.payload?.sellerReport || action.payload || null;
             })
             .addCase(fetchSellerReports.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            .addCase(updateSellerProfile.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateSellerProfile.fulfilled, (state, action) => {
+                state.loading = false;
+                state.profile = action.payload;
+            })
+            .addCase(updateSellerProfile.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });

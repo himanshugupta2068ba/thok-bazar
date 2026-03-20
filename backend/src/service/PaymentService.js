@@ -123,13 +123,14 @@ const razorpay = require("../config/razorpayClient");
 const PaymentStatus = require("../domain/PaymentStatus");
 const Order = require("../models/Order");
 const OrderStatus = require("../domain/OrderStatus");
+const productService = require("./ProductService");
+const paymentMethodUtils = require("../util/paymentMethod");
 
 const FRONTEND_CALLBACK_BASE = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
 
 class PaymentService {
-
   // Create payment order in DB
-  async createOrder(user, orders) {
+  async createOrder(user, orders, paymentMethod = "RAZORPAY") {
 
     if (!Array.isArray(orders) || !orders.length) {
       throw new Error("Cannot create payment order for empty order list");
@@ -147,7 +148,7 @@ class PaymentService {
       amount: totalAmount,
       user: user._id,
       orders: orders.map(order => order._id),
-      paymentMethod: "razorpay",
+      paymentMethod: paymentMethodUtils.toPaymentOrderMethod(paymentMethod),
       status: PaymentStatus.PENDING
     });
 
@@ -202,9 +203,10 @@ class PaymentService {
       await Promise.all(
         paymentOrder.orders.map(async (orderId) => {
 
-          const order = await Order.findById(orderId);
+          const order = await Order.findById(orderId).populate("orderItems");
 
           if (order) {
+            await productService.decreaseStockForOrderItems(order.orderItems || []);
             order.orderStatus = OrderStatus.PLACED;
             order.paymentStatus = PaymentStatus.COMPLETED;
             await order.save();

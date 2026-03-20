@@ -12,6 +12,7 @@ export const SellerRoutes=()=>{
     return(
         <Routes>
             <Route path="/" element={<HomePage/>}/>
+            <Route path="/dashboard" element={<HomePage/>}/>
             <Route path="/products" element={<Product/>}/>
             <Route path="/add-product" element={<AddProduct/>}/>
             <Route path="/products/:productId/edit" element={<EditProduct/>}/>

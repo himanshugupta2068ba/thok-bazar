@@ -2,16 +2,17 @@ const OrderService=require('../service/OrderService');
 const CartService=require('../service/CartService');
 const PaymentService=require('../service/PaymentService');
 const PaymentOrder = require('../models/paymentOrder');
+const paymentMethodUtils = require('../util/paymentMethod');
 
 class OrderController{
-
     async createOrder(req,res){
         const { shippingAddress } = req.body;
-        const {paymentMethod}=req.query;
+        const requestedPaymentMethod = req.query.paymentMethod || req.body.paymentMethod;
+        const normalizedPaymentMethod = paymentMethodUtils.normalizePaymentMethod(requestedPaymentMethod);
         try{
             const user= await req.user;
             const cartData=await CartService.findUserCart(user);
-            const orders=await OrderService.createOrder(user,shippingAddress,cartData,paymentMethod);
+            const orders=await OrderService.createOrder(user,shippingAddress,cartData,normalizedPaymentMethod);
 
             if (!orders.length) {
                 return res.status(400).json({ message: 'Cart is empty or no valid seller found for checkout' });
@@ -19,20 +20,23 @@ class OrderController{
 
             const primaryOrder = orders[0] || null;
             
-            const paymentOrder=await PaymentService.createOrder(user,orders);
+            const paymentOrder=await PaymentService.createOrder(user,orders,normalizedPaymentMethod);
 
             const response={};
 
-            if(paymentMethod==='razorpay'){
+            if(normalizedPaymentMethod === 'RAZORPAY'){
                 const payment=await PaymentService.createRazorpaypaymentLink(user,paymentOrder.amount,primaryOrder?._id);
                 response.paymentLink=payment.short_url || payment.url;
                 response.paymentOrderId=paymentOrder._id;
+                response.paymentMethod = 'RAZORPAY';
 
                 await PaymentOrder.findByIdAndUpdate(paymentOrder._id,{
                     paymentLinkId:payment.id
                 });
             } else {
                 response.paymentOrderId = paymentOrder._id;
+                response.paymentMethod = 'COD';
+                await CartService.clearUserCart(user._id);
             }
             return res.status(201).json({order: primaryOrder, orders, paymentDetails:response});
             
@@ -85,7 +89,8 @@ class OrderController{
         try{
             const {orderId}=req.params;
             const {newStatus}=req.body;
-            const order=await OrderService.updateOrderStatus(orderId,newStatus);
+            const seller= await req.user;
+            const order=await OrderService.updateOrderStatus(orderId,newStatus,seller._id);
             return res.status(200).json({order});
         }catch(error){
             return res.status(500).json({message:error.message});

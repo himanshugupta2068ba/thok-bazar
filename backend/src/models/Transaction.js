@@ -16,6 +16,19 @@ const transactionSchema=new mongoose.Schema({
         ref:'Seller',
         required:true
     },
+    transactionId:{
+        type:String,
+        default:null
+    },
+    paymentLinkId:{
+        type:String,
+        default:null
+    },
+    status:{
+        type:String,
+        enum:['RECEIVED','REFUNDED'],
+        default:'RECEIVED'
+    },
     date:{
         type:Date,
         default:Date.now

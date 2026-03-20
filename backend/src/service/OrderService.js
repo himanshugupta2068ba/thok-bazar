@@ -4,12 +4,18 @@ const Address = require('../models/Address');
 const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const OrderStatus = require('../domain/OrderStatus');
+const PaymentStatus = require('../domain/PaymentStatus');
+const SellerReportService = require('./SellerReportService');
+const productService = require('./ProductService');
+const paymentMethodUtils = require('../util/paymentMethod');
 
 const PLATFORM_FEE = 20;
 const SHIPPING_FEE = 99;
 class OrderService{
-    async createOrder(user,shippingAddress,cart){
+    async createOrder(user,shippingAddress,cart,paymentMethod='RAZORPAY'){
         const userAddressIds = Array.isArray(user.address) ? user.address.map((id) => id.toString()) : [];
+        const normalizedPaymentMethod = paymentMethodUtils.normalizePaymentMethod(paymentMethod);
+        const isCashOnDelivery = paymentMethodUtils.isCashOnDelivery(paymentMethod);
 
         if (shippingAddress?._id) {
             const shippingAddressId = shippingAddress._id.toString();
@@ -62,7 +68,8 @@ class OrderService{
                 shippingFee,
                 totalItems:totalItem,
                 seller:sellerId,
-                orderStatus:OrderStatus.PENDING
+                orderStatus:isCashOnDelivery ? OrderStatus.PLACED : OrderStatus.PENDING,
+                paymentMethod: normalizedPaymentMethod
             });
 
             const orderItems=await Promise.all(cartItems.map(async(cartItem)=>{
@@ -83,6 +90,9 @@ class OrderService{
             neworder.discount = Math.max(0, neworder.totalMrpPrice - productOrderTotal);
 
             const savedOrder=await neworder.save();
+            if (isCashOnDelivery) {
+                await productService.decreaseStockForOrderItems(orderItems);
+            }
             orders.add(savedOrder);
 
         }
@@ -97,7 +107,7 @@ class OrderService{
             throw new Error('Invalid order ID');
         }
         const order=await Order.findById(orderId)
-        .populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
+        .populate([{path:"user"},{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
 
         if(!order){
             throw new Error('Order not found');
@@ -112,23 +122,126 @@ class OrderService{
     }
 
     async getSellerOrders(sellerId){
-        return await Order.find({seller:sellerId})
+        return await Order.find({
+            seller:sellerId,
+            $or: [
+                { paymentStatus: { $in: [PaymentStatus.COMPLETED, PaymentStatus.REFUNDED] } },
+                { paymentMethod: 'COD' },
+            ],
+        })
         .populate([{path:"user"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}])
         .sort({createdAt:-1});
     }
 
-    async updateOrderStatus(orderId,newStatus){
+    async applyCancelledOrderState(order, { markTransactionRefunded = true } = {}){
+        if(!order){
+            throw new Error('Order not found');
+        }
+
+        if (order.orderStatus === OrderStatus.DELIVERED) {
+            throw new Error('Delivered orders cannot be cancelled or refunded');
+        }
+
+        const wasAlreadyCancelled = order.orderStatus === OrderStatus.CANCELLED;
+        const wasRefunded = order.paymentStatus === PaymentStatus.REFUNDED;
+        const shouldRefundNow = order.paymentStatus === PaymentStatus.COMPLETED && !wasRefunded;
+        const shouldRestoreCodStock =
+            !wasAlreadyCancelled &&
+            paymentMethodUtils.isCashOnDelivery(order.paymentMethod);
+
+        if (wasAlreadyCancelled && !shouldRefundNow) {
+            return order;
+        }
+
+        const updateData = {
+            orderStatus: OrderStatus.CANCELLED,
+        };
+
+        if (order.paymentStatus === PaymentStatus.COMPLETED || wasRefunded) {
+            updateData.paymentStatus = PaymentStatus.REFUNDED;
+        }
+
+        const cancelledOrder = await Order.findByIdAndUpdate(order._id,updateData,{new:true}
+        ).populate([{path:"user"},{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
+
+        if (!cancelledOrder) {
+            throw new Error('Order not found');
+        }
+
+        const sellerId = cancelledOrder.seller?._id || cancelledOrder.seller;
+        const sellerReport = await SellerReportService.getSellerReport(sellerId);
+
+        if (!wasAlreadyCancelled) {
+            sellerReport.canceledOrders = Number(sellerReport.canceledOrders || 0) + 1;
+        }
+
+        if (shouldRefundNow) {
+            const totalAmount = Number(cancelledOrder.totalSellingPrice || 0);
+
+            await productService.restoreStockForOrderItems(cancelledOrder.orderItems || []);
+            sellerReport.totalRefunds =
+                Number(sellerReport.totalRefunds || 0) + totalAmount;
+            sellerReport.netEarnings = Math.max(
+                0,
+                Number(sellerReport.netEarnings || 0) - totalAmount,
+            );
+
+            if (markTransactionRefunded) {
+                const TransactionService = require('./TransactionService');
+                await TransactionService.markTransactionRefunded(cancelledOrder._id);
+            }
+        }
+
+        if (shouldRestoreCodStock) {
+            await productService.restoreStockForOrderItems(cancelledOrder.orderItems || []);
+        }
+
+        await SellerReportService.updateSellerReport(sellerReport);
+
+        return cancelledOrder;
+    }
+
+    async cancelOrderBySeller(orderId,sellerId,{ markTransactionRefunded = true } = {}){
+        const order=await this.findOrderById(orderId);
+        const orderSellerId = order?.seller?._id || order?.seller;
+
+        if(orderSellerId?.toString()!==sellerId.toString()){
+            throw new Error('Unauthorized to cancel this order');
+        }
+
+        return await this.applyCancelledOrderState(order,{ markTransactionRefunded });
+    }
+
+    async updateOrderStatus(orderId,newStatus,sellerId){
         
         const order=await this.findOrderById(orderId);
         if(!order){
             throw new Error('Order not found');
         }
+
+        const orderSellerId = order?.seller?._id || order?.seller;
+        if(sellerId && orderSellerId?.toString()!==sellerId.toString()){
+            throw new Error('Unauthorized to update this order');
+        }
+
+        if(order.orderStatus===OrderStatus.DELIVERED && newStatus!==OrderStatus.DELIVERED){
+            throw new Error('Delivered orders cannot be updated');
+        }
+
+        if(newStatus===OrderStatus.CANCELLED){
+            return await this.cancelOrderBySeller(orderId,sellerId);
+        }
+
+        if(order.orderStatus===OrderStatus.CANCELLED){
+            return order;
+        }
+
         order.orderStatus=newStatus;
         return await Order.findByIdAndUpdate(orderId,{orderStatus:newStatus},{new:true}
-        ).populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
+        ).populate([{path:"user"},{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
     }
 
-        async cancelOrder(orderId,user){
+    async cancelOrder(orderId,user){
         
         const order=await this.findOrderById(orderId);
         if(user._id.toString()!==order.user._id.toString()){
@@ -137,9 +250,7 @@ class OrderService{
         if(!order){
             throw new Error('Order not found');
         }
-        order.orderStatus=OrderStatus.CANCELLED;
-        return await Order.findByIdAndUpdate(orderId,{orderStatus:OrderStatus.CANCELLED},{new:true}
-        ).populate([{path:"seller"},{path:"orderItems",populate:{path:"product"}},{path:"shippingAddress"}]);
+        return await this.applyCancelledOrderState(order);
     }
 
     async findOrderItemById(orderItemId){

@@ -14,8 +14,17 @@ import { AddressForm } from "./AddressForm";
 import React from "react";
 import { PricingCard } from "../Cart/PricingCard";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
+import { clearCartState, fetchCart } from "../../../Redux Toolkit/featurs/coustomer/cartSlice";
 import { createOrder } from "../../../Redux Toolkit/featurs/coustomer/orderSlice";
+import {
+  buildWishlistUserKey,
+  removeManyFromWishlist,
+} from "../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
 import { useNavigate } from "react-router";
+import {
+  clearPurchasedProductIds,
+  persistPurchasedProductIds,
+} from "../../../util/purchaseSession";
 
 const style = {
   position: "absolute",
@@ -31,10 +40,12 @@ const style = {
 
 const paymentGatwayList = [
   {
-    name: "Razorpay",
+    label: "Razorpay",
+    value: "razorpay",
   },
   {
-    name: "Paytm",
+    label: "Cash on Delivery",
+    value: "cod",
   },
 ];
 
@@ -42,8 +53,9 @@ export const Checkout = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
-  const [paymentGateway,setPaymentGateway] = useState(paymentGatwayList[0].name);
+  const [paymentGateway,setPaymentGateway] = useState(paymentGatwayList[0].value);
   const { cart, auth, user, order } = useAppSelector((state) => state);
+  const wishlistUserKey = buildWishlistUserKey(auth.user, user.user);
   const [addedAddresses, setAddedAddresses] = useState<any[]>([]);
   const [removedSavedAddressIds, setRemovedSavedAddressIds] = useState<string[]>([]);
   const [checkoutError, setCheckoutError] = useState("");
@@ -105,13 +117,19 @@ export const Checkout = () => {
     }
 
     setCheckoutError("");
+    const purchasedProductIds = (cart.cart?.items || [])
+      .map((item: any) => item?.productId || item?.product?._id)
+      .filter(Boolean)
+      .map((productId: any) => String(productId));
+
+    persistPurchasedProductIds(purchasedProductIds);
 
     try {
       const result = await dispatch(
         createOrder({
           address: selectedAddressData,
           jwt,
-          paymentGateway: paymentGateway.toLowerCase(),
+          paymentGateway,
         }),
       ).unwrap();
 
@@ -122,8 +140,19 @@ export const Checkout = () => {
         return;
       }
 
+      dispatch(
+        removeManyFromWishlist({
+          userKey: wishlistUserKey,
+          productIds: purchasedProductIds,
+        }),
+      );
+      dispatch(clearCartState());
+      await dispatch(fetchCart(jwt));
+      clearPurchasedProductIds();
+
       navigate("/customer/profile/orders", { replace: true });
     } catch (error: any) {
+      clearPurchasedProductIds();
       setCheckoutError(error?.message || error?.error || "Unable to place order");
     }
   };
@@ -186,9 +215,10 @@ export const Checkout = () => {
               onChange={handleChangePaymentGateway}
             >
               {paymentGatwayList.map((item)=><FormControlLabel
-                value={item.name}
+                key={item.value}
+                value={item.value}
                 control={<Radio />}
-                label={item.name}
+                label={item.label}
               />)}
             </RadioGroup>
           </section>
@@ -202,7 +232,7 @@ export const Checkout = () => {
                 onClick={handleCheckout}
                 disabled={order.loading || !cart.cart?.totalItems}
               >
-                {order.loading ? "Processing..." : "Pay Now"}
+                {order.loading ? "Processing..." : paymentGateway === "cod" ? "Place Order" : "Pay Now"}
               </Button>
             </div>
           </section>

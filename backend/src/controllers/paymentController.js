@@ -3,7 +3,7 @@ const OrderService=require('../service/OrderService');
 const SellerService=require('../service/SellerService');
 const TransactionService=require('../service/TransactionService');
 const SellerReportService=require('../service/SellerReportService');
-const Cart=require('../models/Cart');
+const CartService=require('../service/CartService');
 
 const paymentSucessHandler=async(req,res)=>{
     const paymentLinkId=
@@ -24,7 +24,13 @@ const paymentSucessHandler=async(req,res)=>{
             for(let orderId of paymentOrder.orders){
                 const order=await OrderService.findOrderById(orderId);
 
-                await TransactionService.createTransaction(user._id,order._id,order.seller);
+                await TransactionService.createTransaction(
+                    user._id,
+                    order._id,
+                    order.seller,
+                    paymentId,
+                    paymentLinkId,
+                );
 
                 const seller=await SellerService.getSellerById(order.seller);
 
@@ -33,12 +39,13 @@ const paymentSucessHandler=async(req,res)=>{
                 sellerReport.totalEarnings+=order.totalSellingPrice;
                 sellerReport.totalSales+=1;
                 sellerReport.totalOrders+=1;
+                sellerReport.totalTransactions+=1;
                 sellerReport.netEarnings+=order.totalSellingPrice - Number(order.taxAmount || 0);
                 
                 await SellerReportService.updateSellerReport(sellerReport);
 
             }
-            await Cart.findOneAndUpdate({user:user._id},{cartItems:[]},{new:true});
+            await CartService.clearUserCart(user._id);
 
             return res.status(200).json({
                 message:'Payment successful and order processed',

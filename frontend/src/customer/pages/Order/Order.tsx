@@ -32,12 +32,11 @@ export const Order = () => {
 
             <div className="space-y-2">
                 {orders.map((orderItem: any) => (
-                    <div
+                    <OrderItemCart
                         key={orderItem?._id}
-                        onClick={() => navigate(`/customer/profile/orders/${orderItem?._id}`)}
-                    >
-                        <OrderItemCart order={orderItem} />
-                    </div>
+                        order={orderItem}
+                        onOpenOrder={() => navigate(`/customer/profile/orders/${orderItem?._id}`)}
+                    />
                 ))}
             </div>
         </div>

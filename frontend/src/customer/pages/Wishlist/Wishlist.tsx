@@ -70,7 +70,7 @@ export const Wishlist = () => {
           <div className="grid justify-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {wishlistItems.map((item: any) => (
               <div key={item._id || item.productId} className="flex justify-center">
-                <ProductCard item={item} />
+                <ProductCard item={item} removeFromWishlistOnAddToCart />
               </div>
             ))}
           </div>

@@ -122,6 +122,11 @@ const orderSchema = new mongoose.Schema({
         enum: Object.values(PaymentStatus),
         default: PaymentStatus.PENDING
     },
+    paymentMethod: {
+        type: String,
+        enum: ["RAZORPAY", "COD"],
+        default: "RAZORPAY"
+    },
     orderDate: {
         type: Date,
         default: Date.now

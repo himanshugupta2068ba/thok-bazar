@@ -36,6 +36,27 @@ export const fetchSellerTransactions = createAsyncThunk<any, any>(
 	},
 );
 
+export const refundSellerTransaction = createAsyncThunk<any, any>(
+	"sellerTransaction/refundSellerTransaction",
+	async ({ transactionId, jwt }, { rejectWithValue }) => {
+		try {
+			const response = await api.patch(
+				`/transactions/seller/${transactionId}/refund`,
+				{},
+				{
+					headers: {
+						Authorization: `Bearer ${jwt}`,
+					},
+				},
+			);
+
+			return response.data;
+		} catch (error: any) {
+			return rejectWithValue(getErrorMessage(error));
+		}
+	},
+);
+
 const transactionSlice = createSlice({
 	name: "sellerTransactions",
 	initialState,
@@ -56,6 +77,27 @@ const transactionSlice = createSlice({
 					action.payload?.transactions || action.payload?.content || action.payload || [];
 			})
 			.addCase(fetchSellerTransactions.rejected, (state, action) => {
+				state.loading = false;
+				state.error = action.payload as string;
+			})
+			.addCase(refundSellerTransaction.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(refundSellerTransaction.fulfilled, (state, action) => {
+				state.loading = false;
+				const updatedTransaction = action.payload?.transaction || action.payload;
+				const index = state.transactions.findIndex(
+					(transaction: any) =>
+						(transaction?._id || transaction?.id) ===
+						(updatedTransaction?._id || updatedTransaction?.id),
+				);
+
+				if (index !== -1) {
+					state.transactions[index] = updatedTransaction;
+				}
+			})
+			.addCase(refundSellerTransaction.rejected, (state, action) => {
 				state.loading = false;
 				state.error = action.payload as string;
 			});

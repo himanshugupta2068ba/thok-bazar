@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { addItemTocart } from "../../../Redux Toolkit/featurs/coustomer/cartSlice";
 import {
   buildWishlistUserKey,
+  removeItemFromWishlist,
   toggleWishlistItem,
 } from "../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
@@ -23,7 +24,7 @@ const formatLabel = (value?: string) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-export const ProductCard = ({ item }: any) => {
+export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -97,6 +98,14 @@ export const ProductCard = ({ item }: any) => {
           jwt,
         }),
       ).unwrap();
+      if (removeFromWishlistOnAddToCart) {
+        dispatch(
+          removeItemFromWishlist({
+            productId,
+            userKey: wishlistUserKey,
+          }),
+        );
+      }
       navigate("/cart");
     } catch (error) {
       console.error("Failed to add item to cart", error);

@@ -110,6 +110,21 @@ const wishlistSlice = createSlice({
 
       persistWishlistItems(userKey, state.items);
     },
+    removeManyFromWishlist: (state, action) => {
+      const userKey = action.payload?.userKey || state.userKey || "guest";
+      const productIds = Array.isArray(action.payload?.productIds)
+        ? action.payload.productIds.map((productId: any) => String(productId))
+        : [];
+
+      if (!productIds.length) return;
+
+      state.userKey = userKey;
+      state.items = state.items.filter(
+        (item) => !productIds.includes(String(item?._id)),
+      );
+
+      persistWishlistItems(userKey, state.items);
+    },
     toggleWishlistItem: (state, action) => {
       const userKey = action.payload?.userKey || state.userKey || "guest";
       const normalizedItem = normalizeWishlistItem(action.payload?.item);
@@ -136,6 +151,7 @@ const wishlistSlice = createSlice({
 export const {
   addItemToWishlist,
   initializeWishlist,
+  removeManyFromWishlist,
   removeItemFromWishlist,
   toggleWishlistItem,
 } = wishlistSlice.actions;

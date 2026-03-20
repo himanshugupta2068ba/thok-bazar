@@ -2,13 +2,29 @@ import { Alert, Box, CircularProgress } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { api } from "../../../config/api";
+import { clearCartState, fetchCart } from "../../../Redux Toolkit/featurs/coustomer/cartSlice";
+import {
+  buildWishlistUserKey,
+  removeManyFromWishlist,
+} from "../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
+import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
+import {
+  clearPurchasedProductIds,
+  loadPurchasedProductIds,
+} from "../../../util/purchaseSession";
 
 export const PaymentSuccess = () => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
+  const { auth, user } = useAppSelector((state) => state);
 
   const jwt = useMemo(() => localStorage.getItem("jwt") || "", []);
+  const wishlistUserKey = useMemo(
+    () => buildWishlistUserKey(auth.user, user.user),
+    [auth.user, user.user],
+  );
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -37,6 +53,20 @@ export const PaymentSuccess = () => {
         });
 
         const orderId = response.data?.orderId;
+        const purchasedProductIds = loadPurchasedProductIds();
+
+        if (purchasedProductIds.length) {
+          dispatch(
+            removeManyFromWishlist({
+              userKey: wishlistUserKey,
+              productIds: purchasedProductIds,
+            }),
+          );
+        }
+
+        dispatch(clearCartState());
+        await dispatch(fetchCart(jwt));
+        clearPurchasedProductIds();
 
         if (orderId) {
           navigate(`/customer/profile/orders/${orderId}`, { replace: true });
@@ -50,7 +80,7 @@ export const PaymentSuccess = () => {
     };
 
     verifyPayment();
-  }, [jwt, navigate, searchParams]);
+  }, [dispatch, jwt, navigate, searchParams, wishlistUserKey]);
 
   return (
     <Box className="min-h-screen flex items-center justify-center px-4">

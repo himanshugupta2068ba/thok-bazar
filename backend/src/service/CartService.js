@@ -98,6 +98,27 @@ class CartService{
         await isPresent.save();
         return await CartItem.findById(isPresent._id).populate(cartItemPopulateConfig);
     }
+
+    async clearUserCart(userId){
+        const cart = await Cart.findOne({ user: userId });
+
+        if (!cart) {
+            return null;
+        }
+
+        await CartItem.deleteMany({ cart: cart._id });
+
+        cart.cartItems = [];
+        cart.totalMrpPrice = 0;
+        cart.totalSellingPrice = 0;
+        cart.totalItems = 0;
+        cart.discount = 0;
+        cart.couponCode = null;
+
+        await cart.save();
+
+        return cart;
+    }
 }
 
 module.exports=new CartService();
