@@ -12,8 +12,7 @@ import { useAppDispatch, useAppSelector } from './Redux Toolkit/store'
 import { useEffect } from 'react'
 import { fetchUserProfile } from './Redux Toolkit/featurs/coustomer/userSlice'
 import { fetchSellerProfile } from './Redux Toolkit/featurs/seller/sellerSlice'
-import { createHomeCategory, fetchHomeCategories } from './Redux Toolkit/featurs/coustomer/homeCategorySlice'
-import { homeCategories } from './data/homeCategory'
+import { fetchHomeCategories } from './Redux Toolkit/featurs/coustomer/homeCategorySlice'
 import { clearCartState, fetchCart } from './Redux Toolkit/featurs/coustomer/cartSlice'
 import { buildWishlistUserKey, initializeWishlist } from './Redux Toolkit/featurs/coustomer/wishlistSlice'
 
@@ -26,8 +25,9 @@ function App() {
   useEffect(()=>{
     const jwt = auth.jwt?.trim() || localStorage.getItem("jwt");
     const sellerJwt= localStorage.getItem("sellerJwt");
+    const isSellerRoute = window.location.pathname.startsWith("/seller");
 
-    if(sellerJwt){
+    if(sellerJwt && isSellerRoute){
       dispatch(fetchSellerProfile(sellerJwt));
     }
     if(jwt){
@@ -45,11 +45,7 @@ function App() {
 
 
   useEffect(()=>{
-    dispatch(createHomeCategory(homeCategories))
-      .unwrap()
-      .catch(() => {
-        dispatch(fetchHomeCategories());
-      });
+    dispatch(fetchHomeCategories());
   },[dispatch])
   return (
   <ThemeProvider theme={customTheme}>

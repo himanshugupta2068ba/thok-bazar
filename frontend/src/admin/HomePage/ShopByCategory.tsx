@@ -1,10 +1,14 @@
 import { HomeCategoryTable } from "./HomeCategoryTable"
 
-const image="https://avatars.githubusercontent.com/u/23248726?v=4"
 export const ShopByCategory = () => {
     return (
         <div>
-            <HomeCategoryTable image={image}/>
+            <HomeCategoryTable
+                section="SHOP_BY_CATEGORY"
+                title="Shop By Category Section"
+                description="Manage top-level categories shown in the shop-by-category section."
+                addButtonLabel="Add Shop Category"
+            />
         </div>
     )
 }

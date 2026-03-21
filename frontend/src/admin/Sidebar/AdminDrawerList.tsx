@@ -1,5 +1,4 @@
 import {
-  AccountBalanceWallet,
   AccountBox,
   Add,
   Category,
@@ -10,9 +9,8 @@ import {
   Logout,
   Person,
   Receipt,
-  ShoppingBag,
 } from "@mui/icons-material";
-import { Divider, Grid, ListItemIcon, ListItemText } from "@mui/material";
+import { Divider, ListItemIcon, ListItemText } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 
 const menu = [
@@ -22,12 +20,12 @@ const menu = [
     path: "/admin",
     activeIcon: <Dashboard className="text-white" />,
   },
-//  {
-//   name: "Seller Table",
-//   icon: <Person className="text-teal-700" />,
-//   path: "/admin/seller-table",
-//   activeIcon: <Person className="text-white" />,
-//  },
+ {
+  name: "Seller Table",
+  icon: <Person className="text-teal-700" />,
+  path: "/admin/seller-table",
+  activeIcon: <Person className="text-white" />,
+ },
  {
   name: "Add Coupon",
   icon: <Add className="text-teal-700" />,
@@ -101,7 +99,7 @@ export const AdminDrawwerList = ({ toggleDrawwer }: any) => {
   return (
     <div className="w-75 h-full flex flex-col justify-between border-r border-gray-200 gap-5 py-10">
       <div className="space-y-2">
-        {menu.map((item, index) => (
+        {menu.map((item) => (
           <div
             key={item.path}
             className="pr-9 cursor-pointer"
@@ -122,7 +120,7 @@ export const AdminDrawwerList = ({ toggleDrawwer }: any) => {
       </div>
          <div className="space-y-2">
             <Divider className="py-3"/>
-        {menu2.map((item, index) => (
+        {menu2.map((item) => (
           <div
             key={item.path}
             className="pr-9 cursor-pointer"

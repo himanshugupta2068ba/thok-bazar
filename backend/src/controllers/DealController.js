@@ -5,7 +5,8 @@ class DealController {
 
     async getDeals(req, res) {
         try {
-            const deals = await DealService.getDeals();
+            const activeOnly = String(req.query.active || "").toLowerCase() === "true";
+            const deals = await DealService.getDeals({ activeOnly });
             res.status(200).json(deals);
         } catch (err) {
             res.status(500).json({ error: err.message });

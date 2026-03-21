@@ -1,4 +1,3 @@
-import React from 'react';
 import ElectronicCategory from './ElectronicCategory/ElectronicCategory';
 import Grid from './Grid/Grid';
 import Deal from './Deal/Deal';

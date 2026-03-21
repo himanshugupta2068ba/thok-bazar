@@ -7,11 +7,17 @@ class HomeCategoryController{
     async createHomeCategories(req, res){
         try{
             const homeCategories=req.body;
-            const createdCategories=await HomeCategoryService.createCategories(homeCategories);
-            
-            const home=await HomeSerice.createHomePageData(createdCategories);
 
-            res.status(201).json(createdCategories);
+            // Keep backward compatibility for existing bulk-seed payloads.
+            if (Array.isArray(homeCategories)) {
+                const createdCategories=await HomeCategoryService.createCategories(homeCategories);
+                await HomeSerice.createHomePageData(createdCategories);
+                return res.status(201).json(createdCategories);
+            }
+
+            // Admin create flow: create one category item directly.
+            const createdCategory = await HomeCategoryService.createHomeCategory(homeCategories);
+            return res.status(201).json(createdCategory);
         }catch(err){
             res.status(500).json({error:err.message});
         }

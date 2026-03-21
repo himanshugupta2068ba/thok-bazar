@@ -25,9 +25,12 @@ const API_URL = "/deals";
 
 export const fetchDeals = createAsyncThunk<any, any>(
 	"deal/fetchDeals",
-	async (jwt, { rejectWithValue }) => {
+	async (payload, { rejectWithValue }) => {
 		try {
+			const jwt = typeof payload === "string" ? payload : payload?.jwt;
+			const activeOnly = Boolean(payload?.activeOnly);
 			const response = await api.get(API_URL, {
+				params: activeOnly ? { active: true } : undefined,
 				headers: jwt
 					? {
 							Authorization: `Bearer ${jwt}`,
@@ -50,6 +53,8 @@ export const createDeal = createAsyncThunk<any, any>(
 				{
 					categoryId: deal?.categoryId,
 					discount: Number(deal?.discount),
+					isActive: deal?.isActive !== undefined ? Boolean(deal?.isActive) : true,
+					productIds: Array.isArray(deal?.productIds) ? deal.productIds : [],
 				},
 				{
 					headers: jwt
@@ -68,12 +73,13 @@ export const createDeal = createAsyncThunk<any, any>(
 
 export const updateDeal = createAsyncThunk<any, any>(
 	"deal/updateDeal",
-	async ({ dealId, discount, jwt }, { rejectWithValue }) => {
+	async ({ dealId, discount, isActive, jwt }, { rejectWithValue }) => {
 		try {
 			const response = await api.put(
 				`${API_URL}/${dealId}`,
 				{
-					discount: Number(discount),
+					...(discount !== undefined ? { discount: Number(discount) } : {}),
+					...(isActive !== undefined ? { isActive: Boolean(isActive) } : {}),
 				},
 				{
 					headers: jwt

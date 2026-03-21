@@ -1,21 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../../config/api";
-import { homeCategories as seededHomeCategories } from "../../../data/homeCategory";
-
-const mergeHomeCategories = (incomingCategories: any[] = []) => {
-    const merged = new Map<string, any>();
-
-    seededHomeCategories.forEach((category) => {
-        merged.set(`${category.section}:${category.categoryId}`, category);
-    });
-
-    incomingCategories.forEach((category) => {
-        if (!category?.section || !category?.categoryId) return;
-        merged.set(`${category.section}:${category.categoryId}`, category);
-    });
-
-    return Array.from(merged.values());
-};
 
 export const fetchHomeCategories = createAsyncThunk<any, void>(
     'homeCategory/fetchAll',
@@ -54,7 +38,7 @@ export const  createHomeCategory=createAsyncThunk<any,any>(
 const HomeCategorySlice=createSlice({
     name:'homeCategory',
     initialState:{
-        homeCategories:mergeHomeCategories() as any[],
+        homeCategories:[] as any[],
         loading:false,
         error:null as string|null,
         homeCategoryCreated:false
@@ -67,9 +51,7 @@ const HomeCategorySlice=createSlice({
         });
         builder.addCase(fetchHomeCategories.fulfilled,(state,action)=>{
             state.loading=false;
-            state.homeCategories = mergeHomeCategories(
-                Array.isArray(action.payload) ? action.payload : [],
-            );
+            state.homeCategories = Array.isArray(action.payload) ? action.payload : [];
         });
         builder.addCase(fetchHomeCategories.rejected,(state,action)=>{
             state.loading=false;
@@ -84,7 +66,7 @@ const HomeCategorySlice=createSlice({
             state.loading=false;
             state.homeCategoryCreated=true;
             const categories = Array.isArray(action.payload) ? action.payload : [action.payload];
-            state.homeCategories = mergeHomeCategories(categories);
+            state.homeCategories = categories;
         });
         builder.addCase(createHomeCategory.rejected,(state,action)=>{
             state.loading=false;

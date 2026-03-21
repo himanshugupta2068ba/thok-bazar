@@ -12,6 +12,22 @@ const paymentMethodUtils = require('../util/paymentMethod');
 const PLATFORM_FEE = 20;
 const SHIPPING_FEE = 99;
 class OrderService{
+    async getAllOrdersForAdmin(){
+        return await Order.find({
+            $or: [
+                { paymentStatus: { $in: [PaymentStatus.COMPLETED, PaymentStatus.REFUNDED] } },
+                { paymentMethod: 'COD' },
+            ],
+        })
+        .populate([
+            {path:"user"},
+            {path:"seller"},
+            {path:"orderItems",populate:{path:"product"}},
+            {path:"shippingAddress"},
+        ])
+        .sort({createdAt:-1});
+    }
+
     async createOrder(user,shippingAddress,cart,paymentMethod='RAZORPAY'){
         const userAddressIds = Array.isArray(user.address) ? user.address.map((id) => id.toString()) : [];
         const normalizedPaymentMethod = paymentMethodUtils.normalizePaymentMethod(paymentMethod);

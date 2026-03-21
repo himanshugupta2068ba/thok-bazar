@@ -1,18 +1,20 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Slider from "react-slick";
 import { DealCard } from "./DealCard.tsx";
-import { useAppSelector } from "../../../../Redux Toolkit/store";
+import { fetchDeals } from "../../../../Redux Toolkit/featurs/admin/DealSlice";
+import { useAppDispatch, useAppSelector } from "../../../../Redux Toolkit/store";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const Deal = () => {
+  const dispatch = useAppDispatch();
   const sliderRef = useRef<Slider | null>(null);
-  const deals = useAppSelector((state) =>
-    state.homeCategory.homeCategories.filter(
-      (item: any) => item.section === "TOP_DEALS",
-    ),
-  );
+  const deals = useAppSelector((state) => state.deals.deals || []);
+
+  useEffect(() => {
+    dispatch(fetchDeals({ activeOnly: true }));
+  }, [dispatch]);
 
   const settings = {
     dots: false,
@@ -30,8 +32,9 @@ const Deal = () => {
           <DealCard
             key={item._id || item.categoryId}
             deal={{
-              image: item.image,
-              name: item.name,
+              image: item.displayImage || item.category?.image || item.image,
+              name: item.displayName || item.category?.name || item.name,
+              discount: item.discount,
             }}
           />
         ))}

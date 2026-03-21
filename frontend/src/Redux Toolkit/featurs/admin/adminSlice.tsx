@@ -56,6 +56,24 @@ export const fetchHomeCategories = createAsyncThunk<any, any>(
   },
 );
 
+export const createAdminHomeCategory = createAsyncThunk<any, any>(
+  "admin/createHomeCategory",
+  async ({ payload, jwt }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/home-categories`, payload, {
+        headers: jwt
+          ? {
+              Authorization: `Bearer ${jwt}`,
+            }
+          : undefined,
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  },
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState,
@@ -96,6 +114,21 @@ const adminSlice = createSlice({
         }
       })
       .addCase(updateHomeCategoryStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(createAdminHomeCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createAdminHomeCategory.fulfilled, (state, action) => {
+        state.loading = false;
+        const createdCategory = action.payload;
+        if (createdCategory) {
+          state.homeCategories.unshift(createdCategory);
+        }
+      })
+      .addCase(createAdminHomeCategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

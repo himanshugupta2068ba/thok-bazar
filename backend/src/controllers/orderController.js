@@ -5,6 +5,15 @@ const PaymentOrder = require('../models/paymentOrder');
 const paymentMethodUtils = require('../util/paymentMethod');
 
 class OrderController{
+    async getAllOrdersForAdmin(req,res){
+        try{
+            const orders = await OrderService.getAllOrdersForAdmin();
+            return res.status(200).json({orders});
+        }catch(error){
+            return res.status(500).json({message:error.message});
+        }
+    }
+
     async createOrder(req,res){
         const { shippingAddress } = req.body;
         const requestedPaymentMethod = req.query.paymentMethod || req.body.paymentMethod;

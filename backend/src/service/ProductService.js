@@ -1,9 +1,114 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Review = require('../models/Review');
+const Deal = require('../models/Deal');
 const calculateDiscountPercentage = require('../util/discountCalculator');
 
 class ProductService {
+    async getActiveDealMaps() {
+        const deals = await Deal.find({ $or: [{ isActive: true }, { isActive: { $exists: false } }] })
+            .populate('category', 'categoryId')
+            .select('discount category productIds isActive');
+
+        const categoryDealMap = new Map();
+        const productDealMap = new Map();
+
+        deals.forEach((deal) => {
+            const discount = Number(deal?.discount || 0);
+            if (!discount || discount <= 0) {
+                return;
+            }
+
+            const categoryId = String(deal?.category?.categoryId || '').trim();
+            if (categoryId) {
+                const existing = categoryDealMap.get(categoryId);
+                if (!existing || Number(existing.discount || 0) < discount) {
+                    categoryDealMap.set(categoryId, deal);
+                }
+            }
+
+            const productIds = Array.isArray(deal?.productIds) ? deal.productIds : [];
+            productIds.forEach((productId) => {
+                const key = String(productId || '').trim();
+                if (!key) {
+                    return;
+                }
+                const existing = productDealMap.get(key);
+                if (!existing || Number(existing.discount || 0) < discount) {
+                    productDealMap.set(key, deal);
+                }
+            });
+        });
+
+        return { categoryDealMap, productDealMap };
+    }
+
+    findDealForProduct(product, dealMaps) {
+        const { categoryDealMap, productDealMap } = dealMaps;
+        const productId = String(product?._id || '').trim();
+
+        if (productId && productDealMap.has(productId)) {
+            return productDealMap.get(productId);
+        }
+
+        const categoryCandidates = [
+            product?.subSubCategory,
+            product?.subCategory,
+            product?.mainCategory,
+            product?.category?.categoryId,
+        ].map((value) => String(value || '').trim()).filter(Boolean);
+
+        for (const categoryId of categoryCandidates) {
+            if (categoryDealMap.has(categoryId)) {
+                return categoryDealMap.get(categoryId);
+            }
+        }
+
+        return null;
+    }
+
+    applyDealToProduct(product, dealMaps) {
+        const rawProduct = product?.toObject ? product.toObject() : product;
+        const matchingDeal = this.findDealForProduct(rawProduct, dealMaps);
+
+        if (!matchingDeal) {
+            return {
+                ...rawProduct,
+                dealApplied: false,
+                activeDeal: null,
+                dealSellingPrice: Number(rawProduct?.sellingPrice || 0),
+            };
+        }
+
+        const baseSellingPrice = Number(rawProduct?.sellingPrice || 0);
+        const dealDiscount = Number(matchingDeal?.discount || 0);
+        const dealSellingPrice = Math.max(
+            0,
+            Number((baseSellingPrice * (1 - dealDiscount / 100)).toFixed(2)),
+        );
+
+        return {
+            ...rawProduct,
+            dealApplied: true,
+            activeDeal: {
+                id: matchingDeal?._id,
+                discount: dealDiscount,
+                categoryId: matchingDeal?.category?.categoryId || null,
+                isProductSpecific: Array.isArray(matchingDeal?.productIds) && matchingDeal.productIds.length > 0,
+            },
+            dealSellingPrice,
+        };
+    }
+
+    async applyDealsToProductCollection(products = []) {
+        if (!Array.isArray(products) || !products.length) {
+            return [];
+        }
+
+        const dealMaps = await this.getActiveDealMaps();
+        return products.map((product) => this.applyDealToProduct(product, dealMaps));
+    }
+
     async decreaseStockForOrderItems(orderItems = []) {
         await Promise.all(
             orderItems.map(async (orderItem) => {
@@ -225,45 +330,6 @@ class ProductService {
         return await this.getProductReviews(productId);
     }
 
-    async getSimilarProducts(productId) {
-        const currentProduct = await Product.findById(productId).populate({
-            path: 'category',
-            populate: {
-                path: 'parentCategory',
-                model: 'Category'
-            }
-        });
-
-        if (!currentProduct) {
-            throw new Error('Product not found');
-        }
-
-        let subCategory = null;
-
-        if (currentProduct.subCategory) {
-            subCategory = await Category.findOne({ categoryId: currentProduct.subCategory });
-        }
-
-        if (!subCategory && currentProduct.category?.parentCategory) {
-            subCategory = currentProduct.category.parentCategory;
-        }
-
-        if (!subCategory) {
-            return [];
-        }
-
-        const categoryIds = await this.getCategoryTreeIds(subCategory);
-
-        return await Product.find({
-            _id: { $ne: productId },
-            category: { $in: categoryIds }
-        })
-            .populate('category', 'categoryId name')
-            .populate('sellerId', 'sellerName businessDetails')
-            .sort({ createdAt: -1 })
-            .limit(8);
-    }
-
     async createProduct(req, seller) {
         try {
             const categoryData = await this.resolveCategoryHierarchy(req.body);
@@ -348,20 +414,22 @@ class ProductService {
         if (!product) {
             throw new Error('Product not found');
         }
-        return product;
+        const [productWithDeal] = await this.applyDealsToProductCollection([product]);
+        return productWithDeal;
     }
 
     async searchProducts(query) {
         try {
             const products = await Product.find({ title: { $regex: query, $options: 'i' } });
-            return products;
+            return await this.applyDealsToProductCollection(products);
         } catch (error) {
             throw new Error('Error searching products: ' + error.message);
         }
     }
 
     async getProductBySeller(sellerId) {
-        return await Product.find({ sellerId: sellerId });
+        const products = await Product.find({ sellerId: sellerId });
+        return await this.applyDealsToProductCollection(products);
     }
 
     async getProductsBySellerId(sellerId, pageNumber = 0) {
@@ -375,9 +443,10 @@ class ProductService {
 
         const totalElement = await Product.countDocuments(query);
         const totalpages = Math.ceil(totalElement / 10);
+        const content = await this.applyDealsToProductCollection(products);
 
         return {
-            content: products,
+            content,
             totalpages,
             totalElement
         };
@@ -457,12 +526,54 @@ class ProductService {
 
         const totalElement = await Product.countDocuments(filterQuery);
         const totalpages = Math.ceil(totalElement / 10);
+        const content = await this.applyDealsToProductCollection(product);
 
         return {
-            content: product,
+            content,
             totalpages,
             totalElement
         };
+    }
+
+    async getSimilarProducts(productId) {
+        const currentProduct = await Product.findById(productId).populate({
+            path: 'category',
+            populate: {
+                path: 'parentCategory',
+                model: 'Category'
+            }
+        });
+
+        if (!currentProduct) {
+            throw new Error('Product not found');
+        }
+
+        let subCategory = null;
+
+        if (currentProduct.subCategory) {
+            subCategory = await Category.findOne({ categoryId: currentProduct.subCategory });
+        }
+
+        if (!subCategory && currentProduct.category?.parentCategory) {
+            subCategory = currentProduct.category.parentCategory;
+        }
+
+        if (!subCategory) {
+            return [];
+        }
+
+        const categoryIds = await this.getCategoryTreeIds(subCategory);
+
+        const products = await Product.find({
+            _id: { $ne: productId },
+            category: { $in: categoryIds }
+        })
+            .populate('category', 'categoryId name')
+            .populate('sellerId', 'sellerName businessDetails')
+            .sort({ createdAt: -1 })
+            .limit(8);
+
+        return await this.applyDealsToProductCollection(products);
     }
 }
 
