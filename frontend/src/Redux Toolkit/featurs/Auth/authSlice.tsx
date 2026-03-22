@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../../config/api.ts";
 import { fetchUserProfile } from "../coustomer/userSlice.tsx";
+import { clearCustomerSession, getValidCustomerJwt } from "../../../util/customerSession.ts";
 
 // export const sendLoginSignupOtp = createAsyncThunk(
 //   "/auth/sendLoginSignupOtp",
@@ -90,7 +91,7 @@ const authSlice = createSlice({
         error:null as unknown,
         role:null,
         otpSent:false,
-      jwt:""
+      jwt:getValidCustomerJwt() || ""
     },
     reducers:{
         logout:(state)=>{
@@ -99,13 +100,15 @@ const authSlice = createSlice({
             state.otpSent=false;
           state.jwt="";
             state.error=null;
-            // Clear all user-related data from localStorage
-            localStorage.removeItem("jwt");
-            localStorage.removeItem("role");
-            localStorage.removeItem("adminToken"); // if exists
+            clearCustomerSession();
         },
         clearError:(state)=>{
             state.error=null;
+        },
+        resetAuthFlow:(state)=>{
+            state.loading=false;
+            state.error=null;
+            state.otpSent=false;
         }
     },
     extraReducers:(builder)=>{
@@ -167,10 +170,10 @@ const authSlice = createSlice({
               state.user = null;
               state.role = null;
               state.jwt = "";
-              localStorage.removeItem("jwt");
+              clearCustomerSession();
           });
     }
 });
 
-export const {logout, clearError}=authSlice.actions;
+export const {logout, clearError, resetAuthFlow}=authSlice.actions;
 export default authSlice.reducer;

@@ -28,10 +28,16 @@ export const OrderDetails = () => {
   const status = orderDetails?.orderStatus;
   const isCancelled = status === "CANCELLED";
   const isDelivered = status === "DELIVERED";
-  const productTotal = Number(orderDetails?.totalSellingPrice || 0) - Number(orderDetails?.platformFee || 0) - Number(orderDetails?.shippingFee || 0);
-  const totalAmount = Number(orderDetails?.totalSellingPrice || 0);
-  const savedAmount = Math.max(0, Number(orderDetails?.totalMrpPrice || 0) - productTotal);
   const orderItems = Array.isArray(orderDetails?.orderItems) ? orderDetails.orderItems : [];
+  const derivedItemTotal = orderItems.reduce(
+    (total: number, item: any) => total + Number(item?.sellingPrice || 0),
+    0,
+  );
+  const productTotal = Number(orderDetails?.itemTotal ?? derivedItemTotal);
+  const totalAmount = Number(orderDetails?.totalSellingPrice || 0);
+  const productDiscountAmount = Number(orderDetails?.discount || 0);
+  const couponDiscountAmount = Number(orderDetails?.couponDiscountAmount || 0);
+  const savedAmount = Math.max(0, productDiscountAmount + couponDiscountAmount);
 
   const handleCancelOrder = async () => {
     if (!orderId || isCancelled || isDelivered) return;
@@ -55,10 +61,10 @@ export const OrderDetails = () => {
 
   return (
     <Box className="space-y-5">
-      <section className="flex flex-col gap-5 justify-center items-center">
+      <section className="flex flex-col items-center justify-center gap-5">
         <img className="w-32" src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="order placed" />
-        <div className="text-sm space-y-1 text-center">
-          <h1 className="font-bold text-lg">Order Tracking</h1>
+        <div className="space-y-1 text-center text-sm">
+          <h1 className="text-lg font-bold">Order Tracking</h1>
           <p>Track your order progress and delivery updates.</p>
         </div>
       </section>
@@ -68,8 +74,8 @@ export const OrderDetails = () => {
       </section>
 
       <section className="border border-gray-200 p-5">
-        <h1 className="font-bold pb-3">Delivery Address</h1>
-        <div className="text-sm space-y-2">
+        <h1 className="pb-3 font-bold">Delivery Address</h1>
+        <div className="space-y-2 text-sm">
           <div className="flex gap-5 font-medium">
             <p>{address?.name || "-"}</p>
             <Divider orientation="vertical" flexItem />
@@ -80,7 +86,7 @@ export const OrderDetails = () => {
       </section>
 
       <section className="border border-gray-200 p-5">
-        <h1 className="font-bold pb-4">Items In This Order</h1>
+        <h1 className="pb-4 font-bold">Items In This Order</h1>
         <div className="space-y-3">
           {orderItems.map((item: any) => {
             const product = item?.product;
@@ -127,10 +133,24 @@ export const OrderDetails = () => {
             <p className="font-semibold">Total item Price</p>
             <p className="pb-3">You saved <span className="text-green-500">Rs. {savedAmount}</span></p>
           </div>
-          <p className="text-lg font-bold ml-auto">Rs. {totalAmount}</p>
+          <p className="ml-auto text-lg font-bold">Rs. {totalAmount}</p>
         </div>
 
-        <div className="px-5 py-3 border-t border-gray-200 bg-teal-50 space-y-2">
+        <div className="space-y-2 border-t border-gray-200 bg-teal-50 px-5 py-3">
+          <div className="flex justify-between text-xs text-gray-600">
+            <span>Items Total</span>
+            <span>Rs. {productTotal}</span>
+          </div>
+          <div className="flex justify-between text-xs text-gray-600">
+            <span>Product Discount</span>
+            <span>-Rs. {productDiscountAmount}</span>
+          </div>
+          {couponDiscountAmount > 0 ? (
+            <div className="flex justify-between text-xs text-gray-600">
+              <span>Coupon {orderDetails?.couponCode ? `(${orderDetails.couponCode})` : ""}</span>
+              <span>-Rs. {couponDiscountAmount}</span>
+            </div>
+          ) : null}
           <div className="flex justify-between">
             <Payment className="text-teal-500" />
             <p>{formatPaymentMethodLabel(orderDetails?.paymentMethod)}</p>

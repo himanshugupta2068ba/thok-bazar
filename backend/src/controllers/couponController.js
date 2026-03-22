@@ -3,7 +3,7 @@ const CouponService = require('../service/CouponService');
 class CouponController {
   async getCoupons(req, res) {
     try {
-      const coupons = await CouponService.getCoupons();
+      const coupons = await CouponService.getCoupons(req.query);
       return res.status(200).json(coupons);
     } catch (error) {
       return res.status(500).json({ message: error.message });

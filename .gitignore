@@ -97,3 +97,6 @@ dist-ssr/
 
 # Storybook / static builds
 storybook-static/
+
+# Local audit notes
+PLATFORM_FLAWS_AUDIT.md

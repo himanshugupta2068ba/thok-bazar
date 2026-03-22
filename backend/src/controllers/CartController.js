@@ -30,7 +30,8 @@ class CartController{
                 req.body.size,
                 req.body.quantity
             );
-            res.status(200).json(cartItem);
+            const cart=await CartService.findUserCart(user);
+            res.status(200).json(cart);
         }catch(error){
             res.status(500).json({error:error.message});
         }
@@ -41,7 +42,8 @@ class CartController{
             const user=await req.user;
             const cartItemId=req.params.cartItemId;
             await CartItemService.removeCartItem(user._id,cartItemId);
-            res.status(200).json({message:"Cart item deleted successfully"});
+            const cart=await CartService.findUserCart(user);
+            res.status(200).json(cart);
         }catch(error){
             res.status(500).json({error:error.message});
         }
@@ -63,9 +65,30 @@ class CartController{
                 cartItemId,
                 cartItemData
             );
-            res.status(200).json(updatedCartItem);
+            const cart=await CartService.findUserCart(user);
+            res.status(200).json(cart);
         }catch(error){
             res.status(500).json({error:error.message});
+        }
+    }
+
+    async applyCouponHandler(req,res){
+        try{
+            const user=await req.user;
+            const cart=await CartService.applyCoupon(user, req.body.code);
+            res.status(200).json(cart);
+        }catch(error){
+            res.status(400).json({error:error.message});
+        }
+    }
+
+    async removeCouponHandler(req,res){
+        try{
+            const user=await req.user;
+            const cart=await CartService.removeCoupon(user);
+            res.status(200).json(cart);
+        }catch(error){
+            res.status(400).json({error:error.message});
         }
     }
 

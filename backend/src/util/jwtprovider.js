@@ -12,22 +12,20 @@ class JwtProvider{
     createJwt(payload){
       return jwt.sign(payload,this.seceretkey,{expiresIn:"24h"})
     }
-    getEmailFromjwt(token){
-        try{
-            const decodeToken=jwt.verify(token,this.seceretkey)
-            return decodeToken.email;
-        }
-        catch(err){
-            throw new Error("Invalid Token")
-        }
-    }
-    verifyJwt(token){
+    getPayloadFromjwt(token){
         try{
             return jwt.verify(token,this.seceretkey)
         }
         catch(err){
             throw new Error("Invalid Token")
         }
+    }
+    getEmailFromjwt(token){
+        const decodeToken=this.getPayloadFromjwt(token);
+        return decodeToken.email;
+    }
+    verifyJwt(token){
+        return this.getPayloadFromjwt(token)
     }
 
 }

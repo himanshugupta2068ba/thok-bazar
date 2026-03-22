@@ -12,6 +12,7 @@ import {
 } from "@mui/icons-material";
 import { Divider, ListItemIcon, ListItemText } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
+import { clearAdminSession } from "../../util/adminSession";
 
 const menu = [
   {
@@ -83,7 +84,7 @@ export const AdminDrawwerList = ({ toggleDrawwer }: any) => {
   const location = useLocation();
   const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
+    clearAdminSession();
     if (toggleDrawwer) toggleDrawwer(false);
     navigate("/admin/login");
   };

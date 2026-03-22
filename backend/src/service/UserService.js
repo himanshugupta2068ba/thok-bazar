@@ -34,7 +34,7 @@ class UserService{
         const cart=new Cart({user:user._id});
         await cart.save();
 
-        return jwtprovider.createJwt({email});
+        return jwtprovider.createJwt({email, role:user.role});
     }
 
     async signin(req){
@@ -52,7 +52,7 @@ class UserService{
         }
         return {
             message:"Signin successful",
-            jwt:jwtprovider.createJwt({email}),
+            jwt:jwtprovider.createJwt({email, role:user.role}),
             role:user.role
         }
     }

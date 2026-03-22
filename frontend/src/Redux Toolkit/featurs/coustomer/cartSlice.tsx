@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../../config/api";
+import { applyCouponToCart, removeCouponFromCart } from "./couponSlice";
 
 interface CartItem {
     productId: string;
@@ -275,6 +276,30 @@ const cartSlice = createSlice({
             }
         });
         builder.addCase(updateCartItemQuantity.rejected,(state,action)=>{
+            state.loading=false;
+            state.error=action.payload as string;
+        });
+        builder.addCase(applyCouponToCart.pending,(state)=>{
+            state.loading=true;
+            state.error="";
+        });
+        builder.addCase(applyCouponToCart.fulfilled,(state,action)=>{
+            state.loading=false;
+            state.cart=normalizeCartPayload(action.payload);
+        });
+        builder.addCase(applyCouponToCart.rejected,(state,action)=>{
+            state.loading=false;
+            state.error=action.payload as string;
+        });
+        builder.addCase(removeCouponFromCart.pending,(state)=>{
+            state.loading=true;
+            state.error="";
+        });
+        builder.addCase(removeCouponFromCart.fulfilled,(state,action)=>{
+            state.loading=false;
+            state.cart=normalizeCartPayload(action.payload);
+        });
+        builder.addCase(removeCouponFromCart.rejected,(state,action)=>{
             state.loading=false;
             state.error=action.payload as string;
         });

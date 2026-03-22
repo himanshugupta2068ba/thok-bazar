@@ -71,12 +71,11 @@ export const SignUp=()=>{
   }
 };
     return(
-        <>   
-        {/* <Navbar/> */}
-        <Box sx={{ padding: 5 }}>
+        <>
+        <Box sx={{ padding: { xs: 3, sm: 5 } }}>
             
             <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color:"teal"}}>
-                SignUp
+                Sign Up
             </Typography>
             
             {/* Error Alert */}

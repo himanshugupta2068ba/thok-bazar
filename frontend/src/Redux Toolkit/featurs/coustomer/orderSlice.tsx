@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../../config/api";
 
-const initialState = {
+const createInitialState = () => ({
     orders: [] as any[],
     orderDetails: null,
     loading: false,
@@ -10,7 +10,9 @@ const initialState = {
     currentOrder: null,
     paymentOrder: null,
     CancelledOrders: [] as any[],
-};
+});
+
+const initialState = createInitialState();
 
 const API_URL = "/orders";
 
@@ -123,7 +125,9 @@ export const deleteOrder = createAsyncThunk<any, any>(
 const orderSlice = createSlice({
     name: "order",
     initialState,
-    reducers: {},
+    reducers: {
+        resetOrderState: () => createInitialState(),
+    },
     extraReducers: (builder) => {
         // Create Order
         builder.addCase(createOrder.pending, (state) => {
@@ -216,4 +220,5 @@ const orderSlice = createSlice({
     }
 });
 
+export const { resetOrderState } = orderSlice.actions;
 export default orderSlice.reducer;

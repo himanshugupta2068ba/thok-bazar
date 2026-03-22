@@ -58,7 +58,7 @@ export const LoginForm=()=>{
     };
 
     return(
-        <Box sx={{ padding: 5 }}>
+        <Box sx={{ padding: { xs: 3, sm: 5 } }}>
             <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color:"teal"}}>
                  Login
             </Typography>

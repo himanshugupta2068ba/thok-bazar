@@ -59,8 +59,8 @@ export const SellerTables = () => {
 
   useEffect(() => {
     const filter = statusFilter === "ALL" ? null : statusFilter;
-    dispatch(fetchSeller(filter));
-  }, [dispatch, statusFilter]);
+    dispatch(fetchSeller({ status: filter, jwt: adminToken }));
+  }, [adminToken, dispatch, statusFilter]);
 
   const sellerRows = useMemo(() => (Array.isArray(sellers) ? sellers : []), [sellers]);
 

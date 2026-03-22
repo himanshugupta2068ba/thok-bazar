@@ -6,6 +6,8 @@ const router=express.Router();
 router.get("/",authMiddleware,CartController.findUserCartHandler);
 
 router.post("/add-item",authMiddleware,CartController.addItemToCart);
+router.patch("/coupon",authMiddleware,CartController.applyCouponHandler);
+router.delete("/coupon",authMiddleware,CartController.removeCouponHandler);
 
 router.delete("/item/:cartItemId",authMiddleware,CartController.deleteCartItemHandler);
 

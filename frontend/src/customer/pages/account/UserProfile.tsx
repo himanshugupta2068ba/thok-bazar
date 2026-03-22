@@ -10,8 +10,7 @@ import {
 } from "@mui/material";
 import { useAppSelector } from "../../../Redux Toolkit/store";
 import { ProfileFieldCart } from "./ProfileFieldCart";
-
-const PROFILE_OVERRIDES_KEY = "customer_profile_overrides";
+import { CUSTOMER_PROFILE_OVERRIDES_KEY } from "../../../util/customerSession";
 
 export const UserProfile = () => {
     const { auth } = useAppSelector((state: any) => state);
@@ -25,7 +24,7 @@ export const UserProfile = () => {
 
     useEffect(() => {
         try {
-            const stored = localStorage.getItem(PROFILE_OVERRIDES_KEY);
+            const stored = localStorage.getItem(CUSTOMER_PROFILE_OVERRIDES_KEY);
             if (stored) {
                 setOverrides(JSON.parse(stored));
             }
@@ -63,7 +62,7 @@ export const UserProfile = () => {
         };
 
         setOverrides(nextOverrides);
-        localStorage.setItem(PROFILE_OVERRIDES_KEY, JSON.stringify(nextOverrides));
+        localStorage.setItem(CUSTOMER_PROFILE_OVERRIDES_KEY, JSON.stringify(nextOverrides));
         setIsEditing(false);
     };
 

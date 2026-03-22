@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../../config/api";
+import { clearSellerSession, getValidSellerJwt } from "../../../util/sellerSession";
 
 interface SellerAuthState {
   otpSent: boolean;
@@ -11,7 +12,7 @@ interface SellerAuthState {
 
 const initialState: SellerAuthState = {
   otpSent: false,
-  jwt: null,
+  jwt: getValidSellerJwt(),
   role: null,
   error: null,
   loading: false,
@@ -91,7 +92,7 @@ const sellerSlice = createSlice({
       state.otpSent = false;
       state.error = null;
       state.loading = false;
-      localStorage.removeItem("sellerJwt");
+      clearSellerSession();
     },
   },
   extraReducers: (builder) => {

@@ -32,9 +32,11 @@ const Deal = () => {
           <DealCard
             key={item._id || item.categoryId}
             deal={{
+              id: item._id || item.id,
               image: item.displayImage || item.category?.image || item.image,
               name: item.displayName || item.category?.name || item.name,
               discount: item.discount,
+              categoryId: item.category?.categoryId || item.categoryId || "",
             }}
           />
         ))}

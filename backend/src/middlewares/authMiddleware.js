@@ -1,5 +1,6 @@
 const jwtprovider = require("../util/jwtprovider");
 const UserService = require("../service/UserService");
+const UserRole = require("../domain/UserRole");
 
 
 const authMiddleware = async(req, res, next) => {
@@ -12,7 +13,11 @@ const authMiddleware = async(req, res, next) => {
         if (!token) {
             return res.status(401).json({ message: "Invalid token" });
         }
-        let email = jwtprovider.getEmailFromjwt(token);
+        const payload = jwtprovider.verifyJwt(token);
+        if (payload.role !== UserRole.CUSTOMER && payload.role !== UserRole.ADMIN) {
+            return res.status(401).json({ message: "Unauthorized role" });
+        }
+        let email = payload.email;
         const user =await UserService.findUserByEmail(email);
 
         if (!user) {

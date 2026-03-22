@@ -1,6 +1,7 @@
 const SellerService = require("../service/SellerService");
 // const UserService = require("../service/UserService");
 const jwtprovider = require("../util/jwtprovider");
+const UserRole = require("../domain/UserRole");
 
 const sellerMiddleware=async(req,res,next)=>{
     try{
@@ -16,7 +17,12 @@ const sellerMiddleware=async(req,res,next)=>{
             return res.status(401).json({message:"Invalid token"})
         }
 
-        let email=jwtprovider.getEmailFromjwt(token);
+        const payload=jwtprovider.verifyJwt(token);
+        if(payload.role!==UserRole.SELLER){
+            return res.status(401).json({message:"Unauthorized role"});
+        }
+
+        let email=payload.email;
 
         const user=await SellerService.getSellerByEmail(email);
 

@@ -36,6 +36,7 @@ const endOfDay = (date: Date) => {
 export const AdminOverview = () => {
   const dispatch = useAppDispatch();
   const { sellers, loading: sellerLoading, error: sellerError } = useAppSelector((state) => state.sellerData);
+  const adminToken = localStorage.getItem("adminToken") || "";
   const today = useMemo(() => new Date(), []);
   const defaultStartDate = useMemo(() => {
     const date = new Date(today);
@@ -51,15 +52,14 @@ export const AdminOverview = () => {
   const [endDate, setEndDate] = useState(toDateInputValue(today));
 
   useEffect(() => {
-    dispatch(fetchSeller(null));
-  }, [dispatch]);
+    dispatch(fetchSeller({ status: null, jwt: adminToken }));
+  }, [adminToken, dispatch]);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setOrdersLoading(true);
         setOrdersError(null);
-        const adminToken = localStorage.getItem("adminToken") || "";
         const response = await api.get("/admin/orders", {
           headers: adminToken
             ? {
@@ -81,7 +81,7 @@ export const AdminOverview = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [adminToken]);
 
   const sellerLifecycleByMonth = useMemo(() => {
     const now = new Date();

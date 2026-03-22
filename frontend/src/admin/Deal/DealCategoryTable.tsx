@@ -36,7 +36,7 @@ import { menthirdlevel } from "../../data/category/level3/menthirdlevel";
 import { womenthirdlevel } from "../../data/category/level3/womenthirdlevel";
 import { uploadToCloudiniary } from "../../util/uploadToCloudNarry";
 
-export const DealCategoryTable = () => {
+export const DealCategoryTable = ({ onCreateDeal }: { onCreateDeal?: (category: any) => void }) => {
   const dispatch = useAppDispatch();
   const adminToken = localStorage.getItem("adminToken") || "";
   const { homeCategories, loading, error } = useAppSelector((state) => state.adminSlice);
@@ -178,12 +178,13 @@ export const DealCategoryTable = () => {
                 <TableCell>Category</TableCell>
                 <TableCell>Category ID</TableCell>
                 <TableCell>Section</TableCell>
+                <TableCell align="right">Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {!topDealCategories.length ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={6} align="center">
                     No TOP_DEALS categories found.
                   </TableCell>
                 </TableRow>
@@ -201,6 +202,15 @@ export const DealCategoryTable = () => {
                     <TableCell>{category?.name || "-"}</TableCell>
                     <TableCell>{category?.categoryId || "-"}</TableCell>
                     <TableCell>{category?.section || "TOP_DEALS"}</TableCell>
+                    <TableCell align="right">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => onCreateDeal?.(category)}
+                      >
+                        Create Deal
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}

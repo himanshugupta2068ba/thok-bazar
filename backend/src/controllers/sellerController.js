@@ -78,8 +78,7 @@ class SellerController{
             if(!verificationCode || verificationCode.otp!=otp){
                 throw new Error("Invalid OTP")
             }
-            console.log("jwtprovider:",jwtprovider);
-            const token=jwtprovider.createJwt({email});
+            const token=jwtprovider.createJwt({email, role:seller.role});
 
             const authResponse={
                 message:"Login Success",

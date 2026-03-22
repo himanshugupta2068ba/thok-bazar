@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Review = require('../models/Review');
@@ -70,17 +71,25 @@ class ProductService {
     applyDealToProduct(product, dealMaps) {
         const rawProduct = product?.toObject ? product.toObject() : product;
         const matchingDeal = this.findDealForProduct(rawProduct, dealMaps);
+        const mrpPrice = Number(rawProduct?.mrpPrice || 0);
+        const baseSellingPrice = Number(rawProduct?.sellingPrice || 0);
+        const baseDiscountPercentage = Number(
+            rawProduct?.discountPercentage || calculateDiscountPercentage(mrpPrice, baseSellingPrice),
+        );
 
         if (!matchingDeal) {
             return {
                 ...rawProduct,
                 dealApplied: false,
                 activeDeal: null,
-                dealSellingPrice: Number(rawProduct?.sellingPrice || 0),
+                dealSellingPrice: baseSellingPrice,
+                effectiveSellingPrice: baseSellingPrice,
+                effectiveDiscountPercentage: baseDiscountPercentage,
+                baseSellingPrice,
+                baseDiscountPercentage,
             };
         }
 
-        const baseSellingPrice = Number(rawProduct?.sellingPrice || 0);
         const dealDiscount = Number(matchingDeal?.discount || 0);
         const dealSellingPrice = Math.max(
             0,
@@ -97,6 +106,53 @@ class ProductService {
                 isProductSpecific: Array.isArray(matchingDeal?.productIds) && matchingDeal.productIds.length > 0,
             },
             dealSellingPrice,
+            effectiveSellingPrice: dealSellingPrice,
+            effectiveDiscountPercentage: calculateDiscountPercentage(mrpPrice, dealSellingPrice),
+            baseSellingPrice,
+            baseDiscountPercentage,
+        };
+    }
+
+    async buildDealProductFilter(dealId) {
+        const normalizedDealId = String(dealId || '').trim();
+
+        if (!normalizedDealId || !mongoose.Types.ObjectId.isValid(normalizedDealId)) {
+            return null;
+        }
+
+        const deal = await Deal.findOne({
+            _id: normalizedDealId,
+            $or: [{ isActive: true }, { isActive: { $exists: false } }],
+        }).populate('category', 'categoryId');
+
+        if (!deal) {
+            return null;
+        }
+
+        const productIds = Array.isArray(deal.productIds) ? deal.productIds.filter(Boolean) : [];
+
+        if (productIds.length) {
+            return {
+                _id: { $in: productIds },
+            };
+        }
+
+        const categoryId = String(deal?.category?.categoryId || '').trim();
+
+        if (!categoryId) {
+            return null;
+        }
+
+        const category = await Category.findOne({ categoryId });
+
+        if (!category) {
+            return null;
+        }
+
+        const categoryIds = await this.getCategoryTreeIds(category);
+
+        return {
+            category: { $in: categoryIds },
         };
     }
 
@@ -454,6 +510,20 @@ class ProductService {
 
     async getAllProducts(req) {
         const filterQuery = {};
+
+        if (req.dealId) {
+            const dealFilter = await this.buildDealProductFilter(req.dealId);
+
+            if (!dealFilter) {
+                return {
+                    content: [],
+                    totalpages: 0,
+                    totalElement: 0,
+                };
+            }
+
+            Object.assign(filterQuery, dealFilter);
+        }
 
         if (req.q) {
             const keyword = String(req.q).trim();

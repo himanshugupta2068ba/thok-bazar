@@ -98,6 +98,11 @@ const orderSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
+    itemTotal: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     platformFee: {
         type: Number,
         default: 0,
@@ -110,6 +115,26 @@ const orderSchema = new mongoose.Schema({
     },
     discount: {
         type: Number,
+        default: 0,
+        min: 0
+    },
+    couponCode: {
+        type: String,
+        default: null
+    },
+    couponDiscountAmount: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    couponDiscountPercentage: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    totalItems: {
+        type: Number,
+        default: 0,
         min: 0
     },
     orderStatus: {

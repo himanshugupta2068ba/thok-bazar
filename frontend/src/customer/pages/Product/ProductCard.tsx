@@ -9,6 +9,7 @@ import {
   toggleWishlistItem,
 } from "../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
+import { resolveProductPricing } from "../../../util/productPricing";
 import "./ProductCard.css";
 
 const FALLBACK_IMAGE =
@@ -52,12 +53,8 @@ export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any
     item?.seller?.bussinessDetails?.bussinessName ||
     "Seller";
 
-  const sellingPrice = item?.sellingPrice ?? 2999;
-  const mrpPrice = item?.mrpPrice ?? 3999;
-  const discount =
-    item?.discountPercentage ??
-    (mrpPrice > 0 ? Math.round(((mrpPrice - sellingPrice) / mrpPrice) * 100) : 0);
-  const savings = Math.max(mrpPrice - sellingPrice, 0);
+  const { sellingPrice, mrpPrice, discount, savings, dealApplied, activeDeal } =
+    resolveProductPricing(item);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
@@ -139,7 +136,9 @@ export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any
             </span>
             {discount > 0 ? (
               <span className="product-card-badge product-card-badge--accent">
-                {discount}% Off
+                {dealApplied && activeDeal?.discount
+                  ? `Deal ${activeDeal.discount}% Off`
+                  : `${discount}% Off`}
               </span>
             ) : null}
           </div>

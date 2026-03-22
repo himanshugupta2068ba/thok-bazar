@@ -8,9 +8,8 @@ const PaymentStatus = require('../domain/PaymentStatus');
 const SellerReportService = require('./SellerReportService');
 const productService = require('./ProductService');
 const paymentMethodUtils = require('../util/paymentMethod');
+const { roundCurrency } = require('../util/checkoutPricing');
 
-const PLATFORM_FEE = 20;
-const SHIPPING_FEE = 99;
 class OrderService{
     async getAllOrdersForAdmin(){
         return await Order.find({
@@ -62,26 +61,58 @@ class OrderService{
         const orders=new Set();
 
         const sellerEntries = Object.entries(itemsBySeller);
+        const orderValueBeforeCoupon = roundCurrency(
+            cart.orderValue ||
+            sellerEntries.reduce((total, [, cartItems], index) => {
+                const productOrderTotal = cartItems.reduce(
+                    (acc, item) => acc + Number(item.sellingPrice || 0),
+                    0,
+                );
+                const platformFee = index === 0 ? Number(cart.platformFee || 20) : 0;
+                const shippingFee = index === 0 ? Number(cart.shippingFee || 99) : 0;
+                return total + productOrderTotal + platformFee + shippingFee;
+            }, 0),
+        );
+        const cartCouponDiscountAmount = roundCurrency(cart.couponDiscountAmount || 0);
+        let distributedCouponDiscount = 0;
 
         for(const [index, [sellerId,cartItems]] of sellerEntries.entries()){
-            const productOrderTotal=cartItems.reduce((acc,item)=>{
+            const productOrderTotal = roundCurrency(cartItems.reduce((acc,item)=>{
                 return acc+Number(item.sellingPrice || 0);
-            },0);
+            },0));
 
-            const platformFee = index === 0 ? PLATFORM_FEE : 0;
-            const shippingFee = index === 0 ? SHIPPING_FEE : 0;
-            const totalOrderPrice = productOrderTotal + platformFee + shippingFee;
+            const platformFee = index === 0 ? Number(cart.platformFee || 20) : 0;
+            const shippingFee = index === 0 ? Number(cart.shippingFee || 99) : 0;
+            const rawOrderTotal = roundCurrency(productOrderTotal + platformFee + shippingFee);
+            const remainingCouponDiscount = roundCurrency(cartCouponDiscountAmount - distributedCouponDiscount);
+            const couponDiscountAmount =
+                cartCouponDiscountAmount > 0 && orderValueBeforeCoupon > 0
+                    ? roundCurrency(
+                          Math.min(
+                              rawOrderTotal,
+                              index === sellerEntries.length - 1
+                                  ? remainingCouponDiscount
+                                  : cartCouponDiscountAmount * (rawOrderTotal / orderValueBeforeCoupon),
+                          ),
+                      )
+                    : 0;
+            const totalOrderPrice = roundCurrency(Math.max(0, rawOrderTotal - couponDiscountAmount));
+            const totalItem = cartItems.reduce((acc, item) => acc + Number(item.quantity || 0), 0);
 
-            const totalItem=cartItems.length;
+            distributedCouponDiscount = roundCurrency(distributedCouponDiscount + couponDiscountAmount);
 
             const neworder=new Order({
                 user:user._id,
                 shippingAddress:shippingAddress._id,
                 orderItems:[],
                 totalMrpPrice:0,
+                itemTotal: productOrderTotal,
                 totalSellingPrice:totalOrderPrice,
                 platformFee,
                 shippingFee,
+                couponCode: cart.couponCode || null,
+                couponDiscountAmount,
+                couponDiscountPercentage: Number(cart.couponDiscountPercentage || 0),
                 totalItems:totalItem,
                 seller:sellerId,
                 orderStatus:isCashOnDelivery ? OrderStatus.PLACED : OrderStatus.PENDING,
@@ -95,7 +126,7 @@ class OrderService{
                     mrpPrice:cartItem.mrpPrice,
                     sellingPrice:cartItem.sellingPrice,
                     size: String(cartItem.size || cartItem.product?.size || 'N/A'),
-                    userId:cart.user._id,
+                    userId:cart.user?._id || cart.user,
                 });
                 const savedOrderItem=await orderItem.save();
                 neworder.orderItems.push(savedOrderItem._id);
@@ -103,7 +134,7 @@ class OrderService{
                 return savedOrderItem;
             }));
 
-            neworder.discount = Math.max(0, neworder.totalMrpPrice - productOrderTotal);
+            neworder.discount = roundCurrency(Math.max(0, neworder.totalMrpPrice - productOrderTotal));
 
             const savedOrder=await neworder.save();
             if (isCashOnDelivery) {

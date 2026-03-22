@@ -7,6 +7,10 @@ import { Addresses } from "./Addresses";
 import { PaymentMethods } from "../account/PaymentMethods";
 import { useAppDispatch } from "../../../Redux Toolkit/store";
 import { logout } from "../../../Redux Toolkit/featurs/Auth/authSlice";
+import { clearCartState } from "../../../Redux Toolkit/featurs/coustomer/cartSlice";
+import { resetOrderState } from "../../../Redux Toolkit/featurs/coustomer/orderSlice";
+import { resetUserState } from "../../../Redux Toolkit/featurs/coustomer/userSlice";
+import { resetWishlistState } from "../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
 
 const menu = [
   { name: "Orders", link: "/customer/profile/orders" },
@@ -19,11 +23,18 @@ const menu = [
 export const Profile = () => {
   const navigate=useNavigate();
   const dispatch = useAppDispatch();
+  const handleLogout = () => {
+    dispatch(logout());
+    dispatch(resetUserState());
+    dispatch(clearCartState());
+    dispatch(resetOrderState());
+    dispatch(resetWishlistState());
+    navigate("/", { replace: true });
+  };
+
   const handleCLick=(link:string)=>{
     if(link==="/logout"){
-      dispatch(logout());
-      // navigate("/login");
-      window.location.href="/";
+      handleLogout();
     }else{
       navigate(link);
     }

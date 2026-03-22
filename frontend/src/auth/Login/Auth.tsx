@@ -1,49 +1,90 @@
-import { useState } from "react"
-import { SignUp } from "./SignUpForm";
-import { LoginForm } from "./LoginForm";
 import { Button, Snackbar } from "@mui/material";
-import { useAppSelector } from "../../Redux Toolkit/store";
+import { useEffect, useState } from "react";
+import { resetAuthFlow } from "../../Redux Toolkit/featurs/Auth/authSlice";
+import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
+import { LoginForm } from "./LoginForm";
+import { SignUp } from "./SignUpForm";
 
+export const Auth = () => {
+  const [isLogin, setIsLogin] = useState(false);
+  const { auth } = useAppSelector((state) => state);
+  const dispatch = useAppDispatch();
 
-export const Auth=()=>{
+  const handleModeChange = (nextMode: boolean) => {
+    setIsLogin(nextMode);
+    dispatch(resetAuthFlow());
+  };
 
-    const [isLogin,setIsLogin]=useState(false);
-    const {auth}=useAppSelector((state)=>state);
-    const backgroundImage = 'https://images.unsplash.com/photo-1470790376778-a9fbc86d70e2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGxvZ2luJTIwcGFnZXxlbnwwfHwwfHx8MA%3D%3D';
-    
-    return(
-        <div className="flex justify-center h-[90vh] items-center">
-            <div 
-                className="auth w-md h-[85vh] rounded-md shadow-lg relative overflow-hidden"
-                style={{
-                    backgroundImage: `url(${backgroundImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
-                }}
-            >
-                
-                {/* Form content */}
-                <div className="relative z-10  px-10 h-full flex flex-col mt-30 mb-40">
-                    <div className="bg-white bg-opacity-95 rounded-lg p-6">
-                        {isLogin?<LoginForm/>:<SignUp/>}
-                    </div>
-                    <div className="flex items-center gap-1 justufy-center mt-5 px-15">
-                        <p >{isLogin?"Don't have an acount":'Already have account'}</p>
-                        <Button onClick={()=>setIsLogin(!isLogin)} className="text-bold">
-                            {isLogin?'SignUp':'Login'}
-                        </Button>
-                    </div>
-                </div>
+  useEffect(() => {
+    return () => {
+      dispatch(resetAuthFlow());
+    };
+  }, [dispatch]);
+
+  return (
+    <section className="px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[70vh] max-w-2xl items-center justify-center">
+        <section className="w-full rounded-[36px] border border-slate-200 bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+          <div className="rounded-[30px] bg-[linear-gradient(180deg,#fbfffe_0%,#f8fafc_100%)] p-5 sm:p-6">
+            <h2 className="text-center text-3xl font-semibold tracking-tight text-slate-900">
+              {isLogin ? "Customer Login" : "Create Account"}
+            </h2>
+
+            <div className="mt-6 flex justify-center">
+              <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+                <Button
+                  variant={isLogin ? "text" : "contained"}
+                  onClick={() => handleModeChange(false)}
+                  sx={{
+                    borderRadius: "999px",
+                    px: 3,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    boxShadow: !isLogin ? "none" : undefined,
+                  }}
+                >
+                  Sign Up
+                </Button>
+                <Button
+                  variant={isLogin ? "contained" : "text"}
+                  onClick={() => handleModeChange(true)}
+                  sx={{
+                    borderRadius: "999px",
+                    px: 3,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    boxShadow: isLogin ? "none" : undefined,
+                  }}
+                >
+                  Login
+                </Button>
+              </div>
             </div>
 
-        <Snackbar
-            open={auth.otpSent}
-            autoHideDuration={6000}
-            // onClose={handleClose}
-            message="Otp sent to your email"
-        />
+            <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              {isLogin ? <LoginForm /> : <SignUp />}
+            </div>
 
-        </div>
-    )
-}
+            <p className="mt-5 text-center text-sm text-slate-600">
+              {isLogin ? "New here?" : "Already have an account?"}{" "}
+              <button
+                type="button"
+                onClick={() => handleModeChange(!isLogin)}
+                className="font-semibold text-teal-700 transition hover:text-teal-800"
+              >
+                {isLogin ? "Create one now" : "Login instead"}
+              </button>
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <Snackbar
+        open={auth.otpSent}
+        autoHideDuration={4000}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        message={isLogin ? "Login OTP sent to your email" : "Signup OTP sent to your email"}
+      />
+    </section>
+  );
+};

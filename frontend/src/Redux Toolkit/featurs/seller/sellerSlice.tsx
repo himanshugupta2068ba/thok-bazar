@@ -9,13 +9,15 @@ interface SellerState {
     error: string | null;
 }
 
-const initialState: SellerState = {
+const createInitialState = (): SellerState => ({
     profile: null,
     sellers: [],
     reports: null,
     loading: false,
     error: null,
-};
+});
+
+const initialState: SellerState = createInitialState();
 
 const getErrorMessage = (error: any) =>
     error?.response?.data?.message ||
@@ -41,12 +43,25 @@ export const fetchSellerProfile = createAsyncThunk<any, any>(
 );
 export const fetchSeller=createAsyncThunk<any, any>(
     "seller/fetchSeller",
-    async (status,{rejectWithValue})=>{
+    async (payload,{rejectWithValue})=>{
         try{
-                        const response=await api.get(`/sellers`,{
+            const status =
+                typeof payload === "string" || payload === null
+                    ? payload
+                    : payload?.status ?? null;
+            const jwt =
+                typeof payload === "object" && payload !== null
+                    ? payload?.jwt
+                    : undefined;
+            const response=await api.get(`/sellers`,{
                 params:{
                     status
-                }
+                },
+                headers: jwt
+                    ? {
+                        Authorization: `Bearer ${jwt}`,
+                    }
+                    : undefined,
             });
             return response.data;
         }catch(error:any){
@@ -115,6 +130,7 @@ const sellerSlice = createSlice({
         clearSellerDataError: (state) => {
             state.error = null;
         },
+        resetSellerData: () => createInitialState(),
     },
     extraReducers: (builder) => {
         builder
@@ -187,5 +203,5 @@ const sellerSlice = createSlice({
     },
 });
 
-export const { clearSellerDataError } = sellerSlice.actions;
+export const { clearSellerDataError, resetSellerData } = sellerSlice.actions;
 export default sellerSlice.reducer;

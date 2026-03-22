@@ -27,6 +27,7 @@ import {
   resolveMainCategoryId,
 } from "../../../../data/product/productConfig";
 import { api } from "../../../../config/api";
+import { resolveProductPricing } from "../../../../util/productPricing";
 
 const images = [
   "https://images.unsplash.com/photo-1580854898508-4761a9c769a9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d29tZW4lMjBzYXJlZXxlbnwwfHwwfHx8MA%3D%3D",
@@ -128,11 +129,8 @@ export const ProductDetails = () => {
     productData?.sellerId?.name ||
     "Zara Clothing";
   const productTitle = productData?.title || "Marron Floral Patterned Saree";
-  const sellingPrice = productData?.sellingPrice ?? 2999;
-  const mrpPrice = productData?.mrpPrice ?? 3999;
-  const discount =
-    productData?.discountPercentage ??
-    (mrpPrice > 0 ? Math.round(((mrpPrice - sellingPrice) / mrpPrice) * 100) : 0);
+  const { sellingPrice, mrpPrice, discount, dealApplied, activeDeal } =
+    resolveProductPricing(productData);
   const productDescription =
     productData?.description ||
     "This product is crafted to balance quality, comfort, and everyday value across modern shopping needs.";
@@ -318,6 +316,11 @@ export const ProductDetails = () => {
               </span>
               <span className="text-sm text-green-600">{discount}% off</span>
             </div>
+            {dealApplied && activeDeal?.discount ? (
+              <p className="text-sm font-medium text-orange-600">
+                Live deal applied: extra {activeDeal.discount}% off this category.
+              </p>
+            ) : null}
             <p>Inclusive of all taxes</p>
           </div>
 

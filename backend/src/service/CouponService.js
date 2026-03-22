@@ -1,13 +1,46 @@
 const Coupon = require('../models/Coupon');
 
 class CouponService {
-  async getCoupons() {
-    return await Coupon.find().sort({ createdAt: -1 });
+  normalizeCouponDates(couponData = {}) {
+    const payload = { ...couponData };
+
+    if (payload.startDate) {
+      const startDate = new Date(payload.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      payload.startDate = startDate;
+    }
+
+    if (payload.endDate) {
+      const endDate = new Date(payload.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      payload.endDate = endDate;
+    }
+
+    return payload;
+  }
+
+  async getCoupons(filters = {}) {
+    const query = {};
+    const normalizedStatus = String(filters?.status || "").toUpperCase().trim();
+    const activeOnly = String(filters?.activeOnly || "").toLowerCase() === "true";
+
+    if (normalizedStatus) {
+      query.status = normalizedStatus;
+    }
+
+    if (activeOnly) {
+      const now = new Date();
+      query.status = "ACTIVE";
+      query.startDate = { $lte: now };
+      query.endDate = { $gte: now };
+    }
+
+    return await Coupon.find(query).sort({ createdAt: -1 });
   }
 
   async createCoupon(couponData) {
     const payload = {
-      ...couponData,
+      ...this.normalizeCouponDates(couponData),
       code: String(couponData.code || '').toUpperCase().trim(),
       discount: Number(couponData.discount),
       minOrderAmount: Number(couponData.minOrderAmount),
@@ -22,11 +55,20 @@ class CouponService {
       throw new Error('Coupon already exists');
     }
 
+    if (new Date(payload.startDate) > new Date(payload.endDate)) {
+      throw new Error('End date must be after start date');
+    }
+
     return await Coupon.create(payload);
   }
 
   async updateCoupon(id, updates) {
-    const payload = { ...updates };
+    const existingCoupon = await Coupon.findById(id);
+    if (!existingCoupon) {
+      throw new Error('Coupon not found');
+    }
+
+    const payload = this.normalizeCouponDates({ ...updates });
 
     if (payload.code) {
       payload.code = String(payload.code).toUpperCase().trim();
@@ -37,16 +79,17 @@ class CouponService {
     if (payload.minOrderAmount !== undefined) {
       payload.minOrderAmount = Number(payload.minOrderAmount);
     }
+    const nextStartDate = payload.startDate || existingCoupon.startDate;
+    const nextEndDate = payload.endDate || existingCoupon.endDate;
+    if (new Date(nextStartDate) > new Date(nextEndDate)) {
+      throw new Error('End date must be after start date');
+    }
 
     const updatedCoupon = await Coupon.findByIdAndUpdate(
       id,
       { $set: payload },
       { new: true, runValidators: true },
     );
-
-    if (!updatedCoupon) {
-      throw new Error('Coupon not found');
-    }
 
     return updatedCoupon;
   }
@@ -79,7 +122,7 @@ class CouponService {
     return deletedCoupon;
   }
 
-  async applyCoupon(code, orderValue) {
+  async validateCoupon(code, orderValue) {
     const normalizedCode = String(code || '').toUpperCase().trim();
     const value = Number(orderValue);
 
@@ -112,13 +155,24 @@ class CouponService {
 
     return {
       coupon,
-      cart: {
-        couponCode: coupon.code,
-        discount: coupon.discount,
-      },
       orderValue: value,
       discountAmount,
       finalAmount,
+    };
+  }
+
+  async applyCoupon(code, orderValue) {
+    const result = await this.validateCoupon(code, orderValue);
+
+    return {
+      coupon: result.coupon,
+      cart: {
+        couponCode: result.coupon.code,
+        discount: result.coupon.discount,
+      },
+      orderValue: result.orderValue,
+      discountAmount: result.discountAmount,
+      finalAmount: result.finalAmount,
     };
   }
 }

@@ -29,6 +29,10 @@ export const Products = () => {
     () => new URLSearchParams(location.search).get("q")?.trim() || "",
     [location.search],
   );
+  const dealId = useMemo(
+    () => new URLSearchParams(location.search).get("deal")?.trim() || "",
+    [location.search],
+  );
   const mainCategoryId = useMemo(
     () => resolveMainCategoryId(categoryId),
     [categoryId],
@@ -42,7 +46,7 @@ export const Products = () => {
   useEffect(() => {
     setPage(1);
     setFilters({});
-  }, [categoryId, searchTerm]);
+  }, [categoryId, dealId, searchTerm]);
 
   const queryParams = useMemo(() => {
     const nextParams: Record<string, string | number> = {
@@ -53,6 +57,10 @@ export const Products = () => {
 
     if (searchTerm) {
       nextParams.q = searchTerm;
+    }
+
+    if (dealId) {
+      nextParams.dealId = dealId;
     }
 
     const selectedPriceRange = priceFilterOptions.find(
@@ -84,7 +92,7 @@ export const Products = () => {
     });
 
     return nextParams;
-  }, [categoryId, filters, page, searchTerm, sort]);
+  }, [categoryId, dealId, filters, page, searchTerm, sort]);
 
   useEffect(() => {
     dispatch(getAllProducts(queryParams));
@@ -92,9 +100,11 @@ export const Products = () => {
 
   const title = useMemo(() => {
     if (searchTerm) return `Search results for "${searchTerm}"`;
+    if (dealId && categoryId) return `${categoryId.replace(/[-_]/g, " ")} deal picks`;
+    if (dealId) return "Deal picks";
     if (!categoryId) return "Products";
     return categoryId.replace(/[-_]/g, " ");
-  }, [categoryId, searchTerm]);
+  }, [categoryId, dealId, searchTerm]);
   const formattedTitle = useMemo(
     () => title.replace(/\b\w/g, (char) => char.toUpperCase()),
     [title],

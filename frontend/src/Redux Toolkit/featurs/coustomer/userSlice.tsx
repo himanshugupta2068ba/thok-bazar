@@ -43,16 +43,20 @@ interface UserState {
   error: any | null;
 }
 
-const initialState: UserState = {
+const createInitialState = (): UserState => ({
   user: null,
   loading: false,
   error: null,
-};
+});
+
+const initialState: UserState = createInitialState();
 
 const userSlice = createSlice({
   name: "user",
   initialState,
-    reducers: {},
+    reducers: {
+      resetUserState: () => createInitialState(),
+    },
     extraReducers: (builder) => {
         builder.addCase(fetchUserProfile.pending, (state) => {
             state.loading = true;
@@ -64,6 +68,7 @@ const userSlice = createSlice({
         });
         builder.addCase(fetchUserProfile.rejected, (state, action: any) => {
             state.loading = false;
+            state.user = null;
             state.error = action.payload || null;
         });
         builder.addCase(deleteUserAddress.pending, (state) => {
@@ -81,4 +86,5 @@ const userSlice = createSlice({
     },
 });
 
+export const { resetUserState } = userSlice.actions;
 export default userSlice.reducer;

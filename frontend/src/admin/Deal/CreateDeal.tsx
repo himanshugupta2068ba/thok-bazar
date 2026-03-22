@@ -27,6 +27,7 @@ import { electronicthirdlevel } from "../../data/category/level3/electronicsleve
 import { homethirdlevel } from "../../data/category/level3/homelivinglevel3";
 import { menthirdlevel } from "../../data/category/level3/menthirdlevel";
 import { womenthirdlevel } from "../../data/category/level3/womenthirdlevel";
+import { resolveCategoryPath } from "../../data/product/productConfig";
 
 const createDealSchema = Yup.object({
   mainCategoryId: Yup.string().required("Category is required"),
@@ -40,7 +41,7 @@ const createDealSchema = Yup.object({
   productIds: Yup.string(),
 });
 
-export const CreateDeal = () => {
+export const CreateDeal = ({ preselectedCategory = null }: { preselectedCategory?: any | null }) => {
   const dispatch = useAppDispatch();
   const adminToken = localStorage.getItem("adminToken") || "";
   const { homeCategories } = useAppSelector((state) => state.adminSlice);
@@ -65,6 +66,24 @@ export const CreateDeal = () => {
   useEffect(() => {
     dispatch(fetchHomeCategories(adminToken));
   }, [dispatch, adminToken]);
+
+  useEffect(() => {
+    if (!preselectedCategory?.categoryId) {
+      return;
+    }
+
+    const categoryPath = resolveCategoryPath(preselectedCategory.categoryId);
+
+    formik.setValues({
+      mainCategoryId: categoryPath.mainCategory || preselectedCategory.categoryId,
+      subCategoryId: categoryPath.subCategory || "",
+      category3Id: categoryPath.subSubCategory || "",
+      discount: "",
+      isActive: "true",
+      productIds: "",
+    });
+    setSubmitError(null);
+  }, [preselectedCategory]);
 
   const formik = useFormik({
     initialValues: {
@@ -135,6 +154,12 @@ export const CreateDeal = () => {
         <Typography component="h1" variant="h5" align="center" sx={{ mb: 3, fontWeight: 600 }}>
           Create Deal
         </Typography>
+
+        {preselectedCategory?.name ? (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Creating a deal for <strong>{preselectedCategory.name}</strong>.
+          </Alert>
+        ) : null}
 
         <Box component="form" onSubmit={formik.handleSubmit}>
           <Grid container spacing={2}>

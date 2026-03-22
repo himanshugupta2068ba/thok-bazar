@@ -12,6 +12,7 @@ import { Divider, ListItemIcon, ListItemText } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 import { useAppDispatch } from "../../Redux Toolkit/store";
 import { logoutSeller } from "../../Redux Toolkit/featurs/seller/sellerAuthentication";
+import { resetSellerData } from "../../Redux Toolkit/featurs/seller/sellerSlice";
 
 const menu = [
   {
@@ -74,6 +75,7 @@ export const SellerDrawwerList = ({ toggleDrawwer }: any) => {
 
   const handleLogout = () => {
     dispatch(logoutSeller());
+    dispatch(resetSellerData());
     if (toggleDrawwer) toggleDrawwer(false);
     navigate("/");
   };

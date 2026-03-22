@@ -5,31 +5,69 @@ import {
   ShoppingBagOutlined,
   SavingsOutlined,
 } from "@mui/icons-material";
-import { Button, TextField } from "@mui/material";
-import { useEffect } from "react";
+import { Alert, Button, Chip, TextField } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { fetchCart } from "../../../Redux Toolkit/featurs/coustomer/cartSlice";
+import {
+  applyCouponToCart,
+  clearCouponFeedback,
+  fetchActiveCoupons,
+  removeCouponFromCart,
+} from "../../../Redux Toolkit/featurs/coustomer/couponSlice";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
+import { getCartPricing } from "../../../util/cartPricing";
 import { PricingCard } from "./PricingCard";
 import { CartItemCard } from "./cartItemCard";
 
 export const Cart = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { auth, cart } = useAppSelector((state) => state);
+  const { auth, cart, coupon } = useAppSelector((state) => state);
   const jwt = auth.jwt?.trim() || localStorage.getItem("jwt");
   const cartData = cart.cart;
-  const cartItems = cartData?.items || [];
-  const totalAmount = Number(cartData?.totalSellingPrice || 0);
-  const totalSavings = Math.max(
-    Number(cartData?.totalMrpPrice || 0) - Number(cartData?.totalSellingPrice || 0),
-    0,
-  );
+  const [couponCode, setCouponCode] = useState("");
+
+  const pricing = useMemo(() => getCartPricing(cartData), [cartData]);
+  const cartItems = pricing.items;
+  const totalAmount = pricing.payableAmount;
+  const totalSavings = pricing.totalSavings;
+
+  useEffect(() => {
+    setCouponCode(pricing.couponCode || "");
+  }, [pricing.couponCode]);
 
   useEffect(() => {
     if (!jwt) return;
     dispatch(fetchCart(jwt));
+    dispatch(fetchActiveCoupons());
   }, [dispatch, jwt]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearCouponFeedback());
+    };
+  }, [dispatch]);
+
+  const handleApplyCoupon = async (selectedCode?: string) => {
+    if (!jwt) {
+      navigate("/login");
+      return;
+    }
+
+    const normalizedCode = String(selectedCode || couponCode).trim().toUpperCase();
+    if (!normalizedCode) {
+      return;
+    }
+
+    setCouponCode(normalizedCode);
+    await dispatch(applyCouponToCart({ code: normalizedCode, jwt }));
+  };
+
+  const handleRemoveCoupon = async () => {
+    if (!jwt) return;
+    await dispatch(removeCouponFromCart(jwt));
+  };
 
   if (!jwt) {
     return (
@@ -50,7 +88,7 @@ export const Cart = () => {
   return (
     <div className="min-h-screen px-5 pb-10 pt-10 sm:px-10 md:px-20 lg:px-28">
       <div className="space-y-6">
-        <section className="rounded-[34px] border border-emerald-100 bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.18),_transparent_30%),linear-gradient(135deg,_#f7fffd_0%,_#f8fafc_55%,_#ffffff_100%)] px-6 py-7 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:px-8">
+        <section className="rounded-[34px] border border-emerald-100 bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.18),_transparent_30%),linear-gradient(135deg,_#f7fffd_0%,#f8fafc_55%,#ffffff_100%)] px-6 py-7 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.32em] text-teal-700 shadow-sm">
@@ -75,7 +113,7 @@ export const Cart = () => {
                   </span>
                 </div>
                 <p className="mt-3 text-2xl font-semibold text-slate-900">
-                  {cartData?.totalItems || 0}
+                  {pricing.totalItems || 0}
                 </p>
               </div>
 
@@ -113,7 +151,7 @@ export const Cart = () => {
                 Cart Overview
               </p>
               <p className="mt-2 text-base text-slate-600">
-                {cartData?.totalItems || 0} item{cartData?.totalItems === 1 ? "" : "s"} currently in your bag
+                {pricing.totalItems || 0} item{pricing.totalItems === 1 ? "" : "s"} currently in your bag
               </p>
             </div>
 
@@ -153,23 +191,104 @@ export const Cart = () => {
                 <h1 className="font-semibold text-teal-600">Apply Coupon</h1>
               </div>
 
-              <div className="py-4">
-                <div className="flex items-center">
+              <div className="space-y-3 py-4">
+                <div className="flex items-center gap-3">
                   <TextField
                     size="small"
                     label="Enter Coupon Code"
                     variant="outlined"
                     className="w-full"
-                    disabled
+                    value={couponCode}
+                    onChange={(event) => {
+                      setCouponCode(event.target.value.toUpperCase());
+                      if (coupon.error || coupon.successMessage) {
+                        dispatch(clearCouponFeedback());
+                      }
+                    }}
+                    disabled={!cartItems.length || coupon.actionLoading}
                   />
                   <button
-                    className="ml-3 rounded-full bg-slate-300 px-5 py-2 text-white"
-                    disabled
+                    className={`rounded-full px-5 py-2 text-white ${
+                      !cartItems.length || coupon.actionLoading || !couponCode.trim()
+                        ? "bg-slate-300"
+                        : "bg-teal-600 hover:bg-teal-700"
+                    }`}
+                    disabled={!cartItems.length || coupon.actionLoading || !couponCode.trim()}
+                    onClick={() => handleApplyCoupon()}
                   >
-                    Apply
+                    {coupon.actionLoading ? "Applying..." : "Apply"}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">Coupon support can be added next.</p>
+
+                {pricing.couponCode ? (
+                  <div className="flex items-center justify-between rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <div>
+                      <p className="font-semibold text-emerald-700">{pricing.couponCode} applied</p>
+                      <p className="text-xs text-emerald-700/80">
+                        You saved Rs. {pricing.couponDiscountAmount} on this cart.
+                      </p>
+                    </div>
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={handleRemoveCoupon}
+                      disabled={coupon.actionLoading}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : null}
+
+                {coupon.error ? <Alert severity="error">{coupon.error}</Alert> : null}
+                {coupon.successMessage ? <Alert severity="success">{coupon.successMessage}</Alert> : null}
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                    Active Coupons
+                  </p>
+
+                  {!coupon.loading && !coupon.coupons.length ? (
+                    <p className="text-xs text-gray-500">No active coupons are available right now.</p>
+                  ) : null}
+
+                  {coupon.coupons.map((activeCoupon: any) => {
+                    const isApplied = pricing.couponCode === activeCoupon?.code;
+                    const isEligible = pricing.orderValue >= Number(activeCoupon?.minOrderAmount || 0);
+
+                    return (
+                      <div
+                        key={activeCoupon?._id || activeCoupon?.code}
+                        className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-slate-900">{activeCoupon?.code}</p>
+                              <Chip
+                                size="small"
+                                color={isEligible ? "success" : "default"}
+                                label={isEligible ? "Eligible" : `Min Rs. ${activeCoupon?.minOrderAmount || 0}`}
+                              />
+                            </div>
+                            <p className="mt-1 text-xs text-slate-600">
+                              Save {activeCoupon?.discount || 0}% on orders above Rs. {activeCoupon?.minOrderAmount || 0}
+                            </p>
+                          </div>
+                          <Button
+                            size="small"
+                            variant={isApplied ? "contained" : "outlined"}
+                            disabled={coupon.actionLoading || !cartItems.length || (!isEligible && !isApplied)}
+                            onClick={() =>
+                              isApplied ? handleRemoveCoupon() : handleApplyCoupon(activeCoupon?.code)
+                            }
+                          >
+                            {isApplied ? "Applied" : "Use"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <section className="rounded-[24px] border border-slate-200 bg-slate-50/70">

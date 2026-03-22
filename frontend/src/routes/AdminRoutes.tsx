@@ -9,6 +9,7 @@ import { Deal } from "../admin/Deal/Deal"
 import { SellerTables } from "../admin/Seller/SellerTable"
 import { ElectronicTable } from "../admin/HomePage/ElectronicsTable"
 import { AdminOverview } from "../admin/Dashboard/AdminOverview"
+import { AdminAccount } from "../admin/Account/AdminAccount"
 export const AdminRoutes = () => {
     return (
        <Routes>
@@ -20,6 +21,7 @@ export const AdminRoutes = () => {
         <Route path="/coupon" element={<Coupon/>}/>
         <Route path="/shop-by-category" element={<ShopByCategory/>}/>
         <Route path="/deal" element={<Deal/>}/>
+        <Route path="/account" element={<AdminAccount/>}/>
        </Routes>
     )
 }

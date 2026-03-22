@@ -182,6 +182,12 @@ export const Footer = () => {
             Built with React, TypeScript, Tailwind CSS, and MUI for a
             marketplace-style interface.
           </p>
+          <Link
+            to="/admin/login"
+            className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300 transition hover:border-white/25 hover:text-white"
+          >
+            I&apos;m Admin
+          </Link>
         </div>
       </div>
     </footer>
