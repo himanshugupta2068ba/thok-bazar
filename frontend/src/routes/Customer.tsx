@@ -11,6 +11,7 @@ import { Profile } from "../customer/pages/Order/Profile"
 import { Wishlist } from "../customer/pages/Wishlist/Wishlist"
 import { PaymentSuccess } from "../customer/pages/Order/PaymentSuccess"
 import { CustomerProtectedRoute } from "./CustomerProtectedRoute"
+import { CustomerAssistant } from "../customer/assistant/CustomerAssistant"
 
 export const CustomerRoutes = () => {
     return (
@@ -26,7 +27,8 @@ export const CustomerRoutes = () => {
         <Route path='/payment/success' element={<CustomerProtectedRoute><PaymentSuccess/></CustomerProtectedRoute>}/>
          <Route path='/checkout/address' element={<CustomerProtectedRoute><Checkout/></CustomerProtectedRoute>}/> 
          <Route path='/customer/profile/*' element={<CustomerProtectedRoute><Profile/></CustomerProtectedRoute>}/>  
-      </Routes> 
+      </Routes>
+      <CustomerAssistant />
       <Footer/>
         </>)
 }

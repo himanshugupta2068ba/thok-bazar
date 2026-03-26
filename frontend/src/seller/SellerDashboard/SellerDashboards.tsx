@@ -1,6 +1,7 @@
 import { Navbar } from "../../common/Navbar"
 import { SellerRoutes } from "../../routes/SellerRoutes"
 import { SellerDrawwerList } from "../sidebar/SelllerDrawwerList"
+import { SoftPageBackground } from "../../common/SoftPageBackground"
 
 
 
@@ -12,9 +13,13 @@ export const SellerDashboard=()=>{
                 <div className="hidden lg:block h-full">
                     <SellerDrawwerList/>
                 </div>
-                <div className="p-10 w-full lg:w-[80%] overflow-y-auto">
-            <SellerRoutes/>
-            </div>
+                <div className="w-full lg:w-[80%] overflow-y-auto">
+                    <SoftPageBackground className="min-h-full">
+                        <div className="p-10">
+                            <SellerRoutes/>
+                        </div>
+                    </SoftPageBackground>
+                </div>
             </section>
 
             

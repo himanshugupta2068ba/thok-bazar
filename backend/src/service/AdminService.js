@@ -3,20 +3,29 @@ const AdminCredential = require("../models/AdminCredential");
 const jwtprovider = require("../util/jwtprovider");
 const UserRole = require("../domain/UserRole");
 
-const DEFAULT_ADMIN_EMAIL = "himanshugupta2068ba@gmail.com";
-const DEFAULT_ADMIN_PASSWORD = "Him@123#";
-
 class AdminService {
     normalizeEmail(email) {
         return String(email || "").trim().toLowerCase();
     }
 
     getConfiguredAdminEmail() {
-        return this.normalizeEmail(process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL);
+        const email = this.normalizeEmail(process.env.ADMIN_EMAIL);
+
+        if (!email) {
+            throw new Error("ADMIN_EMAIL is not configured");
+        }
+
+        return email;
     }
 
     getConfiguredAdminPassword() {
-        return String(process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD);
+        const password = String(process.env.ADMIN_PASSWORD || "");
+
+        if (!password) {
+            throw new Error("ADMIN_PASSWORD is not configured");
+        }
+
+        return password;
     }
 
     async getOrCreateAdminCredential() {

@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 app.use(express.json());
 const cors = require('cors');
+const path = require('path');
 
 const mongoose = require('mongoose');
 
@@ -13,7 +14,7 @@ const connectDb = require('./db/db');
 app.use((cors()));
 
 // dotenv.config();
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 
 
@@ -36,6 +37,7 @@ const SellerReportRoutes=require('./routers/SellerReportRoutes');
 const HomeCategoryRoutes=require('./routers/HomeCategoryRoutes');
 const dealRoutes=require('./routers/DealRoutes');
 const couponRoutes=require('./routers/CouponRoutes');
+const customerAssistantRoutes=require('./routers/CustomerAssistantRoutes');
 
 // app.use(cors());
 app.use(bodyParser.json());
@@ -56,6 +58,7 @@ app.use('/seller-reports',SellerReportRoutes);
 app.use('/home-categories',HomeCategoryRoutes);
 app.use('/deals',dealRoutes);
 app.use('/coupons',couponRoutes);
+app.use('/ai',customerAssistantRoutes);
 
 
 const ports = process.env.PORT || 5000;

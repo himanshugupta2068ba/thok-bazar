@@ -1,12 +1,8 @@
-import { Grid, TextField, Box, Typography } from "@mui/material"
+import { Grid, TextField, Box } from "@mui/material"
 
 export const BecomeSellerStep3=({formik}:any)=>{
     return(
-        <Box sx={{ padding: 3 }}>
-          <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600 }}>
-            Step 3: Bank Details
-          </Typography>
-          
+        <Box>
           <Grid container spacing={3}>
             
             {/* Account Number */}

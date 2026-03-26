@@ -1,12 +1,8 @@
-import { Grid, TextField, Box, Typography, FormControl, InputLabel, Select, MenuItem } from "@mui/material"
+import { Grid, TextField, Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material"
 
 export const BecomeSellerStep4=({formik}:any)=>{
     return(
-        <Box sx={{ padding: 3 }}>
-          <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600 }}>
-            Step 4: Business Details
-          </Typography>
-          
+        <Box>
           <Grid container spacing={3}>
             
             {/* Business Name */}
