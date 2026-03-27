@@ -9,36 +9,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (!id.includes("node_modules")) {
-            return;
-          }
-
-          if (id.includes("@mui") || id.includes("@emotion")) {
-            return "mui-vendor";
-          }
-
-          if (id.includes("formik") || id.includes("yup")) {
-            return "form-vendor";
-          }
-
-          if (id.includes("@reduxjs/toolkit") || id.includes("react-redux")) {
-            return "state-vendor";
-          }
-
-          if (id.includes("react-router")) {
-            return "router-vendor";
-          }
-
-          if (id.includes("axios")) {
-            return "network-vendor";
-          }
-
-          if (id.includes("react-slick") || id.includes("slick-carousel")) {
-            return "carousel-vendor";
-          }
-
-          if (id.includes("react") || id.includes("scheduler")) {
-            return "react-vendor";
+          // Keep third-party code in one stable vendor chunk.
+          // The previous fine-grained vendor split created circular chunk imports
+          // in production builds (for example react-vendor <-> mui-vendor),
+          // which caused deployment-only initialization errors.
+          if (id.includes("node_modules")) {
+            return "vendor";
           }
         },
       },
