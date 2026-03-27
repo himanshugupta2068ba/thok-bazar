@@ -2,6 +2,8 @@ const dns = require('dns').promises;
 const nodemailer = require('nodemailer');
 const createHttpError = require('./createHttpError');
 
+const normalizeHost = (value) => String(value || "").trim().toLowerCase();
+
 const toBoolean = (value, fallback = false) => {
     if (value === undefined || value === null || value === "") {
         return fallback;
@@ -19,11 +21,11 @@ const toOptionalNumber = (value) => {
     return Number.isFinite(parsedValue) ? parsedValue : undefined;
 };
 
-const resolvePreferredFamily = () => {
+const resolvePreferredFamily = (host) => {
     const rawValue = String(process.env.SMTP_IP_FAMILY || "").trim();
 
     if (!rawValue || rawValue === "0" || rawValue.toLowerCase() === "auto") {
-        return undefined;
+        return normalizeHost(host) === "smtp.gmail.com" ? 4 : undefined;
     }
 
     const parsedFamily = Number(rawValue);
@@ -90,7 +92,7 @@ const resolveMailerConfig = async () => {
     const secure = toBoolean(process.env.SMTP_SECURE, port === 465);
     const from = String(process.env.EMAIL_FROM || user).trim();
     const servername = String(process.env.SMTP_SERVERNAME || host).trim() || host;
-    const preferredFamily = resolvePreferredFamily();
+    const preferredFamily = resolvePreferredFamily(host);
     const resolvedTarget = await resolvePreferredAddress(host, servername, preferredFamily);
 
     return {
@@ -171,6 +173,13 @@ async function sendVerificationEmail(to, subject, body) {
         if (error?.code === "EAUTH") {
             throw createHttpError(
                 "Email authentication failed. Verify EMAIL_USER and EMAIL_PASS on Render.",
+                503,
+            );
+        }
+
+        if (["ENETUNREACH", "EHOSTUNREACH"].includes(String(error?.code || ""))) {
+            throw createHttpError(
+                "SMTP network route is unreachable. Gmail SMTP is now configured to prefer IPv4; redeploy Render and retry.",
                 503,
             );
         }
