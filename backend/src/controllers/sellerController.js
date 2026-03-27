@@ -4,6 +4,8 @@ const SellerService = require("../service/SellerService");
 const jwtprovider = require("../util/jwtprovider");
 const AuthService = require("../service/AuthService");
 
+const getStatusCode = (error) => Number(error?.statusCode) || 500;
+
 class SellerController{
     async getSellerProfile(req,res){
         //bearer token
@@ -98,7 +100,7 @@ class SellerController{
             await AuthService.sendLoginOTP(email);
             res.status(200).json({message:"OTP sent successfully"});
         }catch(error){
-            res.status(500).json({error:error.message});
+            res.status(getStatusCode(error)).json({error:error.message || "Failed to send OTP"});
         }
     }
 }

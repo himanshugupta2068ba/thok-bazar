@@ -3,6 +3,7 @@ const VerificationCode=require('../models/VerificationCode');
 const generateOTP=require('../util/generateOtp');
 const sendVerificationEmail=require('../util/sendEmail.js');
 const User = require('../models/user');
+const createHttpError = require('../util/createHttpError');
 
 class AuthService{
     async sendLoginOTP(email){
@@ -12,7 +13,7 @@ class AuthService{
     const LEGACY_SIGNIN_PREFIX = "signin_";
 
     if (!email || typeof email !== "string") {
-      throw new Error("Invalid email format");
+      throw createHttpError("Invalid email format", 400);
     }
 
     let loginType = null;
@@ -25,46 +26,53 @@ class AuthService{
       loginType = "seller";
       normalizedEmail = normalizedEmail.substring(SIGNIN_SELLER_PREFIX.length);
     } else if (normalizedEmail.startsWith(LEGACY_SIGNIN_PREFIX)) {
-      throw new Error("Use signin_user_ or signin_seller_ prefix for login OTP");
+      throw createHttpError("Use signin_user_ or signin_seller_ prefix for login OTP", 400);
     }
 
     if (!validator.isEmail(normalizedEmail)) {
-      throw new Error("Invalid email");
+      throw createHttpError("Invalid email", 400);
     }
 
     if (loginType === "user") {
       const user = await User.findOne({ email: normalizedEmail });
       if (!user) {
-        throw new Error("User not found");
+        throw createHttpError("User not found", 404);
       }
     }
 
     if (loginType === "seller") {
       const seller = await Seller.findOne({ email: normalizedEmail });
       if (!seller) {
-        throw new Error("Seller not found");
+        throw createHttpError("Seller not found", 404);
       }
     }
 
-    const existingVerificationCode= await VerificationCode.findOne({email: normalizedEmail}) ;
+    const otp = generateOTP();
 
-        if(existingVerificationCode){
-      await VerificationCode.deleteOne({email: normalizedEmail});
-            // console.log("Existing verification code deleted");
-        }
-
-        const otp=generateOTP();
-        const verificationCode=new VerificationCode({
+    await VerificationCode.findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        $set: {
           email: normalizedEmail,
-            otp:otp
-        });
-        await verificationCode.save();
+          otp,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
 
-        await sendVerificationEmail(
-          normalizedEmail,
-            "Your Login OTP for Thok Bazar",
-            `Your One Time Password(OTP) for login is ${otp}. It is valid for 10 minutes.`
-        );
+    try {
+      await sendVerificationEmail(
+        normalizedEmail,
+        "Your Login OTP for Thok Bazar",
+        `Your One Time Password(OTP) for login is ${otp}. It is valid for 10 minutes.`,
+      );
+    } catch (error) {
+      await VerificationCode.deleteOne({ email: normalizedEmail }).catch(() => undefined);
+      throw error;
+    }
     }
 
     // async createUser(req){

@@ -2,6 +2,8 @@ const UserRole = require('../domain/UserRole');
 const AuthService = require('../service/AuthService');
 const UserService = require('../service/UserService');
 
+const getStatusCode = (error) => Number(error?.statusCode) || 500;
+
 class UserController {
     async sendLoginOtp(req, res) {
         try {
@@ -9,7 +11,7 @@ class UserController {
             await AuthService.sendLoginOTP(email);
             res.status(200).json({ message: "OTP sent successfully" });
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(getStatusCode(error)).json({ error: error.message || "Failed to send OTP" });
         }
     }
 
