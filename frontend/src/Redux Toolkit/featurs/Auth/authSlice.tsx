@@ -133,7 +133,9 @@ const authSlice = createSlice({
         .addCase(signup.fulfilled,(state,action)=>{
             state.loading=false;
             state.user=action.payload;
+            state.role=action.payload?.role || null;
             state.otpSent=false;
+            state.jwt=action.payload?.jwt || "";
         }
         )
         .addCase(signup.rejected,(state,action)=>{

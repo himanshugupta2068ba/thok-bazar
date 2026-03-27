@@ -1,6 +1,18 @@
 const jwt=require("jsonwebtoken")
 
-const seceretkey="kingisheretorulenottoexist"
+const resolveSecretKey = () => {
+    const configuredSecret = String(process.env.JWT_SECRET || "").trim();
+
+    if (configuredSecret) {
+        return configuredSecret;
+    }
+
+    if (process.env.NODE_ENV === "production") {
+        throw new Error("JWT_SECRET is not configured");
+    }
+
+    return "development-only-jwt-secret";
+};
 
 
 class JwtProvider{
@@ -29,6 +41,6 @@ class JwtProvider{
     }
 
 }
-module.exports=new JwtProvider(seceretkey);
+module.exports=new JwtProvider(resolveSecretKey());
 
 

@@ -168,6 +168,34 @@ class OrderService{
         .sort({createdAt:-1});
     }
 
+    async getUserOrderSummaries(userId, { limit = 5, orderId = null } = {}){
+        const normalizedLimit = Math.max(1, Math.min(Number(limit) || 5, 5));
+        const normalizedOrderId = String(orderId || '').trim();
+        const query = { user: userId };
+
+        if (normalizedOrderId) {
+            if (!mongoose.Types.ObjectId.isValid(normalizedOrderId)) {
+                return [];
+            }
+
+            query._id = normalizedOrderId;
+        }
+
+        return await Order.find(query)
+            .select('orderStatus paymentStatus totalSellingPrice totalItems createdAt orderItems')
+            .populate({
+                path: 'orderItems',
+                select: 'product',
+                populate: {
+                    path: 'product',
+                    select: 'title',
+                },
+            })
+            .sort({ createdAt: -1 })
+            .limit(normalizedLimit)
+            .lean();
+    }
+
     async getSellerOrders(sellerId){
         return await Order.find({
             seller:sellerId,

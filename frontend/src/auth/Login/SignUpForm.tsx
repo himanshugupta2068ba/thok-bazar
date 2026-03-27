@@ -62,10 +62,7 @@ export const SignUp=()=>{
     localStorage.setItem("role", result.role);
 
     // navigate to home
-    navigate("/");
-    
-    // Force page reload to trigger fetchUserProfile in App.tsx
-    window.location.href = "/";
+    navigate("/", { replace: true });
   } catch (error) {
     console.log("Signup failed:", error);
   }

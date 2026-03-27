@@ -13,20 +13,32 @@ export const SimilarProduct = ({ productId }: SimilarProductProps) => {
   useEffect(() => {
     if (!productId) return;
 
+    const controller = new AbortController();
     setLoading(true);
 
     api
-      .get(`/products/${productId}/similar`)
+      .get(`/products/${productId}/similar`, {
+        signal: controller.signal,
+      })
       .then((response) => {
         setProducts(response.data || []);
       })
       .catch((error) => {
+        if (error?.code === "ERR_CANCELED" || error?.name === "CanceledError") {
+          return;
+        }
         console.error("Failed to fetch similar products", error);
         setProducts([]);
       })
       .finally(() => {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       });
+
+    return () => {
+      controller.abort();
+    };
   }, [productId]);
 
   if (loading) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   AccountCircle,
   AddShoppingCart,
@@ -14,27 +14,25 @@ import {
   Button,
   InputBase,
   IconButton,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import "./Navbar.css";
 import mainCategory from "../../data/category/mainCategory";
-import { CategorySheet } from "./Category";
 import { useLocation, useNavigate } from "react-router";
 import { useAppSelector } from "../../Redux Toolkit/store";
+import { optimizeImageUrl } from "../../util/image";
+
+const LazyCategorySheet = lazy(() =>
+  import("./Category").then((module) => ({
+    default: module.CategorySheet,
+  })),
+);
+
 export const Navbar = () => {
-  const {user, cart, wishlist}=useAppSelector((state)=>state);
-  const theme = useTheme();
-  const isLarge = useMediaQuery(theme.breakpoints.up("lg"));
+  const customerName = useAppSelector((state) => state.user.user?.name || "");
+  const cartItemCount = useAppSelector((state) => state.cart.cart?.totalItems || 0);
+  const wishlistItemCount = useAppSelector((state) => state.wishlist.items?.length || 0);
   const [showSheet, setShowSheet] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("menu");
-  const cartItemCount = cart.cart?.totalItems || 0;
-  const wishlistItemCount = wishlist.items?.length || 0;
-  // const[isLoggedIn,setIsLoggedIn]=useState(false);
-  // const jwt=localStorage.getItem("jwt");
-  // if(jwt){
-  //   setIsLoggedIn(true);
-  // }
   const navigate=useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,16 +66,14 @@ export const Navbar = () => {
       <div className="flex items-center justify-between px-5 lg:px-20 h-17.5 border-b border-gray-200">
         <div className="flex items-center gap-9">
           <div className="flex items-center gap-2">
-            {!isLarge ? (
-              <IconButton>
-                <Menu className="text-gray-700" sx={{ fontSize: 29 }} />
-              </IconButton>
-            ) : null}
+            <IconButton className="lg:hidden">
+              <Menu className="text-gray-700" sx={{ fontSize: 29 }} />
+            </IconButton>
             <h1 onClick={()=>navigate("/")} className="logo text-shadow-lg text-lg md:text-2xl cursor-pointer">
               Thok Bazar
             </h1>
           </div>
-          <ul className="flex items-center font-medium text-gray-800">
+          <ul className="hidden items-center font-medium text-gray-800 lg:flex">
             {mainCategory.map((item) => (
               <li
                 onMouseEnter={() => {
@@ -112,13 +108,13 @@ export const Navbar = () => {
           <IconButton onClick={handleSearchSubmit}>
             <Search sx={{ fontSize: 29 }} />
           </IconButton>
-          {user.user?.name ? (
+          {customerName ? (
             <Button onClick={()=>navigate("/customer/profile")} className="flex item-center gap-1">
               <Avatar
-                src="https://plus.unsplash.com/premium_photo-1682090778813-3938ba76ee57?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ3Jvb218ZW58MHx8MHx8fDA%3D"
+                src={optimizeImageUrl("https://plus.unsplash.com/premium_photo-1682090778813-3938ba76ee57?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ3Jvb218ZW58MHx8MHx8fDA%3D", { width: 58, height: 58, fit: "crop" })}
                 sx={{ width: 29, height: 29 }}
               />
-              <h1>{user.user?.name}</h1>
+              <h1>{customerName}</h1>
             </Button>
           ) : (
             <Button variant="contained" startIcon={<AccountCircle />} onClick={()=>navigate('/login')}>
@@ -145,16 +141,18 @@ export const Navbar = () => {
           </Button>
         </div>
       </div>
-      {showSheet && isLarge && (
+      {showSheet ? (
         <Box
-          className="categorySheet absolute top-[4.4rem] left-20 right-20 z-130"
+          className="categorySheet absolute top-[4.4rem] left-20 right-20 z-130 hidden lg:block"
         >
-          <CategorySheet
-            selectedCategory={selectedCategory}
-            onNavigate={() => setShowSheet(false)}
-          />
+          <Suspense fallback={null}>
+            <LazyCategorySheet
+              selectedCategory={selectedCategory}
+              onNavigate={() => setShowSheet(false)}
+            />
+          </Suspense>
         </Box>
-      )}
+      ) : null}
     </Box>
   );
 };

@@ -12,24 +12,26 @@ import {
 } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { SimilarProduct } from "./SimilarProduct";
 import { useNavigate, useParams } from "react-router";
-import { useAppDispatch, useAppSelector } from "../../../../Redux Toolkit/store";
-import { fetchProductById } from "../../../../Redux Toolkit/featurs/coustomer/productSlice";
 import { addItemTocart } from "../../../../Redux Toolkit/featurs/coustomer/cartSlice";
+import { fetchProductById } from "../../../../Redux Toolkit/featurs/coustomer/productSlice";
 import {
   buildWishlistUserKey,
   toggleWishlistItem,
 } from "../../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
+import { useAppDispatch, useAppSelector } from "../../../../Redux Toolkit/store";
+import { useInView } from "../../../../common/useInView";
+import { api } from "../../../../config/api";
 import {
   getProductSpecificationFields,
   getSpecificationValue,
   resolveMainCategoryId,
 } from "../../../../data/product/productConfig";
-import { api } from "../../../../config/api";
+import { optimizeImageUrl } from "../../../../util/image";
 import { resolveProductPricing } from "../../../../util/productPricing";
+import { SimilarProduct } from "./SimilarProduct";
 
-const images = [
+const fallbackImages = [
   "https://images.unsplash.com/photo-1580854898508-4761a9c769a9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d29tZW4lMjBzYXJlZXxlbnwwfHwwfHx8MA%3D%3D",
   "https://images.unsplash.com/photo-1756483482418-3f3e4c13f9b0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8d29tZW4lMjBzYXJlZXxlbnwwfHwwfHx8MA%3D%3D",
   "https://images.unsplash.com/photo-1677002419193-9a74069587af?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHdvbWVuJTIwc2FyZWV8ZW58MHx8MHx8fDA%3D",
@@ -50,7 +52,13 @@ export const ProductDetails = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { product, auth, user, wishlist } = useAppSelector((state) => state);
+  const productData: any = useAppSelector((state) => state.product.product) || {};
+  const authJwt = useAppSelector((state) => state.auth.jwt);
+  const authUser = useAppSelector((state) => state.auth.user);
+  const profileUser = useAppSelector((state) => state.user.user);
+  const isWishlisted = useAppSelector((state) =>
+    state.wishlist.items.some((wishlistItem: any) => String(wishlistItem?._id) === String(productId)),
+  );
   const [reviews, setReviews] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
@@ -62,65 +70,127 @@ export const ProductDetails = () => {
     rating: 5,
     comment: "",
   });
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(null);
 
-  const jwt = auth.jwt?.trim() || localStorage.getItem("jwt");
+  const jwt = authJwt?.trim() || localStorage.getItem("jwt");
   const isLoggedIn = Boolean(jwt);
-  const wishlistUserKey = buildWishlistUserKey(auth.user, user.user);
+  const wishlistUserKey = useMemo(
+    () => buildWishlistUserKey(authUser, profileUser),
+    [authUser, profileUser],
+  );
+  const { inView: shouldLoadReviews, ref: reviewSectionRef } = useInView<HTMLElement>({
+    rootMargin: "260px 0px",
+  });
+  const { inView: shouldLoadSimilarProducts, ref: similarProductsRef } = useInView<HTMLElement>({
+    rootMargin: "320px 0px",
+  });
 
   useEffect(() => {
     if (!productId) return;
-    dispatch(fetchProductById(productId));
+
+    const request = dispatch(fetchProductById(productId));
+
+    return () => {
+      request.abort();
+    };
   }, [dispatch, productId]);
 
   useEffect(() => {
-    if (!productId) return;
+    setReviews([]);
+    setAverageRating(0);
+    setTotalReviews(0);
+    setReviewError("");
+  }, [productId]);
+
+  useEffect(() => {
+    if (!productId || !shouldLoadReviews) return;
+
+    const controller = new AbortController();
 
     setReviewLoading(true);
+    setReviewError("");
 
     api
-      .get(`/products/${productId}/reviews`)
+      .get(`/products/${productId}/reviews`, {
+        signal: controller.signal,
+      })
       .then((response) => {
         setReviews(response.data?.reviews || []);
         setAverageRating(Number(response.data?.averageRating || 0));
         setTotalReviews(Number(response.data?.totalReviews || 0));
       })
       .catch((error) => {
+        if (error?.code === "ERR_CANCELED" || error?.name === "CanceledError") {
+          return;
+        }
+
         console.error("Failed to fetch reviews", error);
         setReviewError("Unable to load reviews right now.");
       })
       .finally(() => {
-        setReviewLoading(false);
+        if (!controller.signal.aborted) {
+          setReviewLoading(false);
+        }
       });
-  }, [productId]);
 
-  const productData: any = product.product || {};
-  const isWishlisted = wishlist.items.some(
-    (wishlistItem: any) => String(wishlistItem?._id) === String(productData?._id || productId),
-  );
+    return () => {
+      controller.abort();
+    };
+  }, [productId, shouldLoadReviews]);
+
   const imagesList = useMemo(() => {
-    if (productData?.images?.length) return productData.images;
-    return images;
-  }, [productData]);
+    if (Array.isArray(productData?.images) && productData.images.length) {
+      return productData.images;
+    }
 
-  const [baseImage, setBaseImage] = useState(imagesList[0]);
-  const [currentImage, setCurrentImage] = useState(imagesList[0]);
+    return fallbackImages;
+  }, [productData]);
+  const thumbnailImages = useMemo(
+    () =>
+      imagesList.map((image: string) =>
+        optimizeImageUrl(image, {
+          width: 160,
+          height: 160,
+          fit: "crop",
+          quality: 70,
+        }),
+      ),
+    [imagesList],
+  );
+  const previewImages = useMemo(
+    () =>
+      imagesList.map((image: string) =>
+        optimizeImageUrl(image, {
+          width: 1200,
+          height: 1400,
+          fit: "crop",
+          quality: 82,
+        }),
+      ),
+    [imagesList],
+  );
 
   useEffect(() => {
-    setBaseImage(imagesList[0]);
-    setCurrentImage(imagesList[0]);
-  }, [imagesList]);
+    setSelectedImageIndex(0);
+    setHoveredImageIndex(null);
+  }, [imagesList, productId]);
+
+  const activeImageIndex = hoveredImageIndex ?? selectedImageIndex;
+  const currentImage = previewImages[activeImageIndex] || previewImages[0] || fallbackImages[0];
 
   const handleHover = (index: number) => {
-    setCurrentImage(imagesList[index]);
+    setHoveredImageIndex(index);
   };
 
   const handleLeave = () => {
-    setCurrentImage(baseImage);
+    setHoveredImageIndex(null);
   };
 
   const handleClick = (index: number) => {
-    setBaseImage(imagesList[index]);
-    setCurrentImage(imagesList[index]);
+    setSelectedImageIndex(index);
+    setHoveredImageIndex(null);
   };
 
   const sellerName =
@@ -150,15 +220,14 @@ export const ProductDetails = () => {
   }, [mainCategoryId, productData]);
 
   const currentUserReview = useMemo(() => {
-    if (!user.user?._id) return null;
+    if (!profileUser?._id) return null;
     return (
       reviews.find(
-        (review) => String(review.userId?._id) === String(user.user?._id),
+        (review) => String(review.userId?._id) === String(profileUser?._id),
       ) || null
     );
-  }, [reviews, user.user?._id]);
+  }, [profileUser?._id, reviews]);
 
-  const [quantity, setQuantity] = useState(1);
   const handleQuantityChange = (type: "increment" | "decrement") => {
     if (type === "increment") {
       setQuantity((prev) => prev + 1);
@@ -263,14 +332,16 @@ export const ProductDetails = () => {
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         <section className="flex flex-col gap-5 lg:flex-row">
           <div className="flex w-full flex-wrap gap-3 lg:w-[15%] lg:flex-col">
-            {imagesList.map((imgSrc: string, index: number) => (
+            {thumbnailImages.map((imgSrc: string, index: number) => (
               <img
                 onMouseEnter={() => handleHover(index)}
                 onMouseLeave={handleLeave}
                 onClick={() => handleClick(index)}
-                key={index}
+                key={imgSrc}
                 src={imgSrc}
-                alt="product"
+                alt={`${productTitle} preview ${index + 1}`}
+                loading="lazy"
+                decoding="async"
                 className="w-12.5 cursor-pointer rounded-md border-2 border-gray-300 lg:w-full"
               />
             ))}
@@ -278,7 +349,10 @@ export const ProductDetails = () => {
           <div className="w-full lg:w-[85%]">
             <img
               src={currentImage}
-              alt="current product"
+              alt={productTitle}
+              fetchPriority="high"
+              decoding="async"
+              sizes="(min-width: 1024px) 42vw, 100vw"
               className="w-full rounded-md border-2 border-gray-300"
             />
           </div>
@@ -415,7 +489,11 @@ export const ProductDetails = () => {
         </section>
       </div>
 
-      <section id={REVIEW_SECTION_ID} className="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+      <section
+        ref={reviewSectionRef}
+        id={REVIEW_SECTION_ID}
+        className="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr]"
+      >
         <div>
           <div className="mb-6 flex items-center justify-between">
             <div>
@@ -434,7 +512,9 @@ export const ProductDetails = () => {
             </div>
           </div>
 
-          {reviewLoading ? (
+          {!shouldLoadReviews ? (
+            <p className="text-sm text-gray-500">Reviews will load as you reach this section.</p>
+          ) : reviewLoading ? (
             <p className="text-sm text-gray-500">Loading reviews...</p>
           ) : reviews.length ? (
             <div className="space-y-4">
@@ -540,10 +620,16 @@ export const ProductDetails = () => {
         </div>
       </section>
 
-      <section className="mt-20">
+      <section ref={similarProductsRef} className="mt-20">
         <h1 className="text-lg font-bold">Similar Products</h1>
         <div className="pt-5">
-          <SimilarProduct productId={productId} />
+          {shouldLoadSimilarProducts ? (
+            <SimilarProduct productId={productId} />
+          ) : (
+            <p className="text-sm text-gray-500">
+              Similar products will appear here as you keep browsing.
+            </p>
+          )}
         </div>
       </section>
     </div>

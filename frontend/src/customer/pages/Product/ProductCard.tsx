@@ -1,6 +1,6 @@
 import { AddShoppingCart, Favorite, FavoriteBorder } from "@mui/icons-material";
 import { Button, IconButton } from "@mui/material";
-import { useEffect, useState, type MouseEvent } from "react";
+import { memo, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useNavigate } from "react-router";
 import { addItemTocart } from "../../../Redux Toolkit/featurs/coustomer/cartSlice";
 import {
@@ -10,6 +10,7 @@ import {
 } from "../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
 import { resolveProductPricing } from "../../../util/productPricing";
+import { optimizeImageUrl } from "../../../util/image";
 import "./ProductCard.css";
 
 const FALLBACK_IMAGE =
@@ -25,25 +26,35 @@ const formatLabel = (value?: string) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any) => {
+type ProductCardProps = {
+  item: any;
+  removeFromWishlistOnAddToCart?: boolean;
+};
+
+export const ProductCard = memo(({ item, removeFromWishlistOnAddToCart = false }: ProductCardProps) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { auth, user, wishlist } = useAppSelector((state) => state);
+  const authJwt = useAppSelector((state) => state.auth.jwt);
+  const authUser = useAppSelector((state) => state.auth.user);
+  const profileUser = useAppSelector((state) => state.user.user);
 
   const images = item?.images?.length ? item.images : [FALLBACK_IMAGE];
   const categoryId = item?.category?.categoryId || item?.categoryId || "default";
   const productId = item?._id || item?.productId || item?.id;
   const productName = item?.title || item?.name || "product";
-  const jwt = auth.jwt?.trim() || localStorage.getItem("jwt");
-  const wishlistUserKey = buildWishlistUserKey(auth.user, user.user);
+  const jwt = authJwt?.trim() || localStorage.getItem("jwt");
+  const wishlistUserKey = useMemo(
+    () => buildWishlistUserKey(authUser, profileUser),
+    [authUser, profileUser],
+  );
   const categoryLabel = formatLabel(
     item?.mainCategory || item?.subSubCategory || item?.subCategory || categoryId,
   );
-  const isWishlisted = wishlist.items.some(
-    (wishlistItem: any) => String(wishlistItem?._id) === String(productId),
+  const isWishlisted = useAppSelector((state) =>
+    state.wishlist.items.some((wishlistItem: any) => String(wishlistItem?._id) === String(productId)),
   );
 
   const sellerName =
@@ -55,13 +66,25 @@ export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any
 
   const { sellingPrice, mrpPrice, discount, savings, dealApplied, activeDeal } =
     resolveProductPricing(item);
+  const optimizedImages = useMemo(
+    () =>
+      images.map((image: string) =>
+        optimizeImageUrl(image, {
+          width: 720,
+          height: 960,
+          fit: "crop",
+          quality: 78,
+        }),
+      ),
+    [images],
+  );
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
 
-    if (isHovered) {
+    if (isHovered && optimizedImages.length > 1) {
       interval = setInterval(() => {
-        setCurrentImage((prev) => (prev + 1) % images.length);
+        setCurrentImage((prev) => (prev + 1) % optimizedImages.length);
       }, 1000);
     }
 
@@ -70,7 +93,11 @@ export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any
         clearInterval(interval);
       }
     };
-  }, [images.length, isHovered]);
+  }, [isHovered, optimizedImages.length]);
+
+  useEffect(() => {
+    setCurrentImage(0);
+  }, [optimizedImages.length, productId]);
 
   const handleOpenProduct = () => {
     navigate(`/product-details/${categoryId}/${encodeURIComponent(productName)}/${productId}`);
@@ -163,16 +190,14 @@ export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any
             </IconButton>
           </div>
 
-          {images.map((image: string, index: number) => (
-            <img
-              src={image}
-              key={index}
-              className="card-media object-top"
-              style={{
-                transform: `translateX(${(index - currentImage) * 100}%)`,
-              }}
-            />
-          ))}
+          <img
+            src={optimizedImages[currentImage] || FALLBACK_IMAGE}
+            alt={productName}
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width: 1280px) 18vw, (min-width: 1024px) 24vw, (min-width: 640px) 38vw, 88vw"
+            className="card-media object-top"
+          />
         </div>
 
         <div className="px-4 pb-4 pt-4">
@@ -234,4 +259,6 @@ export const ProductCard = ({ item, removeFromWishlistOnAddToCart = false }: any
       </div>
     </div>
   );
-};
+});
+
+ProductCard.displayName = "ProductCard";

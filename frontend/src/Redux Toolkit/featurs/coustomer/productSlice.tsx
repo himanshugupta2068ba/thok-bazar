@@ -12,12 +12,15 @@ const initialState = {
     searchProducts: [],
 };
 
+const isAbortedRequest = (action: any) => action?.meta?.aborted || action?.error?.name === "AbortError";
+
 export const fetchProductById = createAsyncThunk<any,any>(
     "product/fetchProductById",
-    async (productId, { rejectWithValue }) => {
+    async (productId, { rejectWithValue, signal }) => {
         try {
-            const response = await api.get(`/products/${productId}`);
-            console.log("fetch product",response.data);
+            const response = await api.get(`/products/${productId}`, {
+                signal,
+            });
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data || { error: "Failed to fetch product" });
@@ -27,14 +30,14 @@ export const fetchProductById = createAsyncThunk<any,any>(
 
 export const SearchProduct = createAsyncThunk<any,any>(
     "product/SearchProduct",
-    async (query, { rejectWithValue }) => {
+    async (query, { rejectWithValue, signal }) => {
         try {
             const response = await api.get(`/products/search`,{
                 params: {
                     q: query
-                }
+                },
+                signal,
             });
-            console.log("search product",response.data);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data || { error: "Failed to fetch product" });
@@ -44,15 +47,15 @@ export const SearchProduct = createAsyncThunk<any,any>(
 
 export const getAllProducts = createAsyncThunk<any,any>(
     "product/getAllProducts",
-    async (params, { rejectWithValue }) => {
+    async (params, { rejectWithValue, signal }) => {
         try {
             const response = await api.get(`/products`,{
                 params:{
                     ...params,
                     pageNumber: params?.pageNumber ?? 0,
-                }
+                },
+                signal,
             });
-            console.log("get all products",response.data);
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data || { error: "Failed to fetch products" });
@@ -76,7 +79,9 @@ const productSlice = createSlice({
         });
         builder.addCase(fetchProductById.rejected,(state,action:any)=>{
             state.loading=false;
-            state.error=action.payload || null;
+            if (!isAbortedRequest(action)) {
+                state.error=action.payload || null;
+            }
         });
         builder.addCase(SearchProduct.pending,(state)=>{
             state.loading=true;
@@ -88,7 +93,9 @@ const productSlice = createSlice({
         });
         builder.addCase(SearchProduct.rejected,(state,action:any)=>{
             state.loading=false;
-            state.error=action.payload || null;
+            if (!isAbortedRequest(action)) {
+                state.error=action.payload || null;
+            }
         });
         builder.addCase(getAllProducts.pending,(state)=>{
             state.loading=true;
@@ -102,7 +109,9 @@ const productSlice = createSlice({
         });
         builder.addCase(getAllProducts.rejected,(state,action:any)=>{
             state.loading=false;
-            state.error=action.payload || null;
+            if (!isAbortedRequest(action)) {
+                state.error=action.payload || null;
+            }
         });
     }
 })

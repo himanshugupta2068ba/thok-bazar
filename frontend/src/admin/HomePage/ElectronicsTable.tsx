@@ -18,9 +18,10 @@ import {
   Paper,
   TextField,
 } from "@mui/material";
-import { Edit } from "@mui/icons-material";
+import { Delete, Edit } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
 import {
+  deleteAdminHomeCategory,
   fetchHomeCategories,
   createAdminHomeCategory,
   updateHomeCategoryStatus,
@@ -38,6 +39,7 @@ export const ElectronicTable = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState("");
   const [formValues, setFormValues] = useState({
@@ -139,6 +141,34 @@ export const ElectronicTable = () => {
     }
   };
 
+  const handleDelete = async (row: any) => {
+    const categoryId = String(row?._id || row?.id || "");
+    if (!categoryId) return;
+
+    const confirmed = window.confirm(`Delete "${row?.name || "this electronics category"}"?`);
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(categoryId);
+      setSaveError(null);
+
+      const resultAction = await dispatch(
+        deleteAdminHomeCategory({
+          categoryId,
+          jwt: adminToken,
+        }),
+      );
+
+      if (deleteAdminHomeCategory.rejected.match(resultAction)) {
+        throw new Error(String(resultAction.payload || "Failed to delete category"));
+      }
+    } catch (err: any) {
+      setSaveError(err?.message || "Failed to delete category");
+    } finally {
+      setDeletingId("");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -169,7 +199,7 @@ export const ElectronicTable = () => {
                 <TableCell>Image</TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Category ID</TableCell>
-                <TableCell>Update</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -195,8 +225,19 @@ export const ElectronicTable = () => {
                       <TableCell>{row?.name || "-"}</TableCell>
                       <TableCell>{row?.categoryId || "-"}</TableCell>
                       <TableCell>
-                        <IconButton color="primary" onClick={() => handleOpenEdit(row)}>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleOpenEdit(row)}
+                          disabled={deletingId === rowId}
+                        >
                           <Edit />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDelete(row)}
+                          disabled={deletingId === rowId}
+                        >
+                          {deletingId === rowId ? <CircularProgress size={18} /> : <Delete />}
                         </IconButton>
                       </TableCell>
                     </TableRow>

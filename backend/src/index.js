@@ -1,25 +1,36 @@
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
-app.use(express.json());
 const cors = require('cors');
 const path = require('path');
-
 const mongoose = require('mongoose');
-
-// const dotenv = require('dotenv');
+const dotenv = require('dotenv');
 
 const connectDb = require('./db/db');
+const corsOptions = require('./config/corsOptions');
 
-app.use((cors()));
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: false });
 
-// dotenv.config();
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-
-
+app.use(cors(corsOptions));
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('Werlcome to the backend server of thok-bazar!');
+});
+app.get('/health', (_req, res) => {
+  const readyStateLookup = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+
+  const readyState = mongoose.connection.readyState;
+
+  res.status(readyState === 1 ? 200 : 503).json({
+    status: readyState === 1 ? 'ok' : 'degraded',
+    database: readyStateLookup[readyState] || 'unknown',
+  });
 });
 
 const sellerRoutes = require('./routers/SellerRoutes');
@@ -39,10 +50,6 @@ const dealRoutes=require('./routers/DealRoutes');
 const couponRoutes=require('./routers/CouponRoutes');
 const customerAssistantRoutes=require('./routers/CustomerAssistantRoutes');
 
-// app.use(cors());
-app.use(bodyParser.json());
-
-
 app.use('/sellers', sellerRoutes);
 app.use('/admin', adminRoutes);
 app.use('/auth',authrouter);
@@ -61,9 +68,19 @@ app.use('/coupons',couponRoutes);
 app.use('/ai',customerAssistantRoutes);
 
 
-const ports = process.env.PORT || 5000;
+const port = Number(process.env.PORT || 5000);
 
-app.listen(ports, async() => {
-    console.log(`Server is running on port: ${ports}`);
+const startServer = async () => {
+  try {
     await connectDb();
-});
+
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Server is running on port: ${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start backend:', error?.message || error);
+    process.exit(1);
+  }
+};
+
+startServer();

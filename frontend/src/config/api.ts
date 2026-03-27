@@ -3,8 +3,24 @@ import { clearCustomerSession, getStoredCustomerJwt, isCustomerProtectedPath } f
 import { clearSellerSession, extractBearerToken, getStoredSellerJwt } from '../util/sellerSession';
 import { clearAdminSession, getStoredAdminJwt } from '../util/adminSession';
 
+const normalizeBaseUrl = (value?: string) => String(value || "").trim().replace(/\/$/, "");
+
+const resolveApiBaseUrl = () => {
+    const configuredBaseUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
+
+    if (configuredBaseUrl) {
+        return configuredBaseUrl;
+    }
+
+    if (import.meta.env.DEV) {
+        return "http://localhost:5000";
+    }
+
+    return "";
+};
+
 export const api=axios.create({
-    baseURL:"http://localhost:5000",
+    baseURL:resolveApiBaseUrl() || undefined,
     headers:{
         'Content-Type':'application/json'
     }

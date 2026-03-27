@@ -1,13 +1,10 @@
 import HomeCategoryCard from "./HomeCategoryCard"
 import { useAppSelector } from "../../../../Redux Toolkit/store"
+import { selectShopByCategoryHomeCategories } from "../../../../Redux Toolkit/featurs/coustomer/homeCategorySlice";
 
 
 const HomeCategory=()=>{
-    const items = useAppSelector((state) =>
-        state.homeCategory.homeCategories.filter(
-            (item: any) => item.section === "SHOP_BY_CATEGORY",
-        ),
-    );
+    const items = useAppSelector(selectShopByCategoryHomeCategories);
 
     return(
         <div className="flex justify-center gap-7 flex-wrap">

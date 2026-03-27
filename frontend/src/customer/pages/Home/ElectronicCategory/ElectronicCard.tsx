@@ -1,12 +1,23 @@
 import { useNavigate } from 'react-router';
+import { optimizeImageUrl } from "../../../../util/image";
 
 const ElectronicCategoryCard = ({ListItem}:any) => {
     const navigate=useNavigate();
     return(
-         <div onClick={()=>navigate(`/products/${ListItem.categoryId}`)} className="group flex w-20 flex-col items-center gap-3 cursor-pointer mx-auto">
-          <img className="object-contain h-10 w-20 transition-transform duration-300 group-hover:scale-110" src={ListItem.image} alt={ListItem.name} />
-          <h2 className='font-semibold text-sm transition-colors duration-300 group-hover:text-teal-600'>{ListItem.name}</h2>
-        </div>
+         <button
+            type="button"
+            onClick={()=>navigate(`/products/${ListItem.categoryId}`)}
+            className="flex w-full max-w-[120px] flex-col items-center gap-3 text-center"
+         >
+          <img
+            className="h-10 w-20 object-contain"
+            src={optimizeImageUrl(ListItem.image, { width: 160, height: 80, fit: "fill" })}
+            alt={ListItem.name}
+            loading="lazy"
+            decoding="async"
+          />
+          <h2 className='text-sm font-medium text-slate-700'>{ListItem.name}</h2>
+        </button>
     )
 }
 export default ElectronicCategoryCard;

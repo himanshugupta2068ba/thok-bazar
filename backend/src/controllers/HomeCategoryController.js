@@ -43,6 +43,20 @@ class HomeCategoryController{
         }
     }
 
+    async deleteHomeCategory(req, res){
+        try{
+            const id=req.params.id;
+            const deletedCategory = await HomeCategoryService.deleteHomeCategory(id);
+            res.status(200).json({
+                message: "Home category deleted successfully",
+                homeCategory: deletedCategory,
+            });
+        }catch(err){
+            const statusCode = err.message === "Home category not found" ? 404 : 500;
+            res.status(statusCode).json({error:err.message});
+        }
+    }
+
 
 }
 module.exports=new HomeCategoryController();

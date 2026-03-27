@@ -1,14 +1,27 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-const url="mongodb+srv://himanshuguptadeveloper_db_user:S5xdXBXZVPtprypO@cluster0.fqvwr7t.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const getMongoUri = () => {
+    const mongoUri = String(
+        process.env.MONGODB_URI || process.env.MONGO_URI || process.env.MONGO_URL || "",
+    ).trim();
 
-const connectDb=async()=>{
-    try{
-        const conn=await mongoose.connect(url)
-        console.log('MongoDB connected:',conn.connection.host);
+    if (!mongoUri) {
+        throw new Error("MONGODB_URI is not configured");
     }
-    catch(err){
-        console.log(err);
+
+    return mongoUri;
+};
+
+const connectDb = async () => {
+    try {
+        const conn = await mongoose.connect(getMongoUri());
+        console.log("MongoDB connected:", conn.connection.host);
+        return conn;
     }
-}
-module.exports=connectDb;
+    catch (err) {
+        console.error("MongoDB connection failed:", err?.message || err);
+        throw err;
+    }
+};
+
+module.exports = connectDb;

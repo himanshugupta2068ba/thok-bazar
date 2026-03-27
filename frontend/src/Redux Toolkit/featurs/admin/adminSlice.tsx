@@ -74,6 +74,24 @@ export const createAdminHomeCategory = createAsyncThunk<any, any>(
   },
 );
 
+export const deleteAdminHomeCategory = createAsyncThunk<any, any>(
+  "admin/deleteHomeCategory",
+  async ({ categoryId, jwt }, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/home-categories/${categoryId}`, {
+        headers: jwt
+          ? {
+              Authorization: `Bearer ${jwt}`,
+            }
+          : undefined,
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  },
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState,
@@ -129,6 +147,25 @@ const adminSlice = createSlice({
         }
       })
       .addCase(createAdminHomeCategory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(deleteAdminHomeCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAdminHomeCategory.fulfilled, (state, action) => {
+        state.loading = false;
+        const deletedCategory = action.payload?.homeCategory || action.payload;
+        const deletedCategoryId = deletedCategory?._id || deletedCategory?.id;
+
+        if (deletedCategoryId) {
+          state.homeCategories = state.homeCategories.filter(
+            (category: any) => (category._id || category.id) !== deletedCategoryId,
+          );
+        }
+      })
+      .addCase(deleteAdminHomeCategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

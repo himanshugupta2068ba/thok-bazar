@@ -4,6 +4,22 @@ const OrderService = require("./OrderService");
 
 const MAX_TOOL_PRODUCTS = 6;
 const MAX_TOOL_ROUNDS = 4;
+const ASSISTANT_PRODUCT_SELECT = [
+    "title",
+    "mrpPrice",
+    "sellingPrice",
+    "stock",
+    "images",
+    "sellerId",
+    "category",
+    "mainCategory",
+    "subCategory",
+    "subSubCategory",
+    "color",
+    "size",
+    "discountPercentage",
+    "createdAt",
+].join(" ");
 const INPUT_NORMALIZERS = [
     { pattern: /\b(t[\s-]?shirts?|tshrt|tee[\s-]?shirts?|tees?)\b/gi, replacement: " tshirt " },
     { pattern: /\b(shooes|shoees|shoos|shoe)\b/gi, replacement: " shoes " },
@@ -324,10 +340,12 @@ class CustomerAssistantService {
         }
 
         let products = await Product.find(filterQuery)
+            .select(ASSISTANT_PRODUCT_SELECT)
             .populate("category", "categoryId name")
             .populate("sellerId", "sellerName businessDetails")
             .sort(sort === "newest" ? { _id: -1 } : { createdAt: -1, _id: -1 })
-            .limit(Math.max(limit * 4, 20));
+            .limit(Math.max(limit * 4, 20))
+            .lean();
 
         products = await productService.applyDealsToProductCollection(products);
 
@@ -387,9 +405,11 @@ class CustomerAssistantService {
 
         const limit = Math.min(this.clampLimit(args.limit, 3, 5), 5);
         const targetOrderId = String(args.orderId || "").trim();
-        const orders = await OrderService.userOrdersHistory(customer._id);
+        const orders = await OrderService.getUserOrderSummaries(customer._id, {
+            limit,
+            orderId: targetOrderId || undefined,
+        });
         const recentOrders = orders
-            .filter((order) => !targetOrderId || String(order?._id || "") === targetOrderId)
             .slice(0, limit)
             .map((order) => ({
                 id: String(order?._id || ""),

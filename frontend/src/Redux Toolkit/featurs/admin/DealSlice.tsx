@@ -6,6 +6,7 @@ interface DealState {
 	loading: boolean;
 	error: string | null;
 	successMessage: string | null;
+	lastFetchedAt: number | null;
 }
 
 const initialState: DealState = {
@@ -13,6 +14,7 @@ const initialState: DealState = {
 	loading: false,
 	error: null,
 	successMessage: null,
+	lastFetchedAt: null,
 };
 
 const getErrorMessage = (error: any) =>
@@ -41,6 +43,27 @@ export const fetchDeals = createAsyncThunk<any, any>(
 		} catch (error: any) {
 			return rejectWithValue(getErrorMessage(error));
 		}
+	},
+	{
+		condition: (payload, { getState }) => {
+			const state = getState() as { deals: DealState };
+			const { deals } = state;
+
+			if (deals.loading) {
+				return false;
+			}
+
+			if (!payload?.activeOnly) {
+				return true;
+			}
+
+			const hasFreshCache =
+				Boolean(deals.deals.length) &&
+				Boolean(deals.lastFetchedAt) &&
+				Date.now() - Number(deals.lastFetchedAt) < 60 * 1000;
+
+			return !hasFreshCache;
+		},
 	},
 );
 
@@ -134,6 +157,7 @@ const dealSlice = createSlice({
 			.addCase(fetchDeals.fulfilled, (state, action) => {
 				state.loading = false;
 				state.deals = action.payload?.deals || action.payload?.content || action.payload || [];
+				state.lastFetchedAt = Date.now();
 			})
 			.addCase(fetchDeals.rejected, (state, action) => {
 				state.loading = false;
@@ -150,6 +174,7 @@ const dealSlice = createSlice({
 				if (createdDeal) {
 					state.deals.unshift(createdDeal);
 				}
+				state.lastFetchedAt = Date.now();
 				state.successMessage = "Deal created successfully";
 			})
 			.addCase(createDeal.rejected, (state, action) => {
@@ -170,6 +195,7 @@ const dealSlice = createSlice({
 				if (index !== -1 && updatedDeal) {
 					state.deals[index] = updatedDeal;
 				}
+				state.lastFetchedAt = Date.now();
 				state.successMessage = "Deal updated successfully";
 			})
 			.addCase(updateDeal.rejected, (state, action) => {
@@ -185,6 +211,7 @@ const dealSlice = createSlice({
 				state.deals = state.deals.filter(
 					(deal: any) => (deal._id || deal.id) !== action.payload?.dealId,
 				);
+				state.lastFetchedAt = Date.now();
 				state.successMessage =
 					action.payload?.response?.message || "Deal deleted successfully";
 			})

@@ -5,11 +5,49 @@ const Review = require('../models/Review');
 const Deal = require('../models/Deal');
 const calculateDiscountPercentage = require('../util/discountCalculator');
 
+const ACTIVE_DEAL_CACHE_TTL_MS = 30 * 1000;
+const PRODUCT_LIST_SELECT = [
+    'title',
+    'description',
+    'mrpPrice',
+    'sellingPrice',
+    'category',
+    'stock',
+    'images',
+    'sellerId',
+    'discountPercentage',
+    'mainCategory',
+    'subCategory',
+    'subSubCategory',
+    'color',
+    'size',
+    'specifications',
+].join(' ');
+
 class ProductService {
+    constructor() {
+        this.activeDealCache = {
+            dealMaps: null,
+            expiresAt: 0,
+        };
+    }
+
+    clearActiveDealCache() {
+        this.activeDealCache = {
+            dealMaps: null,
+            expiresAt: 0,
+        };
+    }
+
     async getActiveDealMaps() {
+        if (this.activeDealCache.dealMaps && Date.now() < this.activeDealCache.expiresAt) {
+            return this.activeDealCache.dealMaps;
+        }
+
         const deals = await Deal.find({ $or: [{ isActive: true }, { isActive: { $exists: false } }] })
             .populate('category', 'categoryId')
-            .select('discount category productIds isActive');
+            .select('discount category productIds isActive')
+            .lean();
 
         const categoryDealMap = new Map();
         const productDealMap = new Map();
@@ -41,7 +79,13 @@ class ProductService {
             });
         });
 
-        return { categoryDealMap, productDealMap };
+        const dealMaps = { categoryDealMap, productDealMap };
+        this.activeDealCache = {
+            dealMaps,
+            expiresAt: Date.now() + ACTIVE_DEAL_CACHE_TTL_MS,
+        };
+
+        return dealMaps;
     }
 
     findDealForProduct(product, dealMaps) {
@@ -123,7 +167,10 @@ class ProductService {
         const deal = await Deal.findOne({
             _id: normalizedDealId,
             $or: [{ isActive: true }, { isActive: { $exists: false } }],
-        }).populate('category', 'categoryId');
+        })
+            .populate('category', 'categoryId')
+            .select('category productIds')
+            .lean();
 
         if (!deal) {
             return null;
@@ -143,7 +190,7 @@ class ProductService {
             return null;
         }
 
-        const category = await Category.findOne({ categoryId });
+        const category = await Category.findOne({ categoryId }).select('_id').lean();
 
         if (!category) {
             return null;
@@ -308,7 +355,9 @@ class ProductService {
         while (parentIds.length > 0) {
             const childCategories = await Category.find({
                 parentCategory: { $in: parentIds }
-            }).select('_id');
+            })
+                .select('_id')
+                .lean();
 
             if (!childCategories.length) {
                 break;
@@ -330,7 +379,8 @@ class ProductService {
 
         const reviews = await Review.find({ productId })
             .populate('userId', 'name')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
         const totalReviews = reviews.length;
         const averageRating = totalReviews
@@ -464,8 +514,10 @@ class ProductService {
     async findProductbyId(productId) {
         const product = await Product
             .findById(productId)
-            .populate('category')
-            .populate('sellerId', 'name email sellerName businessDetails');
+            .select(PRODUCT_LIST_SELECT)
+            .populate('category', 'categoryId name')
+            .populate('sellerId', 'name email sellerName businessDetails')
+            .lean();
 
         if (!product) {
             throw new Error('Product not found');
@@ -476,7 +528,12 @@ class ProductService {
 
     async searchProducts(query) {
         try {
-            const products = await Product.find({ title: { $regex: query, $options: 'i' } });
+            const products = await Product.find({ title: { $regex: query, $options: 'i' } })
+                .select(PRODUCT_LIST_SELECT)
+                .populate('category', 'categoryId name')
+                .populate('sellerId', 'sellerName businessDetails')
+                .sort({ _id: -1 })
+                .lean();
             return await this.applyDealsToProductCollection(products);
         } catch (error) {
             throw new Error('Error searching products: ' + error.message);
@@ -484,20 +541,27 @@ class ProductService {
     }
 
     async getProductBySeller(sellerId) {
-        const products = await Product.find({ sellerId: sellerId });
+        const products = await Product.find({ sellerId: sellerId })
+            .select(PRODUCT_LIST_SELECT)
+            .populate('category', 'categoryId name')
+            .sort({ _id: -1 })
+            .lean();
         return await this.applyDealsToProductCollection(products);
     }
 
     async getProductsBySellerId(sellerId, pageNumber = 0) {
         const page = Number(pageNumber) || 0;
         const query = { sellerId: sellerId };
-        const products = await Product.find(query)
-            .populate('category', 'categoryId name')
-            .sort({ createdAt: -1 })
-            .skip(page * 10)
-            .limit(10);
-
-        const totalElement = await Product.countDocuments(query);
+        const [products, totalElement] = await Promise.all([
+            Product.find(query)
+                .select(PRODUCT_LIST_SELECT)
+                .populate('category', 'categoryId name')
+                .sort({ _id: -1 })
+                .skip(page * 10)
+                .limit(10)
+                .lean(),
+            Product.countDocuments(query),
+        ]);
         const totalpages = Math.ceil(totalElement / 10);
         const content = await this.applyDealsToProductCollection(products);
 
@@ -576,25 +640,30 @@ class ProductService {
             filterQuery[`specifications.${specificationKey}`] = value;
         });
 
-        const sortQuery = {};
+        const sortQuery = { _id: -1 };
         if (req.sort == 'price_low') {
             sortQuery.sellingPrice = 1;
+            delete sortQuery._id;
         } else if (req.sort == 'price_high') {
             sortQuery.sellingPrice = -1;
+            delete sortQuery._id;
         } else if (req.sort == 'newest') {
             sortQuery._id = -1;
         }
 
         const pageNumber = Number(req.pageNumber ?? req.page ?? 0) || 0;
 
-        const product = await Product.find(filterQuery)
-            .populate('category', 'categoryId name')
-            .populate('sellerId', 'sellerName businessDetails')
-            .sort(sortQuery)
-            .skip(pageNumber * 10)
-            .limit(10);
-
-        const totalElement = await Product.countDocuments(filterQuery);
+        const [product, totalElement] = await Promise.all([
+            Product.find(filterQuery)
+                .select(PRODUCT_LIST_SELECT)
+                .populate('category', 'categoryId name')
+                .populate('sellerId', 'sellerName businessDetails')
+                .sort(sortQuery)
+                .skip(pageNumber * 10)
+                .limit(10)
+                .lean(),
+            Product.countDocuments(filterQuery),
+        ]);
         const totalpages = Math.ceil(totalElement / 10);
         const content = await this.applyDealsToProductCollection(product);
 
@@ -638,10 +707,12 @@ class ProductService {
             _id: { $ne: productId },
             category: { $in: categoryIds }
         })
+            .select(PRODUCT_LIST_SELECT)
             .populate('category', 'categoryId name')
             .populate('sellerId', 'sellerName businessDetails')
-            .sort({ createdAt: -1 })
-            .limit(8);
+            .sort({ _id: -1 })
+            .limit(8)
+            .lean();
 
         return await this.applyDealsToProductCollection(products);
     }

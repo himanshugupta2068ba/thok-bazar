@@ -1,15 +1,9 @@
-
 import { ThemeProvider } from '@emotion/react'
 import './App.css'
 import { customTheme } from './Theme/custom_theme'
 import { Route, Routes } from 'react-router'
-import { SellerDashboard } from './seller/SellerDashboard/SellerDashboards'
-import { BecomeSeller } from './auth/BecomeSeller/BecomeSeller'
-import { CustomerRoutes } from './routes/Customer'
-import { Auth } from './auth/Login/Auth'
-import { Dashboard } from './admin/Dashboard/Dashboard'
 import { useAppDispatch, useAppSelector } from './Redux Toolkit/store'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { fetchUserProfile } from './Redux Toolkit/featurs/coustomer/userSlice'
 import { fetchHomeCategories } from './Redux Toolkit/featurs/coustomer/homeCategorySlice'
 import { clearCartState, fetchCart } from './Redux Toolkit/featurs/coustomer/cartSlice'
@@ -18,7 +12,38 @@ import { SellerProtectedRoute } from './routes/SellerProtectedRoute'
 import { getValidCustomerJwt, isCustomerJwtExpired } from './util/customerSession'
 import { PublicStorefrontLayout } from './routes/PublicStorefrontLayout'
 import { AdminProtectedRoute } from './routes/AdminProtectedRoute'
-import { AdminLogin } from './admin/Auth/AdminLogin'
+import { RouteLoader } from './common/RouteLoader'
+
+const SellerDashboard = lazy(() =>
+  import('./seller/SellerDashboard/SellerDashboards').then((module) => ({
+    default: module.SellerDashboard,
+  })),
+)
+const BecomeSeller = lazy(() =>
+  import('./auth/BecomeSeller/BecomeSeller').then((module) => ({
+    default: module.BecomeSeller,
+  })),
+)
+const CustomerRoutes = lazy(() =>
+  import('./routes/Customer').then((module) => ({
+    default: module.CustomerRoutes,
+  })),
+)
+const Auth = lazy(() =>
+  import('./auth/Login/Auth').then((module) => ({
+    default: module.Auth,
+  })),
+)
+const Dashboard = lazy(() =>
+  import('./admin/Dashboard/Dashboard').then((module) => ({
+    default: module.Dashboard,
+  })),
+)
+const AdminLogin = lazy(() =>
+  import('./admin/Auth/AdminLogin').then((module) => ({
+    default: module.AdminLogin,
+  })),
+)
 
 function App() {
   
@@ -52,12 +77,62 @@ function App() {
 
 {/* //seller routes */}
 <Routes>
-  <Route path='/seller/*' element={<SellerProtectedRoute><SellerDashboard/></SellerProtectedRoute>}/>
-  <Route path='/become-seller' element={<BecomeSeller/>}/>
-  <Route path='/login' element={<PublicStorefrontLayout><Auth/></PublicStorefrontLayout>}/>
-  <Route path='/admin/login' element={<PublicStorefrontLayout><AdminLogin/></PublicStorefrontLayout>}/>
-  <Route path='/*' element={<CustomerRoutes/>}/>
-   <Route path='/admin/*' element={<AdminProtectedRoute><Dashboard/></AdminProtectedRoute>}/>
+  <Route
+    path='/seller/*'
+    element={
+      <SellerProtectedRoute>
+        <Suspense fallback={<RouteLoader label="Loading seller area..." />}>
+          <SellerDashboard/>
+        </Suspense>
+      </SellerProtectedRoute>
+    }
+  />
+  <Route
+    path='/become-seller'
+    element={
+      <Suspense fallback={<RouteLoader label="Loading seller signup..." />}>
+        <BecomeSeller/>
+      </Suspense>
+    }
+  />
+  <Route
+    path='/login'
+    element={
+      <PublicStorefrontLayout>
+        <Suspense fallback={<RouteLoader label="Loading login..." />}>
+          <Auth/>
+        </Suspense>
+      </PublicStorefrontLayout>
+    }
+  />
+  <Route
+    path='/admin/login'
+    element={
+      <PublicStorefrontLayout>
+        <Suspense fallback={<RouteLoader label="Loading admin login..." />}>
+          <AdminLogin/>
+        </Suspense>
+      </PublicStorefrontLayout>
+    }
+  />
+  <Route
+    path='/*'
+    element={
+      <Suspense fallback={<RouteLoader label="Loading storefront..." />}>
+        <CustomerRoutes/>
+      </Suspense>
+    }
+  />
+   <Route
+    path='/admin/*'
+    element={
+      <AdminProtectedRoute>
+        <Suspense fallback={<RouteLoader label="Loading admin area..." />}>
+          <Dashboard/>
+        </Suspense>
+      </AdminProtectedRoute>
+    }
+  />
 
 </Routes>
   </ThemeProvider>

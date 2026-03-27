@@ -16,12 +16,13 @@ import {
   priceFilterOptions,
   resolveMainCategoryId,
 } from "../../../data/product/productConfig";
+import { useDebouncedValue } from "../../../common/useDebouncedValue";
 
 export const Products = () => {
   const dispatch = useAppDispatch();
   const { categoryId } = useParams();
   const location = useLocation();
-  const { product } = useAppSelector((state) => state);
+  const product = useAppSelector((state) => state.product);
   const [sort, setSort] = useState("price_low");
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -93,10 +94,15 @@ export const Products = () => {
 
     return nextParams;
   }, [categoryId, dealId, filters, page, searchTerm, sort]);
+  const debouncedQueryParams = useDebouncedValue(queryParams, 250);
 
   useEffect(() => {
-    dispatch(getAllProducts(queryParams));
-  }, [dispatch, queryParams]);
+    const request = dispatch(getAllProducts(debouncedQueryParams));
+
+    return () => {
+      request.abort();
+    };
+  }, [debouncedQueryParams, dispatch]);
 
   const title = useMemo(() => {
     if (searchTerm) return `Search results for "${searchTerm}"`;

@@ -8,5 +8,6 @@ router.post('/', adminAuthMiddleware, HomeCategoryController.createHomeCategorie
 router.get('/', HomeCategoryController.getAllHomeCategories);
 
 router.put('/:id', adminAuthMiddleware, HomeCategoryController.updateHomeCategory);
+router.delete('/:id', adminAuthMiddleware, HomeCategoryController.deleteHomeCategory);
 
 module.exports = router;

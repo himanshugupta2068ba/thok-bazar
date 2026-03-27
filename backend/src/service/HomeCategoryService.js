@@ -45,6 +45,15 @@ class HomeCategoryService {
         );
     }
 
+    async deleteHomeCategory(id) {
+        const deletedCategory = await HomeCategory.findByIdAndDelete(id);
+        if (!deletedCategory) {
+            throw new Error("Home category not found");
+        }
+
+        return deletedCategory;
+    }
+
 }
 
 module.exports = new HomeCategoryService();
