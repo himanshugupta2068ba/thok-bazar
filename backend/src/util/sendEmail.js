@@ -1,6 +1,7 @@
 const dns = require('dns').promises;
 const nodemailer = require('nodemailer');
 const createHttpError = require('./createHttpError');
+const { logError, logInfo, logWarn, maskEmail } = require('./requestTrace');
 
 const normalizeHost = (value) => String(value || "").trim().toLowerCase();
 const isGmailHost = (value) => normalizeHost(value) === "smtp.gmail.com";
@@ -234,6 +235,20 @@ const formatMailError = (error, config, phase) => ({
     syscall: error?.syscall,
 });
 
+const buildMailLogContext = (context = {}, config = {}, recipient = null) => ({
+    ...context,
+    from: maskEmail(config?.from),
+    host: config?.host,
+    port: config?.port,
+    preferredFamily: config?.preferredFamily,
+    recipient: maskEmail(recipient),
+    requireTLS: config?.requireTLS,
+    resolvedAddress: config?.resolvedAddress,
+    resolvedFamily: config?.resolvedFamily,
+    secure: config?.secure,
+    servername: config?.servername,
+});
+
 const createTransporter = (config) =>
     nodemailer.createTransport({
         auth: config.auth,
@@ -256,14 +271,42 @@ const loadTransporter = async () => {
         const config = configs[index];
         const transporter = createTransporter(config);
 
+        logInfo("Attempting SMTP transport verification", buildMailLogContext(
+            {
+                smtpAttempt: index + 1,
+                smtpAttemptCount: configs.length,
+            },
+            config,
+        ));
+
         try {
             await transporter.verify();
+            logInfo("SMTP transport verified", buildMailLogContext(
+                {
+                    smtpAttempt: index + 1,
+                    smtpAttemptCount: configs.length,
+                },
+                config,
+            ));
             return { config, transporter };
         } catch (error) {
             lastError = error;
             transporter.close?.();
 
-            console.error("SMTP transport verification failed", formatMailError(error, config, "verify"));
+            logError(
+                "SMTP transport verification failed",
+                error,
+                {
+                    ...buildMailLogContext(
+                        {
+                            smtpAttempt: index + 1,
+                            smtpAttemptCount: configs.length,
+                        },
+                        config,
+                    ),
+                    smtpError: formatMailError(error, config, "verify"),
+                },
+            );
 
             const hasFallback = index < configs.length - 1;
 
@@ -271,9 +314,15 @@ const loadTransporter = async () => {
                 break;
             }
 
-            console.warn(
-                `Retrying SMTP using alternate port after ${config.originalHost}:${config.port} failed.`,
-            );
+            logWarn("Retrying SMTP using fallback transport", buildMailLogContext(
+                {
+                    failedOriginalHost: config.originalHost,
+                    failedOriginalPort: config.port,
+                    smtpAttempt: index + 1,
+                    smtpAttemptCount: configs.length,
+                },
+                config,
+            ));
         }
     }
 
@@ -291,8 +340,10 @@ const getTransporter = async () => {
     return await cachedTransporterPromise;
 };
 
-async function sendVerificationEmail(to, subject, body) {
+async function sendVerificationEmail(to, subject, body, context = {}) {
     const { transporter, config } = await getTransporter();
+
+    logInfo("SMTP send started", buildMailLogContext(context, config, to));
 
     try {
         await transporter.sendMail({
@@ -301,10 +352,15 @@ async function sendVerificationEmail(to, subject, body) {
             subject,
             text: body,
         });
+
+        logInfo("SMTP send completed", buildMailLogContext(context, config, to));
     } catch (error) {
         cachedTransporterPromise = null;
 
-        console.error("Failed to send OTP email", formatMailError(error, config, "send"));
+        logError("Failed to send OTP email", error, {
+            ...buildMailLogContext(context, config, to),
+            smtpError: formatMailError(error, config, "send"),
+        });
         throw toMailHttpError(error);
     }
 }

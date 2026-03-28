@@ -4,13 +4,19 @@ const generateOTP=require('../util/generateOtp');
 const sendVerificationEmail=require('../util/sendEmail.js');
 const User = require('../models/user');
 const createHttpError = require('../util/createHttpError');
+const { logError, logInfo, logWarn, maskEmail } = require('../util/requestTrace');
 
 class AuthService{
-    async sendLoginOTP(email){
+    async sendLoginOTP(email, requestContext = {}){
     const validator = require("validator");
     const SIGNIN_USER_PREFIX = "signin_user_";
     const SIGNIN_SELLER_PREFIX = "signin_seller_";
     const LEGACY_SIGNIN_PREFIX = "signin_";
+
+    logInfo("OTP send requested", {
+      ...requestContext,
+      email: maskEmail(email),
+    });
 
     if (!email || typeof email !== "string") {
       throw createHttpError("Invalid email format", 400);
@@ -33,9 +39,20 @@ class AuthService{
       throw createHttpError("Invalid email", 400);
     }
 
+    logInfo("OTP request normalized", {
+      ...requestContext,
+      email: maskEmail(normalizedEmail),
+      loginType: loginType || "generic",
+    });
+
     if (loginType === "user") {
       const user = await User.findOne({ email: normalizedEmail });
       if (!user) {
+        logWarn("OTP request rejected because customer was not found", {
+          ...requestContext,
+          email: maskEmail(normalizedEmail),
+          loginType,
+        });
         throw createHttpError("User not found", 404);
       }
     }
@@ -43,6 +60,11 @@ class AuthService{
     if (loginType === "seller") {
       const seller = await Seller.findOne({ email: normalizedEmail });
       if (!seller) {
+        logWarn("OTP request rejected because seller was not found", {
+          ...requestContext,
+          email: maskEmail(normalizedEmail),
+          loginType,
+        });
         throw createHttpError("Seller not found", 404);
       }
     }
@@ -63,14 +85,36 @@ class AuthService{
       },
     );
 
+    logInfo("OTP code persisted", {
+      ...requestContext,
+      email: maskEmail(normalizedEmail),
+      loginType: loginType || "generic",
+    });
+
     try {
       await sendVerificationEmail(
         normalizedEmail,
         "Your Login OTP for Thok Bazar",
         `Your One Time Password(OTP) for login is ${otp}. It is valid for 10 minutes.`,
+        {
+          ...requestContext,
+          email: maskEmail(normalizedEmail),
+          loginType: loginType || "generic",
+        },
       );
+
+      logInfo("OTP email dispatched successfully", {
+        ...requestContext,
+        email: maskEmail(normalizedEmail),
+        loginType: loginType || "generic",
+      });
     } catch (error) {
       await VerificationCode.deleteOne({ email: normalizedEmail }).catch(() => undefined);
+      logError("OTP email dispatch failed and OTP record was rolled back", error, {
+        ...requestContext,
+        email: maskEmail(normalizedEmail),
+        loginType: loginType || "generic",
+      });
       throw error;
     }
     }

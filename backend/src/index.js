@@ -7,12 +7,15 @@ const dotenv = require('dotenv');
 
 const connectDb = require('./db/db');
 const corsOptions = require('./config/corsOptions');
+const { requestLogger, logInfo } = require('./util/requestTrace');
 
 dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false, quiet: true });
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: false, quiet: true });
 
+app.set('trust proxy', true);
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(requestLogger);
 
 app.get('/', (req, res) => {
   res.send('Werlcome to the backend server of thok-bazar!');
@@ -72,6 +75,17 @@ const port = Number(process.env.PORT || 5000);
 
 const startServer = async () => {
   try {
+    logInfo('Backend configuration snapshot', {
+      emailFromConfigured: Boolean(String(process.env.SMTP_FROM || process.env.EMAIL_FROM || "").trim()),
+      emailUserConfigured: Boolean(String(process.env.SMTP_USER || process.env.EMAIL_USER || "").trim()),
+      frontendUrl: String(process.env.FRONTEND_URL || "").trim() || null,
+      nodeEnv: process.env.NODE_ENV || 'development',
+      port,
+      smtpHost: String(process.env.SMTP_HOST || "").trim() || 'smtp.gmail.com (derived from EMAIL_USER when Gmail is used)',
+      smtpPort: String(process.env.SMTP_PORT || "").trim() || null,
+      smtpSecure: String(process.env.SMTP_SECURE || "").trim() || null,
+    });
+
     await connectDb();
 
     app.listen(port, '0.0.0.0', () => {

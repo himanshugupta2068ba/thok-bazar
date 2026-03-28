@@ -3,6 +3,7 @@ const VerificationCode = require("../models/VerificationCode");
 const SellerService = require("../service/SellerService");
 const jwtprovider = require("../util/jwtprovider");
 const AuthService = require("../service/AuthService");
+const { getRequestContext, logError } = require("../util/requestTrace");
 
 const getStatusCode = (error) => Number(error?.statusCode) || 500;
 
@@ -95,11 +96,16 @@ class SellerController{
     }
 
     async sendLoginOtp(req,res){
+        const requestContext = getRequestContext(req, {
+            authFlow: "seller-login-otp",
+        });
+
         try{
             const {email}=req.body;
-            await AuthService.sendLoginOTP(email);
+            await AuthService.sendLoginOTP(email, requestContext);
             res.status(200).json({message:"OTP sent successfully"});
         }catch(error){
+            logError("Seller login OTP request failed", error, requestContext);
             res.status(getStatusCode(error)).json({error:error.message || "Failed to send OTP"});
         }
     }
