@@ -8,7 +8,7 @@ const dotenv = require('dotenv');
 const connectDb = require('./db/db');
 const corsOptions = require('./config/corsOptions');
 
-dotenv.config({ quiet: true });
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false, quiet: true });
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: false, quiet: true });
 
 app.use(cors(corsOptions));

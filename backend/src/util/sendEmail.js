@@ -22,11 +22,14 @@ const toOptionalNumber = (value) => {
     return Number.isFinite(parsedValue) ? parsedValue : undefined;
 };
 
+const getSmtpUser = () => String(process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
+const getSmtpPass = () => String(process.env.SMTP_PASS || process.env.EMAIL_PASS || "").trim();
+
 const resolvePreferredFamily = (host) => {
     const rawValue = String(process.env.SMTP_IP_FAMILY || "").trim();
 
     if (!rawValue || rawValue === "0" || rawValue.toLowerCase() === "auto") {
-        return normalizeHost(host) === "smtp.gmail.com" ? 4 : undefined;
+        return isGmailHost(host) ? 4 : undefined;
     }
 
     const parsedFamily = Number(rawValue);
@@ -59,7 +62,7 @@ const resolvePreferredAddress = async (host, servername, family) => {
             resolvedFamily: lookupResult.family,
             servername,
         };
-    } catch (error) {
+    } catch (_error) {
         throw createHttpError(
             `Unable to resolve SMTP host over IPv${family}. Check SMTP_IP_FAMILY or SMTP_HOST.`,
             503,
@@ -67,11 +70,9 @@ const resolvePreferredAddress = async (host, servername, family) => {
     }
 };
 
-const hasExplicitEnvValue = (value) => value !== undefined && value !== null && value !== "";
-
 const buildTransportVariants = (host) => {
     const explicitPort = toOptionalNumber(process.env.SMTP_PORT);
-    const hasExplicitSecure = hasExplicitEnvValue(process.env.SMTP_SECURE);
+    const hasExplicitSecure = process.env.SMTP_SECURE !== undefined && process.env.SMTP_SECURE !== null && process.env.SMTP_SECURE !== "";
 
     if (explicitPort !== undefined) {
         const secure = toBoolean(process.env.SMTP_SECURE, explicitPort === 465);
@@ -112,12 +113,12 @@ const buildTransportVariants = (host) => {
 };
 
 const resolveMailerConfigs = async () => {
-    const user = String(process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
-    const pass = String(process.env.SMTP_PASS || process.env.EMAIL_PASS || "").trim();
+    const user = getSmtpUser();
+    const pass = getSmtpPass();
 
     if (!user || !pass) {
         throw createHttpError(
-            "Email service is not configured. Set EMAIL_USER and EMAIL_PASS on Render.",
+            "Email service is not configured. Set EMAIL_USER and EMAIL_PASS on the server.",
             503,
         );
     }
@@ -133,7 +134,7 @@ const resolveMailerConfigs = async () => {
         );
     }
 
-    const from = String(process.env.EMAIL_FROM || user).trim();
+    const from = String(process.env.SMTP_FROM || process.env.EMAIL_FROM || user).trim() || user;
     const servername = String(process.env.SMTP_SERVERNAME || host).trim() || host;
     const preferredFamily = resolvePreferredFamily(host);
     const resolvedTarget = await resolvePreferredAddress(host, servername, preferredFamily);
@@ -201,7 +202,7 @@ const toMailHttpError = (error) => {
         /\b(EACCES|ECONNREFUSED|EHOSTUNREACH|ENETUNREACH)\b/i.test(errorMessage)
     ) {
         return createHttpError(
-            "SMTP connection is blocked or unreachable. Check outbound SMTP access, firewall rules, or try SMTP_PORT=587 with SMTP_SECURE=false.",
+            "SMTP connection is blocked or unreachable. Check SMTP_HOST, SMTP_PORT, firewall rules, or try SMTP_PORT=587 with SMTP_SECURE=false.",
             503,
         );
     }

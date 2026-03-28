@@ -40,14 +40,16 @@ export const LoginForm=()=>{
 }
     })
 
-    const handleSentOtp=()=>{
-        formik.validateField("email");
-        if(formik.errors.email){
+    const handleSentOtp = async () => {
+        const errors = await formik.validateForm();
+        formik.setTouched({ ...formik.touched, email: true });
+
+        if (errors.email || !formik.values.email) {
             return;
         }
         dispatch(clearError());
         dispatch(sendLoginSignupOtp({email:`signin_user_${formik.values.email}`}));
-    }
+    };
 
     const getErrorMessage = () => {
         if (!auth.error) return null;
@@ -56,6 +58,14 @@ export const LoginForm=()=>{
         if (typeof auth.error === 'object' && (auth.error as any)?.message) return (auth.error as any).message;
         return "An error occurred";
     };
+
+    const buttonLabel = auth.loading
+        ? auth.otpSent
+            ? "Logging in..."
+            : "Sending OTP..."
+        : auth.otpSent
+            ? "Login"
+            : "Send OTP";
 
     return(
         <Box sx={{ padding: { xs: 3, sm: 5 } }}>
@@ -67,6 +77,12 @@ export const LoginForm=()=>{
             {auth.error && getErrorMessage() && (
                 <Alert severity="error" sx={{ marginBottom: 2 }} onClose={() => dispatch(clearError())}>
                     {getErrorMessage()}
+                </Alert>
+            )}
+
+            {auth.loading && !auth.otpSent && (
+                <Alert severity="info" sx={{ marginBottom: 2 }}>
+                    Sending OTP to {formik.values.email || "your email"}...
                 </Alert>
             )}
             <Grid container spacing={3}>
@@ -85,6 +101,7 @@ export const LoginForm=()=>{
                             error={formik.touched.email && Boolean(formik.errors.email)}
                             helperText={formik.touched.email && formik.errors.email}
                             variant="outlined"
+                            disabled={auth.loading}
                         />
                     </Grid>
 
@@ -101,6 +118,7 @@ export const LoginForm=()=>{
                             error={formik.touched.otp && Boolean(formik.errors.otp)}
                             helperText={formik.touched.otp && formik.errors.otp}
                             variant="outlined"
+                            disabled={auth.loading}
                         />
                     </Grid>}
 
@@ -110,11 +128,11 @@ export const LoginForm=()=>{
                             fullWidth
                             variant="contained"
                             type="submit"
+                            disabled={auth.loading}
                             sx={{ py: 1.5, fontSize: "1rem", fontWeight: 600 }}
                             onClick={auth.otpSent?(e)=>formik.handleSubmit(e as any):handleSentOtp}
                         >
-                            {auth.otpSent ? "Login" : "Send OTP"}
-                            {/* {auth.loading ? "Please wait..." : "Login"} */}
+                            {buttonLabel}
                         </Button>
                     </Grid>
                 </Grid>
