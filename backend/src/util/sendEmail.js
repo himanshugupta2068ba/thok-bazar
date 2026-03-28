@@ -3,6 +3,7 @@ const nodemailer = require('nodemailer');
 const createHttpError = require('./createHttpError');
 
 const normalizeHost = (value) => String(value || "").trim().toLowerCase();
+const isGmailHost = (value) => normalizeHost(value) === "smtp.gmail.com";
 
 const toBoolean = (value, fallback = false) => {
     if (value === undefined || value === null || value === "") {
@@ -66,7 +67,51 @@ const resolvePreferredAddress = async (host, servername, family) => {
     }
 };
 
-const resolveMailerConfig = async () => {
+const hasExplicitEnvValue = (value) => value !== undefined && value !== null && value !== "";
+
+const buildTransportVariants = (host) => {
+    const explicitPort = toOptionalNumber(process.env.SMTP_PORT);
+    const hasExplicitSecure = hasExplicitEnvValue(process.env.SMTP_SECURE);
+
+    if (explicitPort !== undefined) {
+        const secure = toBoolean(process.env.SMTP_SECURE, explicitPort === 465);
+
+        return [
+            {
+                port: explicitPort,
+                requireTLS: !secure,
+                secure,
+            },
+        ];
+    }
+
+    if (isGmailHost(host)) {
+        return [
+            {
+                port: 465,
+                requireTLS: false,
+                secure: true,
+            },
+            {
+                port: 587,
+                requireTLS: true,
+                secure: false,
+            },
+        ];
+    }
+
+    const secure = hasExplicitSecure ? toBoolean(process.env.SMTP_SECURE, false) : false;
+
+    return [
+        {
+            port: 587,
+            requireTLS: !secure,
+            secure,
+        },
+    ];
+};
+
+const resolveMailerConfigs = async () => {
     const user = String(process.env.SMTP_USER || process.env.EMAIL_USER || "").trim();
     const pass = String(process.env.SMTP_PASS || process.env.EMAIL_PASS || "").trim();
 
@@ -88,60 +133,161 @@ const resolveMailerConfig = async () => {
         );
     }
 
-    const port = Number(process.env.SMTP_PORT || (host === "smtp.gmail.com" ? 465 : 587));
-    const secure = toBoolean(process.env.SMTP_SECURE, port === 465);
     const from = String(process.env.EMAIL_FROM || user).trim();
     const servername = String(process.env.SMTP_SERVERNAME || host).trim() || host;
     const preferredFamily = resolvePreferredFamily(host);
     const resolvedTarget = await resolvePreferredAddress(host, servername, preferredFamily);
+    const transportVariants = buildTransportVariants(host);
 
-    return {
+    return transportVariants.map((variant) => ({
         auth: { user, pass },
         connectionTimeout: toOptionalNumber(process.env.SMTP_CONNECTION_TIMEOUT),
         dnsTimeout: toOptionalNumber(process.env.SMTP_DNS_TIMEOUT),
         from,
         greetingTimeout: toOptionalNumber(process.env.SMTP_GREETING_TIMEOUT),
         host: resolvedTarget.host,
-        port,
+        originalHost: host,
+        port: variant.port,
         preferredFamily,
+        requireTLS: variant.requireTLS,
         resolvedAddress: resolvedTarget.resolvedAddress,
         resolvedFamily: resolvedTarget.resolvedFamily,
-        secure,
+        secure: variant.secure,
         servername: resolvedTarget.servername,
         socketTimeout: toOptionalNumber(process.env.SMTP_SOCKET_TIMEOUT),
-    };
+    }));
 };
 
 let cachedTransporterPromise = null;
-let cachedConfig = null;
+
+const getErrorCode = (error) => String(error?.code || "").toUpperCase();
+const getErrorMessage = (error) => String(error?.message || "");
+
+const isConnectionError = (error) => {
+    const errorCode = getErrorCode(error);
+    const errorMessage = getErrorMessage(error);
+
+    return (
+        [
+            "EACCES",
+            "ECONNECTION",
+            "ECONNREFUSED",
+            "EHOSTUNREACH",
+            "ENETUNREACH",
+            "ESOCKET",
+            "ETIMEDOUT",
+        ].includes(errorCode) ||
+        /\b(EACCES|ECONNREFUSED|EHOSTUNREACH|ENETUNREACH|ETIMEDOUT)\b/i.test(errorMessage)
+    );
+};
+
+const toMailHttpError = (error) => {
+    if (error?.statusCode) {
+        return error;
+    }
+
+    const errorCode = getErrorCode(error);
+    const errorMessage = getErrorMessage(error);
+
+    if (errorCode === "EAUTH") {
+        return createHttpError(
+            "Email authentication failed. Verify EMAIL_USER and EMAIL_PASS on the server.",
+            503,
+        );
+    }
+
+    if (
+        ["EACCES", "ECONNREFUSED", "EHOSTUNREACH", "ENETUNREACH"].includes(errorCode) ||
+        /\b(EACCES|ECONNREFUSED|EHOSTUNREACH|ENETUNREACH)\b/i.test(errorMessage)
+    ) {
+        return createHttpError(
+            "SMTP connection is blocked or unreachable. Check outbound SMTP access, firewall rules, or try SMTP_PORT=587 with SMTP_SECURE=false.",
+            503,
+        );
+    }
+
+    if (["ECONNECTION", "ESOCKET", "ETIMEDOUT"].includes(errorCode)) {
+        return createHttpError("Email service is temporarily unreachable.", 503);
+    }
+
+    return createHttpError(errorMessage || "Failed to send OTP email.", 503);
+};
+
+const formatMailError = (error, config, phase) => ({
+    address: error?.address,
+    code: error?.code,
+    command: error?.command,
+    errno: error?.errno,
+    host: config?.host,
+    message: error?.message,
+    phase,
+    port: config?.port,
+    preferredFamily: config?.preferredFamily,
+    requireTLS: config?.requireTLS,
+    response: error?.response,
+    resolvedAddress: config?.resolvedAddress,
+    resolvedFamily: config?.resolvedFamily,
+    secure: config?.secure,
+    servername: config?.servername,
+    stack: error?.stack,
+    syscall: error?.syscall,
+});
+
+const createTransporter = (config) =>
+    nodemailer.createTransport({
+        auth: config.auth,
+        connectionTimeout: config.connectionTimeout,
+        dnsTimeout: config.dnsTimeout,
+        greetingTimeout: config.greetingTimeout,
+        host: config.host,
+        port: config.port,
+        requireTLS: config.requireTLS,
+        secure: config.secure,
+        servername: config.servername,
+        socketTimeout: config.socketTimeout,
+    });
+
+const loadTransporter = async () => {
+    const configs = await resolveMailerConfigs();
+    let lastError = null;
+
+    for (let index = 0; index < configs.length; index += 1) {
+        const config = configs[index];
+        const transporter = createTransporter(config);
+
+        try {
+            await transporter.verify();
+            return { config, transporter };
+        } catch (error) {
+            lastError = error;
+            transporter.close?.();
+
+            console.error("SMTP transport verification failed", formatMailError(error, config, "verify"));
+
+            const hasFallback = index < configs.length - 1;
+
+            if (!hasFallback || !isConnectionError(error)) {
+                break;
+            }
+
+            console.warn(
+                `Retrying SMTP using alternate port after ${config.originalHost}:${config.port} failed.`,
+            );
+        }
+    }
+
+    throw toMailHttpError(lastError || new Error("Failed to initialize email transport."));
+};
 
 const getTransporter = async () => {
     if (!cachedTransporterPromise) {
-        cachedTransporterPromise = (async () => {
-            cachedConfig = await resolveMailerConfig();
-
-            return nodemailer.createTransport({
-                auth: cachedConfig.auth,
-                connectionTimeout: cachedConfig.connectionTimeout,
-                dnsTimeout: cachedConfig.dnsTimeout,
-                greetingTimeout: cachedConfig.greetingTimeout,
-                host: cachedConfig.host,
-                port: cachedConfig.port,
-                secure: cachedConfig.secure,
-                servername: cachedConfig.servername,
-                socketTimeout: cachedConfig.socketTimeout,
-            });
-        })().catch((error) => {
+        cachedTransporterPromise = loadTransporter().catch((error) => {
             cachedTransporterPromise = null;
-            cachedConfig = null;
             throw error;
         });
     }
 
-    return {
-        config: cachedConfig,
-        transporter: await cachedTransporterPromise,
-    };
+    return await cachedTransporterPromise;
 };
 
 async function sendVerificationEmail(to, subject, body) {
@@ -155,40 +301,10 @@ async function sendVerificationEmail(to, subject, body) {
             text: body,
         });
     } catch (error) {
-        console.error("Failed to send OTP email", {
-            address: error?.address,
-            code: error?.code,
-            command: error?.command,
-            errno: error?.errno,
-            host: config?.host,
-            port: config?.port,
-            preferredFamily: config?.preferredFamily,
-            response: error?.response,
-            resolvedAddress: config?.resolvedAddress,
-            resolvedFamily: config?.resolvedFamily,
-            servername: config?.servername,
-            syscall: error?.syscall,
-        });
+        cachedTransporterPromise = null;
 
-        if (error?.code === "EAUTH") {
-            throw createHttpError(
-                "Email authentication failed. Verify EMAIL_USER and EMAIL_PASS on Render.",
-                503,
-            );
-        }
-
-        if (["ENETUNREACH", "EHOSTUNREACH"].includes(String(error?.code || ""))) {
-            throw createHttpError(
-                "SMTP network route is unreachable. Gmail SMTP is now configured to prefer IPv4; redeploy Render and retry.",
-                503,
-            );
-        }
-
-        if (["ECONNECTION", "ESOCKET", "ETIMEDOUT"].includes(String(error?.code || ""))) {
-            throw createHttpError("Email service is temporarily unreachable.", 503);
-        }
-
-        throw createHttpError("Failed to send OTP email.", 503);
+        console.error("Failed to send OTP email", formatMailError(error, config, "send"));
+        throw toMailHttpError(error);
     }
 }
 
