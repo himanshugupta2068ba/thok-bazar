@@ -1,5 +1,17 @@
 const crypto = require("crypto");
 
+const LOG_LEVELS = {
+    silent: 0,
+    error: 1,
+    warn: 2,
+    info: 3,
+};
+
+const configuredLogLevel = String(process.env.LOG_LEVEL || "warn").trim().toLowerCase();
+const activeLogLevel = LOG_LEVELS[configuredLogLevel] ?? LOG_LEVELS.warn;
+
+const shouldLog = (level) => activeLogLevel >= (LOG_LEVELS[level] ?? LOG_LEVELS.info);
+
 const readHeader = (req, headerName) => {
     const headerValue = req?.headers?.[headerName];
 
@@ -44,14 +56,18 @@ const requestLogger = (req, res, next) => {
 
     res.setHeader("x-request-id", requestId);
 
-    console.info("HTTP request started", req.requestContext);
+    if (shouldLog("info")) {
+        console.info("HTTP request started", req.requestContext);
+    }
 
     res.on("finish", () => {
-        console.info("HTTP request completed", {
-            ...req.requestContext,
-            durationMs: Date.now() - startedAt,
-            statusCode: res.statusCode,
-        });
+        if (shouldLog("info")) {
+            console.info("HTTP request completed", {
+                ...req.requestContext,
+                durationMs: Date.now() - startedAt,
+                statusCode: res.statusCode,
+            });
+        }
     });
 
     next();
@@ -63,21 +79,27 @@ const getRequestContext = (req, extraContext = {}) => ({
 });
 
 const logInfo = (message, context = {}) => {
-    console.info(message, context);
+    if (shouldLog("info")) {
+        console.info(message, context);
+    }
 };
 
 const logWarn = (message, context = {}) => {
-    console.warn(message, context);
+    if (shouldLog("warn")) {
+        console.warn(message, context);
+    }
 };
 
 const logError = (message, error, context = {}) => {
-    console.error(message, {
-        ...context,
-        errorCode: error?.code,
-        errorMessage: error?.message,
-        errorStatusCode: error?.statusCode,
-        stack: error?.stack,
-    });
+    if (shouldLog("error")) {
+        console.error(message, {
+            ...context,
+            errorCode: error?.code,
+            errorMessage: error?.message,
+            errorStatusCode: error?.statusCode,
+            stack: error?.stack,
+        });
+    }
 };
 
 module.exports = {

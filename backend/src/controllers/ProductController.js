@@ -21,7 +21,6 @@ class SellerProductController{
         try{
             // await createProductSchema.validate(req.body);
             const seller=req.user;
-            console.log(seller);
             const product=await productService.createProduct(req,seller);
             res.status(201).json(product);
         }catch(error){

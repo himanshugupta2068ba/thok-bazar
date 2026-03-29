@@ -10,8 +10,6 @@ export const fetchUserProfile= createAsyncThunk(
           Authorization: `Bearer ${jwt}`,
         }
       });
-
-      console.log(response.data);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data || {error: "Failed to fetch user profile"});

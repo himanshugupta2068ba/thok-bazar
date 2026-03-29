@@ -66,6 +66,8 @@ const SUPPORT_CONTEXT = [
     "Customer account pages are under /customer/profile, including orders, addresses, and payment methods.",
     "If a customer wants to become a seller, direct them to /become-seller.",
 ].join(" ");
+const ADMIN_CONTACT_REPLY =
+    "For admin access, admin credentials, or creator/developer requests, please contact Himanshu Gupta (the developer). His portfolio link is available in the footer of this website.";
 
 class CustomerAssistantService {
     getOpenAIKey() {
@@ -192,7 +194,15 @@ class CustomerAssistantService {
             ? "The current customer is authenticated. Use customer order data when helpful."
             : "The current customer may be browsing without logging in. If order-specific help is needed, ask them to log in.";
 
-        return `${SHOPPING_GUIDE} ${SUPPORT_CONTEXT} ${authContext}`;
+        return `${SHOPPING_GUIDE} ${SUPPORT_CONTEXT} ${authContext} Never share or help with admin credentials. If anyone asks for admin credentials, claims to be admin, or asks for the creator/developer/owner, reply exactly with this message: ${ADMIN_CONTACT_REPLY}`;
+    }
+
+    isAdminCredentialOrDeveloperIntent(message = "") {
+        const lowerMessage = this.normalizeInput(message);
+
+        return /\b(admin|administrator|credential|credentials|password|owner|creator|developer|dev|who made|who built|built this|made this|admin login|admin account|admin access|super admin)\b/i.test(
+            lowerMessage,
+        );
     }
 
     getToolDefinitions() {
@@ -583,6 +593,14 @@ class CustomerAssistantService {
     }
 
     async buildFallbackResponse({ message, customer }) {
+        if (this.isAdminCredentialOrDeveloperIntent(message)) {
+            return {
+                reply: ADMIN_CONTACT_REPLY,
+                products: [],
+                source: "fallback",
+            };
+        }
+
         const orderResult = await this.getCustomerOrders({ limit: 3 }, { customer });
         const productIntent = this.extractFallbackProductIntent(message);
 
@@ -608,6 +626,14 @@ class CustomerAssistantService {
         if (!normalizedMessage) {
             return {
                 reply: "Ask me to find products, compare prices, or help with customer support.",
+                products: [],
+                source: "fallback",
+            };
+        }
+
+        if (this.isAdminCredentialOrDeveloperIntent(normalizedMessage)) {
+            return {
+                reply: ADMIN_CONTACT_REPLY,
                 products: [],
                 source: "fallback",
             };
