@@ -3,84 +3,58 @@ import { api } from "../../../config/api.ts";
 import { fetchUserProfile } from "../coustomer/userSlice.tsx";
 import { clearCustomerSession, getValidCustomerJwt } from "../../../util/customerSession.ts";
 
-// export const sendLoginSignupOtp = createAsyncThunk(
-//   "/auth/sendLoginSignupOtp",
-//   async ({ email }: { email: string }, { rejectWithValue }) => {
-//     try {
-//       const response = await api.post(`/auth/sent/login-signup-otp`, {
-//         email,
-//       });
-//       console.log(response.data);
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(error.response.data);
-//     }
-//   },
-// );
-
-export const sendLoginSignupOtp = createAsyncThunk(
-  "/auth/send-login-otp",
-  async (signupRequest: any, { rejectWithValue }) => {
-    try {
-      const response = await api.post(`/auth/send-login-otp`, 
-        {email:signupRequest.email,}
-      );
-      console.log(response.data);
-      return response.data;
-    } catch (error: any) {
-      console.log(error?.response?.data || error?.message);
-      return rejectWithValue(error?.response?.data || { error: "Failed to send OTP" });
-    }
-  },
-);
-
 export const signup = createAsyncThunk(
   "/users/signup",
   async ({ signupRequest }: any, { rejectWithValue }) => {
     try {
-      const response = await api.post(`/users/signup`, {
-        email: signupRequest.email,
-        name: signupRequest.fullname,
-        otp: signupRequest.otp,
-        password: "temp123",
-        mobile: signupRequest.email.split('@')[0] || "9999999999"
-      });
-      console.log(response.data);
+      const response = await api.post(`/users/signup`, signupRequest);
+      if (response.data?.jwt) {
+        localStorage.setItem("jwt", response.data.jwt);
+      }
+      if (response.data?.role) {
+        localStorage.setItem("role", response.data.role);
+      }
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data || {error: "Signup failed"});
+      return rejectWithValue(error?.response?.data || { error: "Signup failed" });
     }
   },
 );
-
-
-// export const signin = createAsyncThunk(
-//   "/users/signin",
-//   async (signinRequest: any, { rejectWithValue }) => {
-//     try {
-//       const response = await api.post(`/users/signin`, 
-//         signinRequest,
-//       );
-//       console.log(response.data);
-//       localStorage.setItem("jwt", response.data.token);
-//       signinRequest.navigate('/');
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(error.response.data);
-//     }
-//   },
-// );
 
 export const signin = createAsyncThunk(
   "/users/signin",
   async (signinRequest: any, { rejectWithValue }) => {
     try {
       const response = await api.post(`/users/signin`, signinRequest);
+      if (response.data?.jwt) {
+        localStorage.setItem("jwt", response.data.jwt);
+      }
+      if (response.data?.role) {
+        localStorage.setItem("role", response.data.role);
+      }
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data);
+      return rejectWithValue(error?.response?.data || { error: "Signin failed" });
     }
   }
+);
+
+export const signinWithGoogle = createAsyncThunk(
+  "/users/google-signin",
+  async ({ credential }: { credential: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/users/google-signin`, { credential });
+      if (response.data?.jwt) {
+        localStorage.setItem("jwt", response.data.jwt);
+      }
+      if (response.data?.role) {
+        localStorage.setItem("role", response.data.role);
+      }
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data || { error: "Google sign-in failed" });
+    }
+  },
 );
 
 const authSlice = createSlice({
@@ -98,7 +72,7 @@ const authSlice = createSlice({
             state.user=null;
             state.role=null;
             state.otpSent=false;
-          state.jwt="";
+            state.jwt="";
             state.error=null;
             clearCustomerSession();
         },
@@ -113,19 +87,6 @@ const authSlice = createSlice({
     },
     extraReducers:(builder)=>{
         builder
-        .addCase(sendLoginSignupOtp.pending,(state)=>{
-            state.loading=true;
-            state.error=null;
-        })
-        .addCase(sendLoginSignupOtp.fulfilled,(state,action)=>{
-            state.loading=false;
-            state.user=action.payload;
-            state.otpSent=true;
-        })
-        .addCase(sendLoginSignupOtp.rejected,(state,action)=>{
-            state.loading=false;
-            state.error=action.payload;
-        })
         .addCase(signup.pending,(state)=>{
             state.loading=true;
             state.error=null;
@@ -149,14 +110,28 @@ const authSlice = createSlice({
         .addCase(signin.fulfilled,(state,action)=>{
             state.loading=false;
             state.user=action.payload;
-          state.jwt=action.payload?.jwt || "";
+            state.role=action.payload?.role || null;
+            state.jwt=action.payload?.jwt || "";
         })
         .addCase(signin.rejected,(state,action)=>{
             state.loading=false;
             state.error=action.payload;
-        }
-        )
-          .addCase(fetchUserProfile.pending, (state) => {
+        })
+        .addCase(signinWithGoogle.pending,(state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(signinWithGoogle.fulfilled, (state, action) => {
+            state.loading = false;
+            state.user = action.payload;
+            state.role = action.payload?.role || null;
+            state.jwt = action.payload?.jwt || "";
+        })
+        .addCase(signinWithGoogle.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase(fetchUserProfile.pending, (state) => {
             state.loading = true;
             state.error = null;
         })
@@ -169,10 +144,10 @@ const authSlice = createSlice({
         .addCase(fetchUserProfile.rejected, (state, action: any) => {
             state.loading = false;
             state.error = action.payload || null;
-              state.user = null;
-              state.role = null;
-              state.jwt = "";
-              clearCustomerSession();
+            state.user = null;
+            state.role = null;
+            state.jwt = "";
+            clearCustomerSession();
           });
     }
 });

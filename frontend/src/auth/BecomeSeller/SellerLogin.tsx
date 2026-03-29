@@ -1,8 +1,9 @@
 import { TextField, Box, Typography, Button, Alert } from "@mui/material";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router";
-import { clearSellerError, sendLoginOtp, verifyLoginOtp } from "../../Redux Toolkit/featurs/seller/sellerAuthentication";
+import { clearSellerError, signinSeller, signinSellerWithGoogle } from "../../Redux Toolkit/featurs/seller/sellerAuthentication";
 import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
+import { GoogleSignInButton } from "../../common/GoogleSignInButton";
 
 const sellerLoginBenefits = [
     "Manage your orders.",
@@ -10,16 +11,15 @@ const sellerLoginBenefits = [
     "Track payments and reports.",
 ];
 
-export const SellerLogin=()=>{
-
+export const SellerLogin = () => {
     const { seller } = useAppSelector((state) => state);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const formik=useFormik({
-        initialValues:{
-            email:"",
-            otp:""
+    const formik = useFormik({
+        initialValues: {
+            email: "",
+            password: "",
         },
         validate: (values) => {
             const errors: any = {};
@@ -30,8 +30,8 @@ export const SellerLogin=()=>{
                 errors.email = "Invalid email format";
             }
 
-            if (seller.otpSent && !values.otp) {
-                errors.otp = "OTP is required";
+            if (!values.password) {
+                errors.password = "Password is required";
             }
 
             return errors;
@@ -39,27 +39,14 @@ export const SellerLogin=()=>{
         onSubmit: (values) => {
             dispatch(clearSellerError());
             dispatch(
-                verifyLoginOtp({
+                signinSeller({
                     email: values.email,
-                    otp: values.otp,
+                    password: values.password,
                     navigate,
                 })
             );
-        }
+        },
     });
-
-    const handleSendOtp = async () => {
-        const errors = await formik.validateForm();
-        formik.setTouched({ ...formik.touched, email: true });
-
-        if (errors.email || !formik.values.email) {
-            return;
-        }
-
-        dispatch(clearSellerError());
-        const email="signin_seller_"+formik.values.email;
-        dispatch(sendLoginOtp({ email}));
-    };
 
     const getErrorMessage = () => {
         if (!seller.error) return null;
@@ -69,20 +56,32 @@ export const SellerLogin=()=>{
         return "An error occurred";
     };
 
-    return(
+    const handleGoogleSignin = async (credential: string) => {
+        try {
+            dispatch(clearSellerError());
+            await dispatch(
+                signinSellerWithGoogle({
+                    credential,
+                    navigate,
+                })
+            ).unwrap();
+        } catch (error) {
+            console.log("Seller Google login failed:", error);
+        }
+    };
+
+    return (
         <Box sx={{ padding: { xs: 3, sm: 5 } }}>
             <div className="space-y-6">
                 <div className="space-y-3">
                     <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-800">
-                        {seller.otpSent ? "Verify Access" : "Seller Sign In"}
+                        Seller Sign In
                     </span>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: "#0f172a" }}>
                         Seller Login
                     </Typography>
                     <Typography sx={{ color: "#475569", fontSize: 15, lineHeight: 1.8 }}>
-                        {seller.otpSent
-                            ? "Enter the OTP sent to your seller email."
-                            : "Enter your seller email to receive an OTP."}
+                        Login with your seller email and password, or use Google with the same seller email.
                     </Typography>
                 </div>
 
@@ -103,19 +102,13 @@ export const SellerLogin=()=>{
                     </Alert>
                 )}
 
-                {seller.otpSent ? (
-                    <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-900">
-                        OTP sent to <span className="font-semibold">{formik.values.email || "your email"}</span>.
-                    </div>
-                ) : null}
-
                 <Box
                     component="form"
                     onSubmit={formik.handleSubmit}
                     className="rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 shadow-[0_18px_45px_rgba(15,23,42,0.05)] sm:p-5"
                 >
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <div className={seller.otpSent ? "" : "sm:col-span-2"}>
+                        <div className="sm:col-span-2">
                             <TextField
                                 fullWidth
                                 label="Email"
@@ -131,35 +124,31 @@ export const SellerLogin=()=>{
                             />
                         </div>
 
-                        {seller.otpSent ? (
-                            <div>
-                                <TextField
-                                    fullWidth
-                                    label="OTP"
-                                    name="otp"
-                                    placeholder="Enter OTP"
-                                    value={formik.values.otp}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.otp && Boolean(formik.errors.otp)}
-                                    helperText={formik.touched.otp && formik.errors.otp}
-                                    variant="outlined"
-                                />
-                            </div>
-                        ) : null}
+                        <div className="sm:col-span-2">
+                            <TextField
+                                fullWidth
+                                label="Password"
+                                name="password"
+                                placeholder="Enter your password"
+                                type="password"
+                                value={formik.values.password}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.password && Boolean(formik.errors.password)}
+                                helperText={formik.touched.password && formik.errors.password}
+                                variant="outlined"
+                            />
+                        </div>
                     </div>
 
                     <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <Typography sx={{ color: "#64748b", fontSize: 13, lineHeight: 1.7 }}>
-                            {seller.otpSent
-                                ? "Enter the OTP to continue."
-                                : "OTP will be sent after you enter your email."}
+                            Your Google account email must match an existing seller account email.
                         </Typography>
 
                         <Button
                             variant="contained"
-                            type={seller.otpSent ? "submit" : "button"}
-                            onClick={seller.otpSent ? undefined : handleSendOtp}
+                            type="submit"
                             disabled={seller.loading}
                             sx={{
                                 minWidth: { xs: "100%", sm: 180 },
@@ -172,11 +161,23 @@ export const SellerLogin=()=>{
                                 boxShadow: "none",
                             }}
                         >
-                            {seller.loading ? "Please wait..." : seller.otpSent ? "Login" : "Send OTP"}
+                            {seller.loading ? "Please wait..." : "Login"}
                         </Button>
                     </div>
                 </Box>
+
+                <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-slate-200" />
+                    <span className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">or</span>
+                    <div className="h-px flex-1 bg-slate-200" />
+                </div>
+
+                <GoogleSignInButton
+                    buttonText="signin_with"
+                    disabled={seller.loading}
+                    onCredential={handleGoogleSignin}
+                />
             </div>
         </Box>
-    )
-}
+    );
+};

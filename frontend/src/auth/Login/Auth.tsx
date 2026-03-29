@@ -1,13 +1,12 @@
-import { Button, Snackbar } from "@mui/material";
+import { Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import { resetAuthFlow } from "../../Redux Toolkit/featurs/Auth/authSlice";
-import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
+import { useAppDispatch } from "../../Redux Toolkit/store";
 import { LoginForm } from "./LoginForm";
 import { SignUp } from "./SignUpForm";
 
 export const Auth = () => {
   const [isLogin, setIsLogin] = useState(false);
-  const { auth } = useAppSelector((state) => state);
   const dispatch = useAppDispatch();
 
   const handleModeChange = (nextMode: boolean) => {
@@ -29,6 +28,9 @@ export const Auth = () => {
             <h2 className="text-center text-3xl font-semibold tracking-tight text-slate-900">
               {isLogin ? "Customer Login" : "Create Account"}
             </h2>
+            <p className="mt-3 text-center text-sm text-slate-600">
+              Use password login or continue with Google. OTP is no longer required here.
+            </p>
 
             <div className="mt-6 flex justify-center">
               <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
@@ -78,13 +80,6 @@ export const Auth = () => {
           </div>
         </section>
       </div>
-
-      <Snackbar
-        open={auth.otpSent}
-        autoHideDuration={4000}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        message={isLogin ? "Login OTP sent to your email" : "Signup OTP sent to your email"}
-      />
     </section>
   );
 };

@@ -11,6 +11,8 @@ const { requestLogger, logInfo } = require('./util/requestTrace');
 
 dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false, quiet: true });
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: false, quiet: true });
+dotenv.config({ path: path.resolve(__dirname, '../.env.local'), override: true, quiet: true });
+dotenv.config({ path: path.resolve(__dirname, '../../.env.local'), override: true, quiet: true });
 
 app.set('trust proxy', true);
 app.use(cors(corsOptions));
@@ -38,38 +40,37 @@ app.get('/health', (_req, res) => {
 
 const sellerRoutes = require('./routers/SellerRoutes');
 const adminRoutes = require('./routers/AdminRouter');
-const authrouter=require('./routers/AuthRouter');
-const userRouter=require('./routers/UserRouter');
-const productRoutes=require('./routers/ProductRoutes');
-const SellerProductRoutes=require('./routers/SellerProductRoutes');
-const CartRoutes=require('./routers/CartRoutes');
-const OrderRoutes=require('./routers/OrderRouter');
-const sellerOrderRoutes=require('./routers/SellerOrder');
-const PaymentRoutes=require('./routers/PaymentRoutes');
-const TransactionRoutes=require('./routers/TransactionROutes');
-const SellerReportRoutes=require('./routers/SellerReportRoutes');
-const HomeCategoryRoutes=require('./routers/HomeCategoryRoutes');
-const dealRoutes=require('./routers/DealRoutes');
-const couponRoutes=require('./routers/CouponRoutes');
-const customerAssistantRoutes=require('./routers/CustomerAssistantRoutes');
+const authrouter = require('./routers/AuthRouter');
+const userRouter = require('./routers/UserRouter');
+const productRoutes = require('./routers/ProductRoutes');
+const SellerProductRoutes = require('./routers/SellerProductRoutes');
+const CartRoutes = require('./routers/CartRoutes');
+const OrderRoutes = require('./routers/OrderRouter');
+const sellerOrderRoutes = require('./routers/SellerOrder');
+const PaymentRoutes = require('./routers/PaymentRoutes');
+const TransactionRoutes = require('./routers/TransactionROutes');
+const SellerReportRoutes = require('./routers/SellerReportRoutes');
+const HomeCategoryRoutes = require('./routers/HomeCategoryRoutes');
+const dealRoutes = require('./routers/DealRoutes');
+const couponRoutes = require('./routers/CouponRoutes');
+const customerAssistantRoutes = require('./routers/CustomerAssistantRoutes');
 
 app.use('/sellers', sellerRoutes);
 app.use('/admin', adminRoutes);
-app.use('/auth',authrouter);
-app.use('/users',userRouter);
+app.use('/auth', authrouter);
+app.use('/users', userRouter);
 app.use('/products', productRoutes);
 app.use('/seller-products', SellerProductRoutes);
-app.use('/cart',CartRoutes);
-app.use('/orders',OrderRoutes);
-app.use('/seller-orders',sellerOrderRoutes);
-app.use('/payments',PaymentRoutes);
-app.use('/transactions',TransactionRoutes);
-app.use('/seller-reports',SellerReportRoutes);
-app.use('/home-categories',HomeCategoryRoutes);
-app.use('/deals',dealRoutes);
-app.use('/coupons',couponRoutes);
-app.use('/ai',customerAssistantRoutes);
-
+app.use('/cart', CartRoutes);
+app.use('/orders', OrderRoutes);
+app.use('/seller-orders', sellerOrderRoutes);
+app.use('/payments', PaymentRoutes);
+app.use('/transactions', TransactionRoutes);
+app.use('/seller-reports', SellerReportRoutes);
+app.use('/home-categories', HomeCategoryRoutes);
+app.use('/deals', dealRoutes);
+app.use('/coupons', couponRoutes);
+app.use('/ai', customerAssistantRoutes);
 
 const port = Number(process.env.PORT || 5000);
 
@@ -79,6 +80,7 @@ const startServer = async () => {
       emailFromConfigured: Boolean(String(process.env.SMTP_FROM || process.env.EMAIL_FROM || "").trim()),
       emailUserConfigured: Boolean(String(process.env.SMTP_USER || process.env.EMAIL_USER || "").trim()),
       frontendUrl: String(process.env.FRONTEND_URL || "").trim() || null,
+      googleClientConfigured: Boolean(String(process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_IDS || "").trim()),
       nodeEnv: process.env.NODE_ENV || 'development',
       port,
       smtpHost: String(process.env.SMTP_HOST || "").trim() || 'smtp.gmail.com (derived from EMAIL_USER when Gmail is used)',

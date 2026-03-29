@@ -1,93 +1,78 @@
 import { TextField, Box, Typography, Button, Grid, Alert } from "@mui/material";
-import { useFormik } from "formik"
+import { useFormik } from "formik";
 import { useAppDispatch, useAppSelector } from "../../Redux Toolkit/store";
-import { sendLoginSignupOtp, signin, clearError } from "../../Redux Toolkit/featurs/Auth/authSlice";
+import { signin, signinWithGoogle, clearError } from "../../Redux Toolkit/featurs/Auth/authSlice";
 import { useNavigate } from "react-router";
+import { GoogleSignInButton } from "../../common/GoogleSignInButton";
 
-export const LoginForm=()=>{
+export const LoginForm = () => {
+    const { auth } = useAppSelector((state) => state);
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
-    const {auth}=useAppSelector((state)=>state);
-        //   const auth=useAppSelector((state)=>state.auth);
-            const dispatch=useAppDispatch();
-            const navigate=useNavigate();
-    const formik=useFormik({
-        initialValues:{
-            email:"",
-            otp:""
+    const formik = useFormik({
+        initialValues: {
+            email: "",
+            password: "",
         },
-         validate: (values) => {
-    const errors: any = {};
+        validate: (values) => {
+            const errors: any = {};
 
-    if (!values.email) {
-      errors.email = "Email is required";
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)
-    ) {
-      errors.email = "Invalid email format";
-    }
+            if (!values.email) {
+                errors.email = "Email is required";
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+                errors.email = "Invalid email format";
+            }
 
-    return errors;
-  },
+            if (!values.password) {
+                errors.password = "Password is required";
+            }
+
+            return errors;
+        },
         onSubmit: async (values) => {
-  try {
-    dispatch(clearError());
-    const result = await dispatch(signin(values)).unwrap();
-    localStorage.setItem("jwt", result.jwt);
-    navigate("/");
-  } catch (error) {
-    console.log("Login failed:", error);
-  }
-}
-    })
-
-    const handleSentOtp = async () => {
-        const errors = await formik.validateForm();
-        formik.setTouched({ ...formik.touched, email: true });
-
-        if (errors.email || !formik.values.email) {
-            return;
-        }
-        dispatch(clearError());
-        dispatch(sendLoginSignupOtp({email:`signin_user_${formik.values.email}`}));
-    };
+            try {
+                dispatch(clearError());
+                await dispatch(signin(values)).unwrap();
+                navigate("/");
+            } catch (error) {
+                console.log("Login failed:", error);
+            }
+        },
+    });
 
     const getErrorMessage = () => {
         if (!auth.error) return null;
-        if (typeof auth.error === 'string') return auth.error;
-        if (typeof auth.error === 'object' && (auth.error as any)?.error) return (auth.error as any).error;
-        if (typeof auth.error === 'object' && (auth.error as any)?.message) return (auth.error as any).message;
+        if (typeof auth.error === "string") return auth.error;
+        if (typeof auth.error === "object" && (auth.error as any)?.error) return (auth.error as any).error;
+        if (typeof auth.error === "object" && (auth.error as any)?.message) return (auth.error as any).message;
         return "An error occurred";
     };
 
-    const buttonLabel = auth.loading
-        ? auth.otpSent
-            ? "Logging in..."
-            : "Sending OTP..."
-        : auth.otpSent
-            ? "Login"
-            : "Send OTP";
+    const handleGoogleSignin = async (credential: string) => {
+        try {
+            dispatch(clearError());
+            await dispatch(signinWithGoogle({ credential })).unwrap();
+            navigate("/");
+        } catch (error) {
+            console.log("Google login failed:", error);
+        }
+    };
 
-    return(
+    return (
         <Box sx={{ padding: { xs: 3, sm: 5 } }}>
-            <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color:"teal"}}>
-                 Login
+            <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color: "teal" }}>
+                Login With Password
             </Typography>
-            
-            {/* Error Alert */}
+
             {auth.error && getErrorMessage() && (
                 <Alert severity="error" sx={{ marginBottom: 2 }} onClose={() => dispatch(clearError())}>
                     {getErrorMessage()}
                 </Alert>
             )}
 
-            {auth.loading && !auth.otpSent && (
-                <Alert severity="info" sx={{ marginBottom: 2 }}>
-                    Sending OTP to {formik.values.email || "your email"}...
-                </Alert>
-            )}
-            <Grid container spacing={3}>
-                    
-                    {/* Email */}
+            <Box component="form" onSubmit={formik.handleSubmit}>
+                <Grid container spacing={3}>
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
@@ -105,24 +90,23 @@ export const LoginForm=()=>{
                         />
                     </Grid>
 
-                    {/* OTP */}
-                   {auth.otpSent &&  <Grid size={{ xs: 12 }}>
+                    <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
-                            label="OTP"
-                            name="otp"
-                            placeholder="Enter OTP"
-                            value={formik.values.otp}
+                            label="Password"
+                            name="password"
+                            placeholder="Enter your password"
+                            type="password"
+                            value={formik.values.password}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            error={formik.touched.otp && Boolean(formik.errors.otp)}
-                            helperText={formik.touched.otp && formik.errors.otp}
+                            error={formik.touched.password && Boolean(formik.errors.password)}
+                            helperText={formik.touched.password && formik.errors.password}
                             variant="outlined"
                             disabled={auth.loading}
                         />
-                    </Grid>}
+                    </Grid>
 
-                    {/* Submit Button */}
                     <Grid size={{ xs: 12 }}>
                         <Button
                             fullWidth
@@ -130,12 +114,23 @@ export const LoginForm=()=>{
                             type="submit"
                             disabled={auth.loading}
                             sx={{ py: 1.5, fontSize: "1rem", fontWeight: 600 }}
-                            onClick={auth.otpSent?(e)=>formik.handleSubmit(e as any):handleSentOtp}
                         >
-                            {buttonLabel}
+                            {auth.loading ? "Signing in..." : "Login"}
                         </Button>
                     </Grid>
                 </Grid>
             </Box>
-        )
-}
+
+            <div className="my-5 flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">or</span>
+                <div className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <GoogleSignInButton disabled={auth.loading} buttonText="signin_with" onCredential={handleGoogleSignin} />
+            <Typography sx={{ mt: 2, textAlign: "center", color: "#64748b", fontSize: 13 }}>
+                Use Google if your customer email is a Google account.
+            </Typography>
+        </Box>
+    );
+};

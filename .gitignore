@@ -46,6 +46,8 @@ jspm_packages/
 .env.test.local
 .env.production.local
 .env.*.local
+backend/.env.local
+frontend/.env.local
 
 # Build output
 dist/

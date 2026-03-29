@@ -20,16 +20,26 @@ const initialState: SellerAuthState = {
 
 const API_URL = "/sellers";
 
-export const sendLoginOtp = createAsyncThunk<any, any>(
-  "/seller/send-login-otp",
-  async (signupRequest: any, { rejectWithValue }) => {
+export const signinSeller = createAsyncThunk<any, any>(
+  "/seller/signin",
+  async (data, { rejectWithValue }) => {
     try {
-      const response = await api.post(`${API_URL}/send/login-otp`, {
-        email: signupRequest.email,
+      const response = await api.post(`${API_URL}/signin`, {
+        email: data.email,
+        password: data.password,
       });
+
+      if (response.data?.jwt) {
+        localStorage.setItem("sellerJwt", response.data.jwt);
+      }
+
+      if (typeof data.navigate === "function") {
+        data.navigate("/seller/account");
+      }
+
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data || { error: "Failed to send OTP" });
+      return rejectWithValue(error?.response?.data || { error: "Seller login failed" });
     }
   }
 );
@@ -46,28 +56,25 @@ export const createSeller = createAsyncThunk<any, any>(
   }
 );
 
-export const verifyLoginOtp = createAsyncThunk<any, any>(
-  "/seller/verify-login-otp",
+export const signinSellerWithGoogle = createAsyncThunk<any, any>(
+  "/seller/google-signin",
   async (data, { rejectWithValue }) => {
     try {
-      const payload = {
-        email: data.email,
-        otp: data.otp,
-      };
-
-      const response = await api.post(`${API_URL}/verify/login-otp`, payload);
+      const response = await api.post(`${API_URL}/google-signin`, {
+        credential: data.credential,
+      });
 
       if (response.data?.jwt) {
         localStorage.setItem("sellerJwt", response.data.jwt);
       }
-// console.log("Login response:", response.data);
+
       if (typeof data.navigate === "function") {
         data.navigate("/seller/account");
       }
 
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data || { error: "Failed to verify OTP" });
+      return rejectWithValue(error?.response?.data || { error: "Google sign-in failed" });
     }
   }
 );
@@ -97,16 +104,17 @@ const sellerSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(sendLoginOtp.pending, (state) => {
+      .addCase(signinSeller.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(sendLoginOtp.fulfilled, (state) => {
+      .addCase(signinSeller.fulfilled, (state, action) => {
         state.loading = false;
-        state.otpSent = true;
+        state.jwt = action.payload?.jwt ?? null;
+        state.role = action.payload?.role ?? null;
         state.error = null;
       })
-      .addCase(sendLoginOtp.rejected, (state, action) => {
+      .addCase(signinSeller.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as any;
       })
@@ -122,17 +130,17 @@ const sellerSlice = createSlice({
         state.loading = false;
         state.error = action.payload as any;
       })
-      .addCase(verifyLoginOtp.pending, (state) => {
+      .addCase(signinSellerWithGoogle.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(verifyLoginOtp.fulfilled, (state, action) => {
+      .addCase(signinSellerWithGoogle.fulfilled, (state, action) => {
         state.loading = false;
         state.jwt = action.payload?.jwt ?? null;
         state.role = action.payload?.role ?? null;
         state.error = null;
       })
-      .addCase(verifyLoginOtp.rejected, (state, action) => {
+      .addCase(signinSellerWithGoogle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as any;
       });

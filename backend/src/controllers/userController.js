@@ -1,4 +1,3 @@
-const UserRole = require('../domain/UserRole');
 const AuthService = require('../service/AuthService');
 const UserService = require('../service/UserService');
 const { getRequestContext, logError } = require('../util/requestTrace');
@@ -6,6 +5,16 @@ const { getRequestContext, logError } = require('../util/requestTrace');
 const getStatusCode = (error) => Number(error?.statusCode) || 500;
 
 class UserController {
+    constructor() {
+        this.sendLoginOtp = this.sendLoginOtp.bind(this);
+        this.createUser = this.createUser.bind(this);
+        this.signin = this.signin.bind(this);
+        this.googleSignin = this.googleSignin.bind(this);
+        this.getUserProfile = this.getUserProfile.bind(this);
+        this.deleteUserAddress = this.deleteUserAddress.bind(this);
+        this.findUserByEmail = this.findUserByEmail.bind(this);
+    }
+
     async sendLoginOtp(req, res) {
         const requestContext = getRequestContext(req, {
             authFlow: 'customer-login-otp',
@@ -23,22 +32,30 @@ class UserController {
 
     async createUser(req, res) {
         try {
-            const jwt = await UserService.createUser(req);
-            res.status(200).json({ message: "User created successfully", jwt,role:UserRole.CUSTOMER });
+            const result = await UserService.createUser(req);
+            res.status(200).json(result);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            this.handelErrors(error, res);
         }
     }
 
     async signin(req, res) {
         try {
-            // console.log("Signin request received:", req.body);
             const result = await UserService.signin(req);
-            // console.log(result);
             res.status(200).json(result);
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            this.handelErrors(error, res);
+        }
+    }
+
+    async googleSignin(req, res) {
+        try {
+            const { credential } = req.body || {};
+            const result = await UserService.signInWithGoogle(credential);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handelErrors(error, res);
         }
     }
 
@@ -48,7 +65,6 @@ class UserController {
             const user = await UserService.findUserProfile(jwt);
             res.status(200).json(user);
         } catch (error) {
-            // res.status(500).json({ error: error.message });
             this.handelErrors(error,res);
         }
     }
@@ -78,6 +94,7 @@ class UserController {
     async handelErrors(err,res){
         if(err instanceof Error){
             res.status(400).json({message:err.message});
+            return;
         }
         return res.status(500).json({message:"Internal Server Error"});
     }
