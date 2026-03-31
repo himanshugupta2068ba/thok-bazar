@@ -73,8 +73,8 @@ export const Navbar = () => {
       className="sticky top-0 left-0 right-0 z-120 bg-white/90 blur-bg shadow-sm"
     >
       <div className="border-b border-gray-200 px-4 py-3 sm:px-6 lg:px-20">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none lg:gap-9">
+        <div className="flex items-center justify-between gap-3 lg:flex-nowrap lg:justify-start lg:gap-4">
+          <div className="flex min-w-0 items-center gap-3 lg:flex-1 lg:gap-7">
             <div className="flex min-w-0 items-center gap-2">
               <IconButton
                 className="lg:hidden"
@@ -109,7 +109,7 @@ export const Navbar = () => {
 
           <form
             onSubmit={handleSearchFormSubmit}
-            className="order-3 flex w-full items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 lg:order-none lg:w-[320px]"
+            className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 lg:flex lg:w-70 xl:w-80"
           >
             <Search sx={{ fontSize: 22, color: "#64748b" }} />
             <InputBase
@@ -126,7 +126,7 @@ export const Navbar = () => {
             />
           </form>
 
-          <div className="order-2 flex w-full flex-wrap items-center gap-2 sm:justify-end lg:order-none lg:w-auto lg:flex-nowrap lg:gap-3">
+          <div className="hidden items-center gap-2 lg:flex lg:flex-nowrap lg:gap-2 xl:gap-3">
             {customerName ? (
               <Button
                 onClick={() => navigate("/customer/profile")}
@@ -137,7 +137,7 @@ export const Navbar = () => {
                   src={optimizeImageUrl("https://plus.unsplash.com/premium_photo-1682090778813-3938ba76ee57?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ3Jvb218ZW58MHx8MHx8fDA%3D", { width: 58, height: 58, fit: "crop" })}
                   sx={{ width: 32, height: 32 }}
                 />
-                <span className="hidden max-w-[10rem] truncate text-sm font-medium sm:block">
+                <span className="hidden max-w-32 truncate text-sm font-medium xl:block">
                   {customerName}
                 </span>
               </Button>
@@ -221,6 +221,112 @@ export const Navbar = () => {
             </IconButton>
           </div>
           <div className="flex flex-col gap-3 p-4">
+            <form
+              onSubmit={(event) => {
+                handleSearchFormSubmit(event);
+                setShowMobileMenu(false);
+              }}
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2"
+            >
+              <Search sx={{ fontSize: 20, color: "#64748b" }} />
+              <InputBase
+                placeholder="Search products"
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                inputProps={{
+                  "aria-label": "Search products",
+                  autoComplete: "off",
+                  enterKeyHint: "search",
+                }}
+                sx={{ fontSize: 14, width: "100%" }}
+              />
+            </form>
+
+            {customerName ? (
+              <Button
+                onClick={() => {
+                  navigate("/customer/profile");
+                  setShowMobileMenu(false);
+                }}
+                className="justify-start gap-2 rounded-full px-2 py-1 text-slate-700"
+                sx={{ textTransform: "none" }}
+              >
+                <Avatar
+                  src={optimizeImageUrl("https://plus.unsplash.com/premium_photo-1682090778813-3938ba76ee57?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aW5kaWFuJTIwZ3Jvb218ZW58MHx8MHx8fDA%3D", { width: 58, height: 58, fit: "crop" })}
+                  sx={{ width: 32, height: 32 }}
+                />
+                <span className="max-w-48 truncate text-sm font-medium">{customerName}</span>
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                startIcon={<AccountCircle />}
+                onClick={() => {
+                  navigate("/login");
+                  setShowMobileMenu(false);
+                }}
+                sx={{
+                  borderRadius: "999px",
+                  minWidth: 0,
+                  px: 2,
+                  textTransform: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Login
+              </Button>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outlined"
+                startIcon={<FavoriteBorder />}
+                onClick={() => {
+                  navigate("/wishlist");
+                  setShowMobileMenu(false);
+                }}
+                sx={{ borderRadius: "999px", textTransform: "none" }}
+              >
+                Wishlist ({wishlistItemCount})
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<AddShoppingCart />}
+                onClick={() => {
+                  navigate("/cart");
+                  setShowMobileMenu(false);
+                }}
+                sx={{ borderRadius: "999px", textTransform: "none" }}
+              >
+                Cart ({cartItemCount})
+              </Button>
+            </div>
+
+            <Button
+              variant="contained"
+              startIcon={<Storefront />}
+              onClick={() => {
+                navigate("/become-seller");
+                setShowMobileMenu(false);
+              }}
+              sx={{
+                borderRadius: "999px",
+                px: 2.5,
+                py: 1.1,
+                textTransform: "none",
+                whiteSpace: "nowrap",
+                boxShadow: "none",
+                backgroundColor: "#f97316",
+                "&:hover": {
+                  backgroundColor: "#ea580c",
+                  boxShadow: "none",
+                },
+              }}
+            >
+              Sell on Thok Bazar
+            </Button>
+
             <Button
               variant="outlined"
               onClick={() => {
