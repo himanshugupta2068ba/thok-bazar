@@ -7,12 +7,53 @@ const dotenv = require('dotenv');
 
 const connectDb = require('./db/db');
 const corsOptions = require('./config/corsOptions');
-const { requestLogger, logInfo } = require('./util/requestTrace');
+const { requestLogger, logInfo, logWarn } = require('./util/requestTrace');
 
-dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false, quiet: true });
-dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: false, quiet: true });
-dotenv.config({ path: path.resolve(__dirname, '../.env.local'), override: true, quiet: true });
-dotenv.config({ path: path.resolve(__dirname, '../../.env.local'), override: true, quiet: true });
+const isHostedRuntime = () =>
+  [
+    process.env.RENDER,
+    process.env.VERCEL,
+    process.env.RAILWAY_ENVIRONMENT,
+    process.env.FLY_APP_NAME,
+    process.env.K_SERVICE,
+    process.env.WEBSITE_SITE_NAME,
+    process.env.DYNO,
+  ].some(Boolean);
+
+const shouldLoadLocalEnvFiles =
+  String(process.env.NODE_ENV || '').trim().toLowerCase() !== 'production' && !isHostedRuntime();
+
+const localEnvFiles = [
+  path.resolve(__dirname, '../.env.local'),
+  path.resolve(__dirname, '../../.env.local'),
+  path.resolve(__dirname, '../.env'),
+  path.resolve(__dirname, '../../.env'),
+];
+
+if (shouldLoadLocalEnvFiles) {
+  localEnvFiles.forEach((envFilePath) => {
+    dotenv.config({ path: envFilePath, override: false, quiet: true });
+  });
+}
+
+const readyStateLookup = {
+  0: 'disconnected',
+  1: 'connected',
+  2: 'connecting',
+  3: 'disconnecting',
+};
+
+const getDatabaseStatus = () => readyStateLookup[mongoose.connection.readyState] || 'unknown';
+
+const toPositiveInteger = (value, fallbackValue) => {
+  const parsedValue = Number.parseInt(String(value || '').trim(), 10);
+
+  if (Number.isInteger(parsedValue) && parsedValue > 0) {
+    return parsedValue;
+  }
+
+  return fallbackValue;
+};
 
 app.set('trust proxy', true);
 app.use(cors(corsOptions));
@@ -23,18 +64,11 @@ app.get('/', (req, res) => {
   res.send('Werlcome to the backend server of thok-bazar!');
 });
 app.get('/health', (_req, res) => {
-  const readyStateLookup = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting',
-  };
-
   const readyState = mongoose.connection.readyState;
 
-  res.status(readyState === 1 ? 200 : 503).json({
+  res.status(200).json({
     status: readyState === 1 ? 'ok' : 'degraded',
-    database: readyStateLookup[readyState] || 'unknown',
+    database: getDatabaseStatus(),
   });
 });
 
@@ -72,9 +106,68 @@ app.use('/deals', dealRoutes);
 app.use('/coupons', couponRoutes);
 app.use('/ai', customerAssistantRoutes);
 
-const port = Number(process.env.PORT || 5000);
+const port = toPositiveInteger(process.env.PORT, 5000);
+const dbRetryDelayMs = toPositiveInteger(process.env.MONGODB_RETRY_DELAY_MS, 5000);
+let dbReconnectTimer = null;
+let dbConnectPromise = null;
 
-const startServer = async () => {
+const scheduleDatabaseReconnect = () => {
+  if (dbReconnectTimer) {
+    return;
+  }
+
+  dbReconnectTimer = setTimeout(() => {
+    dbReconnectTimer = null;
+    void ensureDatabaseConnection();
+  }, dbRetryDelayMs);
+
+  if (typeof dbReconnectTimer.unref === 'function') {
+    dbReconnectTimer.unref();
+  }
+};
+
+const ensureDatabaseConnection = async () => {
+  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+    return dbConnectPromise;
+  }
+
+  if (dbConnectPromise) {
+    return dbConnectPromise;
+  }
+
+  dbConnectPromise = connectDb()
+    .catch((error) => {
+      logWarn('MongoDB unavailable; HTTP server will stay online and retry.', {
+        database: getDatabaseStatus(),
+        errorMessage: error?.message || String(error),
+        retryInMs: dbRetryDelayMs,
+      });
+      scheduleDatabaseReconnect();
+      return null;
+    })
+    .finally(() => {
+      dbConnectPromise = null;
+    });
+
+  return dbConnectPromise;
+};
+
+mongoose.connection.on('disconnected', () => {
+  logWarn('MongoDB disconnected.', {
+    database: getDatabaseStatus(),
+    retryInMs: dbRetryDelayMs,
+  });
+  scheduleDatabaseReconnect();
+});
+
+mongoose.connection.on('error', (error) => {
+  logWarn('MongoDB connection error.', {
+    database: getDatabaseStatus(),
+    errorMessage: error?.message || String(error),
+  });
+});
+
+const startServer = () => {
   try {
     logInfo('Backend configuration snapshot', {
       emailFromConfigured: Boolean(String(process.env.SMTP_FROM || process.env.EMAIL_FROM || "").trim()),
@@ -88,10 +181,14 @@ const startServer = async () => {
       smtpSecure: String(process.env.SMTP_SECURE || "").trim() || null,
     });
 
-    await connectDb();
-
-    app.listen(port, '0.0.0.0', () => {
+    const server = app.listen(port, '0.0.0.0', () => {
       console.log(`Server is running on port: ${port}`);
+      void ensureDatabaseConnection();
+    });
+
+    server.on('error', (error) => {
+      console.error('Failed to bind backend HTTP server:', error?.message || error);
+      process.exit(1);
     });
   } catch (error) {
     console.error('Failed to start backend:', error?.message || error);

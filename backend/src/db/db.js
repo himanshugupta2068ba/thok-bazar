@@ -12,9 +12,24 @@ const getMongoUri = () => {
     return mongoUri;
 };
 
+const toPositiveInteger = (value, fallbackValue) => {
+    const parsedValue = Number.parseInt(String(value || "").trim(), 10);
+
+    if (Number.isInteger(parsedValue) && parsedValue > 0) {
+        return parsedValue;
+    }
+
+    return fallbackValue;
+};
+
 const connectDb = async () => {
     try {
-        const conn = await mongoose.connect(getMongoUri());
+        const conn = await mongoose.connect(getMongoUri(), {
+            serverSelectionTimeoutMS: toPositiveInteger(
+                process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
+                10000,
+            ),
+        });
         console.log("MongoDB connected:", conn.connection.host);
         return conn;
     }
