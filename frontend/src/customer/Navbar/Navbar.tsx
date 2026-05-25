@@ -73,8 +73,8 @@ export const Navbar = () => {
       className="sticky top-0 left-0 right-0 z-120 bg-white/90 blur-bg shadow-sm"
     >
       <div className="border-b border-gray-200 px-4 py-3 sm:px-6 lg:px-20">
-        <div className="flex items-center justify-between gap-3 lg:flex-nowrap lg:justify-start lg:gap-4">
-          <div className="flex min-w-0 items-center gap-3 lg:flex-1 lg:gap-7">
+        <div className="flex items-center justify-between gap-3 lg:flex-nowrap lg:justify-start lg:gap-2 xl:gap-4">
+          <div className="flex min-w-0 items-center gap-3 lg:flex-1 lg:gap-4 xl:gap-7">
             <div className="flex min-w-0 items-center gap-2">
               <IconButton
                 className="lg:hidden"
@@ -90,7 +90,7 @@ export const Navbar = () => {
                 Thok Bazar
               </h1>
             </div>
-            <ul className="hidden items-center font-medium text-gray-800 lg:flex">
+            <ul className="hidden items-center font-medium text-gray-800 lg:flex lg:text-sm xl:text-base">
               {mainCategory.map((item) => (
                 <li
                   onMouseEnter={() => {
@@ -99,7 +99,7 @@ export const Navbar = () => {
                   }}
                   onClick={() => handleMainCategoryClick(item.categoryid)}
                   key={item.categoryid}
-                  className="mainCategory flex h-17 cursor-pointer items-center px-4 hover:border-b-2 hover:text-teal-600"
+                  className="mainCategory flex h-16 cursor-pointer items-center px-2 hover:border-b-2 hover:text-teal-600 xl:px-4"
                 >
                   {item.name}
                 </li>
@@ -109,7 +109,7 @@ export const Navbar = () => {
 
           <form
             onSubmit={handleSearchFormSubmit}
-            className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 lg:flex lg:w-70 xl:w-80"
+            className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 lg:flex lg:w-48 xl:w-64 2xl:w-80"
           >
             <Search sx={{ fontSize: 22, color: "#64748b" }} />
             <InputBase
@@ -126,7 +126,7 @@ export const Navbar = () => {
             />
           </form>
 
-          <div className="hidden items-center gap-2 lg:flex lg:flex-nowrap lg:gap-2 xl:gap-3">
+          <div className="hidden items-center gap-1 lg:flex lg:flex-nowrap xl:gap-2">
             {customerName ? (
               <Button
                 onClick={() => navigate("/customer/profile")}
@@ -162,7 +162,7 @@ export const Navbar = () => {
               className="rounded-full border border-slate-200 bg-white"
             >
               <Badge badgeContent={wishlistItemCount} color="secondary">
-                <FavoriteBorder sx={{ fontSize: 26 }} />
+                <FavoriteBorder sx={{ fontSize: 24 }} />
               </Badge>
             </IconButton>
             <IconButton
@@ -170,15 +170,15 @@ export const Navbar = () => {
               className="rounded-full border border-slate-200 bg-white"
             >
               <Badge badgeContent={cartItemCount} color="primary">
-                <AddShoppingCart sx={{ fontSize: 26 }} />
+                <AddShoppingCart sx={{ fontSize: 24 }} />
               </Badge>
             </IconButton>
             <Button
               variant="contained"
               startIcon={<Storefront />}
-              className="w-full sm:w-auto"
               onClick={() => navigate("/become-seller")}
               sx={{
+                display: { xs: "none", xl: "inline-flex" },
                 borderRadius: "999px",
                 px: 2.5,
                 py: 1.1,
