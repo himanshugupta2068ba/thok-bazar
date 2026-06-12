@@ -1,8 +1,29 @@
 @import "tailwindcss";
 
-.logo{
-   font-family: "pacifico", cursive;
-   font-weight: 400;
+.logo {
+   color: #0f766e;
+   font-family: "Pacifico", cursive;
    font-style: normal;
-   color: teal;
+   font-weight: 400;
+}
+
+.blur-bg {
+   backdrop-filter: blur(18px);
+}
+
+.mobile-category-rail {
+   transform-origin: top center;
+   will-change: max-height, opacity, transform;
+}
+
+.mobile-category-rail > div {
+   scrollbar-width: none;
+}
+
+.mobile-category-rail > div::-webkit-scrollbar {
+   display: none;
+}
+
+.mobile-category-item {
+   transform-origin: center top;
 }

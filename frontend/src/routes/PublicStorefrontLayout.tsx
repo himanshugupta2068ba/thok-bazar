@@ -8,7 +8,7 @@ export const PublicStorefrontLayout = ({
   children: ReactNode;
 }) => {
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#f5fffc_38%,#ffffff_100%)]">
+    <div className="min-h-screen overflow-x-clip bg-[linear-gradient(180deg,#f8fafc_0%,#f5fffc_38%,#ffffff_100%)]">
       <Navbar />
       <main>{children}</main>
       <Footer />

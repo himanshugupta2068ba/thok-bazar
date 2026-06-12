@@ -135,7 +135,7 @@ export const FilterSection = ({
 
   return (
     <div className="z-50 space-y-5 bg-white">
-      <div className="flex items-center justify-between px-9 py-4 lg:border-r">
+      <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:border-r lg:px-9">
         <div>
           <p className="text-lg font-semibold">Filters</p>
           <p className="text-xs text-gray-500">
@@ -148,7 +148,7 @@ export const FilterSection = ({
         </button>
       </div>
       <Divider />
-      <div className="mt-5 space-y-6 px-9">
+      <div className="mt-5 space-y-6 px-4 sm:px-6 lg:px-9">
         {sections.map((section, index) => (
           <div key={section.key}>
             <FilterRadioSection

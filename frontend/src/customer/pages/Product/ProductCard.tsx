@@ -153,11 +153,11 @@ export const ProductCard = memo(({ item, removeFromWishlistOnAddToCart = false }
     <div onClick={handleOpenProduct} className="product-card group relative w-full px-3">
       <div className="product-card-shell overflow-hidden rounded-[28px]">
         <div
-          className="product-card-image relative h-80 overflow-hidden"
+          className="product-card-image relative h-64 overflow-hidden sm:h-72 lg:h-80"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <div className="absolute left-4 top-4 z-10 flex flex-wrap gap-2">
+          <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2 sm:left-4 sm:top-4">
             <span className="product-card-badge product-card-badge--soft">
               {categoryLabel}
             </span>
@@ -170,7 +170,7 @@ export const ProductCard = memo(({ item, removeFromWishlistOnAddToCart = false }
             ) : null}
           </div>
 
-          <div className="absolute right-4 top-4 z-10">
+          <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
             <IconButton
               onClick={handleWishlistToggle}
               sx={{
@@ -211,10 +211,12 @@ export const ProductCard = memo(({ item, removeFromWishlistOnAddToCart = false }
               </h2>
             </div>
 
-            <div className="flex items-end justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 sm:items-end">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-slate-900">Rs. {sellingPrice}</span>
+                  <span className="text-lg font-bold text-slate-900 sm:text-xl">
+                    Rs. {sellingPrice}
+                  </span>
                   <span className="text-sm text-slate-400 line-through">Rs. {mrpPrice}</span>
                 </div>
                 <p className="text-sm font-medium text-teal-700">

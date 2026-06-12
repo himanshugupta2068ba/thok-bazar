@@ -21,19 +21,19 @@ export const Auth = () => {
   }, [dispatch]);
 
   return (
-    <section className="px-4 py-10 sm:px-6 lg:px-8">
+    <section className="px-3 py-6 sm:px-6 lg:px-8 lg:py-10">
       <div className="mx-auto flex min-h-[70vh] max-w-2xl items-center justify-center">
-        <section className="w-full rounded-[36px] border border-slate-200 bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-          <div className="rounded-[30px] bg-[linear-gradient(180deg,#fbfffe_0%,#f8fafc_100%)] p-5 sm:p-6">
-            <h2 className="text-center text-3xl font-semibold tracking-tight text-slate-900">
+        <section className="w-full rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:rounded-[36px] sm:p-3">
+          <div className="rounded-2xl bg-[linear-gradient(180deg,#fbfffe_0%,#f8fafc_100%)] p-4 sm:rounded-[30px] sm:p-6">
+            <h2 className="text-center text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
               {isLogin ? "Customer Login" : "Create Account"}
             </h2>
-            <p className="mt-3 text-center text-sm text-slate-600">
+            <p className="mt-3 text-center text-sm leading-6 text-slate-600">
               Use password login or continue with Google. OTP is no longer required here.
             </p>
 
-            <div className="mt-6 flex justify-center">
-              <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+            <div className="mt-5 flex justify-center sm:mt-6">
+              <div className="inline-flex w-full rounded-full border border-slate-200 bg-white p-1 shadow-sm sm:w-auto">
                 <Button
                   variant={isLogin ? "text" : "contained"}
                   onClick={() => handleModeChange(false)}
@@ -63,11 +63,11 @@ export const Auth = () => {
               </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:mt-6 sm:rounded-[28px]">
               {isLogin ? <LoginForm /> : <SignUp />}
             </div>
 
-            <p className="mt-5 text-center text-sm text-slate-600">
+            <p className="mt-4 text-center text-sm text-slate-600 sm:mt-5">
               {isLogin ? "New here?" : "Already have an account?"}{" "}
               <button
                 type="button"

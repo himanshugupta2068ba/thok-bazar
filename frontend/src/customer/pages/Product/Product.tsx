@@ -1,11 +1,5 @@
-import {
-  Divider,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Pagination,
-  Select,
-} from "@mui/material";
+import { Divider, FormControl, IconButton, InputLabel, MenuItem, Pagination, Select, Button, Drawer } from "@mui/material";
+import { Close, FilterList } from "@mui/icons-material";
 import { FilterSection } from "./FilterSection";
 import { useEffect, useMemo, useState } from "react";
 import { ProductCard } from "./ProductCard";
@@ -26,6 +20,7 @@ export const Products = () => {
   const [sort, setSort] = useState("price_low");
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const searchTerm = useMemo(
     () => new URLSearchParams(location.search).get("q")?.trim() || "",
     [location.search],
@@ -135,15 +130,19 @@ export const Products = () => {
     setFilters({});
   };
 
+  const handleCloseMobileFilters = () => {
+    setShowMobileFilters(false);
+  };
+
   return (
-    <div className="mt-6 px-4 pb-10 sm:px-6 lg:px-8">
-      <section className="mx-auto max-w-[1500px] rounded-[36px] border border-slate-200/80 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.16),_transparent_30%),linear-gradient(135deg,_#f7fffd_0%,_#f8fafc_58%,_#ffffff_100%)] px-6 py-8 shadow-[0_22px_60px_rgba(15,23,42,0.08)] sm:px-8 lg:px-10">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mt-4 px-4 pb-10 sm:mt-6 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-375 rounded-4xl border border-slate-200/80 bg-[radial-gradient(circle_at_top_left,rgba(20,184,166,0.16),transparent_30%),linear-gradient(135deg,#f7fffd_0%,#f8fafc_58%,#ffffff_100%)] px-5 py-7 shadow-[0_22px_60px_rgba(15,23,42,0.08)] sm:px-8 lg:px-10">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <span className="inline-flex rounded-full border border-white/70 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.32em] text-teal-700 shadow-sm">
               Curated Collection
             </span>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
               Explore {formattedTitle}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -152,8 +151,8 @@ export const Products = () => {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
-            <div className="rounded-[24px] border border-white/70 bg-white/80 px-4 py-4 shadow-sm backdrop-blur">
+          <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:min-w-90">
+            <div className="rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-sm backdrop-blur">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
                 Products Found
               </p>
@@ -161,7 +160,7 @@ export const Products = () => {
                 {product.totalElements || 0}
               </p>
             </div>
-            <div className="rounded-[24px] border border-white/70 bg-white/80 px-4 py-4 shadow-sm backdrop-blur">
+            <div className="rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-sm backdrop-blur">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
                 Active Filters
               </p>
@@ -173,7 +172,7 @@ export const Products = () => {
         </div>
       </section>
 
-      <div className="mx-auto mt-8 flex max-w-[1500px] gap-6 lg:items-start">
+      <div className="mx-auto mt-8 flex max-w-375 gap-6 lg:items-start">
         <section className="hidden w-[22%] lg:block">
           <div className="sticky top-24 rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
             <FilterSection
@@ -186,14 +185,23 @@ export const Products = () => {
         </section>
 
         <section className="w-full space-y-6 lg:w-[78%]">
-          <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white/95 px-5 py-4 shadow-[0_14px_38px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between">
-            <div>
+          <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white/95 px-4 py-4 shadow-[0_14px_38px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
                 Browse
               </p>
               <p className="mt-1 text-sm text-slate-600">
                 Refine the list and sort products the way you shop.
               </p>
+              <Button
+                variant="outlined"
+                startIcon={<FilterList />}
+                onClick={() => setShowMobileFilters(true)}
+                className="lg:hidden"
+                sx={{ borderRadius: "999px", textTransform: "none" }}
+              >
+                Filters {activeFiltersCount ? `(${activeFiltersCount})` : ""}
+              </Button>
             </div>
 
             <FormControl size="small" sx={{ minWidth: 180 }}>
@@ -215,7 +223,7 @@ export const Products = () => {
 
           <Divider />
 
-          <div className="grid justify-center gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid justify-center gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {productItems.map((item: any, index: number) => (
               <div key={item._id || index} className="flex justify-center">
                 <ProductCard item={item} />
@@ -239,6 +247,49 @@ export const Products = () => {
           </div>
         </section>
       </div>
+
+      <Drawer
+        anchor="bottom"
+        open={showMobileFilters}
+        onClose={handleCloseMobileFilters}
+        PaperProps={{
+          sx: {
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            maxHeight: "88vh",
+          },
+        }}
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              Browse
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-slate-900">Filters</h2>
+          </div>
+          <IconButton aria-label="Close filters" onClick={handleCloseMobileFilters}>
+            <Close />
+          </IconButton>
+        </div>
+        <div className="overflow-y-auto p-2 pb-6 sm:p-4">
+          <FilterSection
+            mainCategoryId={mainCategoryId}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClear={handleClearFilters}
+          />
+          <div className="px-3 pt-4 sm:px-5">
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleCloseMobileFilters}
+              sx={{ borderRadius: "999px", textTransform: "none" }}
+            >
+              Done
+            </Button>
+          </div>
+        </div>
+      </Drawer>
     </div>
   );
 };

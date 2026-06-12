@@ -31,11 +31,11 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 500,
+  width: { xs: "min(92vw, 500px)", sm: 500 },
   bgcolor: "background.paper",
   // border: '2px solid #000',
   boxShadow: 24,
-  p: 4,
+  p: { xs: 2, sm: 4 },
 };
 
 const paymentGatwayList = [
@@ -161,20 +161,20 @@ export const Checkout = () => {
     setPaymentGateway(event.target.value);
   }
   return (
-    <div className="pt-10 px-5 s:px-10 md:px-44 lg:px-60 min-h-screen">
-      <div className="space-y-5 lg:space-y-0 lg:grid grid-cols-3 lg:gap-9">
+    <div className="min-h-screen px-4 pb-10 pt-6 sm:px-6 md:px-10 lg:px-20 xl:px-28">
+      <div className="space-y-5 lg:grid lg:grid-cols-3 lg:gap-9 lg:space-y-0">
         <div className="col-span-2 space-y-5">
-          <div className="flex justify-between items-center">
-            <span className="text-2xl font-semibold">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-xl font-semibold sm:text-2xl">
               Select Delivery Address
             </span>
-            <Button onClick={handleOpen} variant="outlined">
+            <Button onClick={handleOpen} variant="outlined" fullWidth className="sm:w-auto">
               Add New Address
             </Button>
           </div>
           <div className="text-sm font-medium space-y-5">
             <p>Saved Adreess</p>
-            <div className="border p-5 rounded-md border-gray-400 space-y-5">
+            <div className="border p-4 rounded-md border-gray-400 space-y-4 sm:p-5 sm:space-y-5">
               {addresses.length ? addresses.map((item, index) => (
                 <AddressCard
                   value={index}
@@ -188,11 +188,13 @@ export const Checkout = () => {
                 <p className="text-gray-500">No saved addresses yet. Add a new address to continue.</p>
               )}
             </div>
-            <div className="py-4 px-5 rounded-md border border-gray-300 mb-4">
+            <div className="mb-4 rounded-md border border-gray-300 px-4 py-4 sm:px-5">
               <Button
                 onClick={handleOpen}
                 variant="contained"
                 startIcon={<Add />}
+                fullWidth
+                className="sm:w-auto"
               >
                 Add new Address
               </Button>
@@ -202,17 +204,17 @@ export const Checkout = () => {
             ) : null}
           </div>
         </div>
-        <div className="col-span-1 border p-5 rounded-md border-gray-300 text-sm space-y-3 h-fit">
-          <section className="space-y-3 border p-5 rounded-md border-gray-300">
-            <h1 className="text-teal-600 font-medium pb-2 text-center ">
+        <div className="col-span-1 h-fit space-y-3 rounded-md border border-gray-300 p-4 text-sm sm:p-5">
+          <section className="space-y-3 rounded-md border border-gray-300 p-4 sm:p-5">
+            <h1 className="pb-2 text-center font-medium text-teal-600">
               Choose Payment Method
             </h1>
             <RadioGroup
-              row
               aria-labelledby="demo-row-radio-buttons-group-label"
               name="row-radio-buttons-group"
               value={paymentGateway}
               onChange={handleChangePaymentGateway}
+              sx={{ flexDirection: { xs: "column", sm: "row" }, gap: 0.5 }}
             >
               {paymentGatwayList.map((item)=><FormControlLabel
                 key={item.value}

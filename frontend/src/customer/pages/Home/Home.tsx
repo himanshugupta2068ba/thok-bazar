@@ -51,12 +51,12 @@ const Home = () => {
                     )}
                 </section>
 
-                <section className='px-4 pt-20 sm:px-6 lg:px-20'>
-                    <div className='overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm'>
-                        <div className='grid gap-6 bg-[linear-gradient(135deg,#ecfeff_0%,#ffffff_48%,#fff7ed_100%)] p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-center lg:p-10'>
+                <section className='px-4 pt-12 sm:px-6 sm:pt-16 lg:px-20'>
+                    <div className='overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-sm'>
+                        <div className='grid gap-5 bg-[linear-gradient(135deg,#ecfeff_0%,#ffffff_48%,#fff7ed_100%)] p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-center lg:p-10'>
                             <div className='max-w-xl'>
                                 <p className='text-xs font-semibold uppercase tracking-[0.3em] text-teal-700'>Seller Program</p>
-                                <h2 className='mt-3 text-2xl font-black text-slate-900 sm:text-4xl'>
+                                <h2 className='mt-3 text-xl font-black text-slate-900 sm:text-4xl'>
                                     Sell Your Product on Thok Bazar
                                 </h2>
                                 <p className='mt-4 text-sm leading-7 text-slate-600 sm:text-base'>
@@ -84,7 +84,7 @@ const Home = () => {
 
                             <div className='overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.12)]'>
                                 <img
-                                    className='h-[220px] w-full object-cover sm:h-[280px] lg:h-[360px]'
+                                    className='h-45 w-full object-cover sm:h-70 lg:h-90'
                                     src={optimizeImageUrl('https://static-assets-web.flixcart.com/fk-sp-static/images/prelogin/banner/Desktop_sell.webp', { width: 1440, quality: 75 })}
                                     alt='Become a seller with Thok Bazar'
                                     loading="lazy"

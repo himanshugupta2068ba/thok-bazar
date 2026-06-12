@@ -328,10 +328,10 @@ export const ProductDetails = () => {
   };
 
   return (
-    <div className="min-h-screen px-5 pt-10 lg:px-20">
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+    <div className="min-h-screen px-4 pt-6 sm:px-5 sm:pt-8 lg:px-20">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
         <section className="flex flex-col gap-5 lg:flex-row">
-          <div className="flex w-full flex-wrap gap-3 lg:w-[15%] lg:flex-col">
+          <div className="flex w-full gap-3 overflow-x-auto pb-2 lg:w-[15%] lg:flex-col lg:overflow-visible lg:pb-0">
             {thumbnailImages.map((imgSrc: string, index: number) => (
               <img
                 onMouseEnter={() => handleHover(index)}
@@ -342,7 +342,7 @@ export const ProductDetails = () => {
                 alt={`${productTitle} preview ${index + 1}`}
                 loading="lazy"
                 decoding="async"
-                className="w-12.5 cursor-pointer rounded-md border-2 border-gray-300 lg:w-full"
+                className="w-16 shrink-0 cursor-pointer rounded-md border-2 border-gray-300 lg:w-full"
               />
             ))}
           </div>
@@ -353,7 +353,7 @@ export const ProductDetails = () => {
               fetchPriority="high"
               decoding="async"
               sizes="(min-width: 1024px) 42vw, 100vw"
-              className="w-full rounded-md border-2 border-gray-300"
+              className="w-full rounded-2xl border-2 border-gray-300"
             />
           </div>
         </section>
@@ -362,7 +362,7 @@ export const ProductDetails = () => {
           <h1 className="text-lg font-bold text-teal-500">{sellerName}</h1>
           <p className="font-semibold text-gray-500">{productTitle}</p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+          <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm">
               <span className="text-xl font-bold text-teal-700">
                 {averageRating ? averageRating.toFixed(1) : "New"}
@@ -419,7 +419,7 @@ export const ProductDetails = () => {
 
           <div className="mt-7 space-y-2">
             <h1>Quantity</h1>
-            <div className="flex w-35 items-center gap-5">
+            <div className="flex w-full max-w-40 items-center gap-5">
               <Button variant="outlined" onClick={() => handleQuantityChange("decrement")}>
                 <Remove />
               </Button>
@@ -430,12 +430,12 @@ export const ProductDetails = () => {
             </div>
           </div>
 
-          <div className="mt-12 flex items-center gap-5">
+          <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:flex lg:items-center lg:gap-5">
             <Button
               startIcon={<AddShoppingCart />}
               variant="contained"
               color="primary"
-              className="w-40 py-3 font-bold"
+              className="w-full py-3 font-bold"
               disabled={isAddingToCart}
               onClick={handleAddToCart}
             >
@@ -444,7 +444,7 @@ export const ProductDetails = () => {
             <Button
               variant="outlined"
               color="primary"
-              className="w-40 py-3 font-bold"
+              className="w-full py-3 font-bold"
               onClick={handleBuyNow}
               disabled={isAddingToCart}
             >
@@ -453,7 +453,7 @@ export const ProductDetails = () => {
             <Button
               variant="outlined"
               color="primary"
-              className="py-3 font-bold"
+              className="w-full py-3 font-bold sm:col-span-2 lg:w-auto"
               onClick={handleWishlistToggle}
               startIcon={isWishlisted ? <Favorite /> : <FavoriteBorder />}
             >
@@ -492,10 +492,10 @@ export const ProductDetails = () => {
       <section
         ref={reviewSectionRef}
         id={REVIEW_SECTION_ID}
-        className="mt-20 grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr]"
+        className="mt-16 grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr]"
       >
         <div>
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-xl font-bold">Customer Reviews</h1>
               <p className="text-sm text-gray-500">
@@ -547,7 +547,7 @@ export const ProductDetails = () => {
           )}
         </div>
 
-        <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6 shadow-sm">
+        <div className="rounded-3xl border border-gray-200 bg-gray-50 p-5 shadow-sm sm:p-6">
           <h2 className="text-xl font-bold text-gray-900">Write a Review</h2>
           <p className="mt-2 text-sm text-gray-500">
             Only logged-in customers can submit a review.

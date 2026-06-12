@@ -60,8 +60,8 @@ export const LoginForm = () => {
     };
 
     return (
-        <Box sx={{ padding: { xs: 3, sm: 5 } }}>
-            <Typography variant="h5" sx={{ marginBottom: 3, fontWeight: 600, textAlign: "center", color: "teal" }}>
+        <Box sx={{ padding: { xs: 2, sm: 5 } }}>
+            <Typography variant="h6" sx={{ marginBottom: 2.5, fontWeight: 600, textAlign: "center", color: "teal" }}>
                 Login With Password
             </Typography>
 
@@ -72,7 +72,7 @@ export const LoginForm = () => {
             )}
 
             <Box component="form" onSubmit={formik.handleSubmit}>
-                <Grid container spacing={3}>
+                <Grid container spacing={2.5}>
                     <Grid size={{ xs: 12 }}>
                         <TextField
                             fullWidth
@@ -113,7 +113,7 @@ export const LoginForm = () => {
                             variant="contained"
                             type="submit"
                             disabled={auth.loading}
-                            sx={{ py: 1.5, fontSize: "1rem", fontWeight: 600 }}
+                            sx={{ py: 1.35, fontSize: "1rem", fontWeight: 600 }}
                         >
                             {auth.loading ? "Signing in..." : "Login"}
                         </Button>
@@ -121,7 +121,7 @@ export const LoginForm = () => {
                 </Grid>
             </Box>
 
-            <div className="my-5 flex items-center gap-3">
+            <div className="my-4 flex items-center gap-3 sm:my-5">
                 <div className="h-px flex-1 bg-slate-200" />
                 <span className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">or</span>
                 <div className="h-px flex-1 bg-slate-200" />

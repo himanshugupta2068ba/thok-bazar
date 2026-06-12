@@ -71,8 +71,8 @@ export const Cart = () => {
 
   if (!jwt) {
     return (
-      <div className="min-h-screen px-5 pb-10 pt-10 sm:px-10 md:px-60">
-        <div className="rounded-[32px] border border-dashed border-slate-300 bg-[linear-gradient(135deg,#f8fffd_0%,#f8fafc_100%)] p-8 text-center shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="min-h-screen px-4 pb-10 pt-6 sm:px-6 md:px-20">
+        <div className="rounded-4xl border border-dashed border-slate-300 bg-[linear-gradient(135deg,#f8fffd_0%,#f8fafc_100%)] p-6 text-center shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:p-8">
           <h1 className="text-2xl font-semibold text-gray-900">Login to view your cart</h1>
           <p className="mt-3 text-gray-600">
             Your saved items will appear here after you sign in.
@@ -86,16 +86,16 @@ export const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen px-5 pb-10 pt-10 sm:px-10 md:px-20 lg:px-28">
+    <div className="min-h-screen px-4 pb-10 pt-6 sm:px-6 md:px-10 lg:px-28">
       <div className="space-y-6">
-        <section className="rounded-[34px] border border-emerald-100 bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.18),_transparent_30%),linear-gradient(135deg,_#f7fffd_0%,#f8fafc_55%,#ffffff_100%)] px-6 py-7 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:px-8">
+        <section className="rounded-[34px] border border-emerald-100 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.18),transparent_30%),linear-gradient(135deg,#f7fffd_0%,#f8fafc_55%,#ffffff_100%)] px-5 py-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.32em] text-teal-700 shadow-sm">
                 <ShoppingBagOutlined sx={{ fontSize: 16 }} />
                 Shopping Bag
               </span>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Your cart, styled and ready
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -105,7 +105,7 @@ export const Cart = () => {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[24px] border border-white/80 bg-white/85 px-4 py-4 shadow-sm backdrop-blur">
+              <div className="rounded-3xl border border-white/80 bg-white/85 px-4 py-4 shadow-sm backdrop-blur">
                 <div className="flex items-center gap-2 text-slate-400">
                   <Inventory2Outlined sx={{ fontSize: 18 }} />
                   <span className="text-[11px] font-semibold uppercase tracking-[0.28em]">
@@ -117,7 +117,7 @@ export const Cart = () => {
                 </p>
               </div>
 
-              <div className="rounded-[24px] border border-white/80 bg-white/85 px-4 py-4 shadow-sm backdrop-blur">
+              <div className="rounded-3xl border border-white/80 bg-white/85 px-4 py-4 shadow-sm backdrop-blur">
                 <div className="flex items-center gap-2 text-slate-400">
                   <LocalOffer sx={{ fontSize: 18 }} />
                   <span className="text-[11px] font-semibold uppercase tracking-[0.28em]">
@@ -129,7 +129,7 @@ export const Cart = () => {
                 </p>
               </div>
 
-              <div className="rounded-[24px] border border-white/80 bg-white/85 px-4 py-4 shadow-sm backdrop-blur">
+              <div className="rounded-3xl border border-white/80 bg-white/85 px-4 py-4 shadow-sm backdrop-blur">
                 <div className="flex items-center gap-2 text-slate-400">
                   <SavingsOutlined sx={{ fontSize: 18 }} />
                   <span className="text-[11px] font-semibold uppercase tracking-[0.28em]">
@@ -162,13 +162,13 @@ export const Cart = () => {
             ) : null}
 
             {cart.error ? (
-              <div className="rounded-[24px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 {cart.error}
               </div>
             ) : null}
 
             {!cart.loading && !cartItems.length ? (
-              <div className="rounded-[32px] border border-dashed border-slate-300 bg-[linear-gradient(135deg,#f8fffd_0%,#f8fafc_100%)] p-8 text-center shadow-[0_16px_42px_rgba(15,23,42,0.05)]">
+              <div className="rounded-4xl border border-dashed border-slate-300 bg-[linear-gradient(135deg,#f8fffd_0%,#f8fafc_100%)] p-8 text-center shadow-[0_16px_42px_rgba(15,23,42,0.05)]">
                 <h2 className="text-xl font-semibold text-gray-900">Your cart is empty</h2>
                 <p className="mt-3 text-gray-500">
                   Add products from the catalog and they will appear here instantly.
@@ -291,7 +291,7 @@ export const Cart = () => {
                 </div>
               </div>
 
-              <section className="rounded-[24px] border border-slate-200 bg-slate-50/70">
+              <section className="rounded-3xl border border-slate-200 bg-slate-50/70">
                 <PricingCard cart={cartData} />
                 <div className="p-5">
                   <Button

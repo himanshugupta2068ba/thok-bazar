@@ -50,7 +50,7 @@ const CustomerAssistant = lazy(() =>
 
 export const CustomerRoutes = () => {
     return (
-        <>
+        <div className="overflow-x-clip">
  <Navbar/>
       <Suspense fallback={<RouteLoader label="Loading page..." />}>
         <Routes>
@@ -69,5 +69,5 @@ export const CustomerRoutes = () => {
         <CustomerAssistant />
       </Suspense>
       <Footer/>
-        </>)
+        </div>)
 }
