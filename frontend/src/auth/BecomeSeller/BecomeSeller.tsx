@@ -36,13 +36,13 @@ export const BecomeSeller = () => {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-700">
-                        Thok Bazar Sellers
+                        GrowLine Sellers
                       </p>
                       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.35rem]">
                         Seller Account
                       </h1>
                       <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-[15px]">
-                        Login to your seller dashboard or create an account to start selling on Thok Bazar.
+                        Login to your seller dashboard or create an account to start selling on GrowLine.
                       </p>
                     </div>
 
@@ -117,7 +117,7 @@ export const BecomeSeller = () => {
               <div className="relative flex h-full w-full flex-col justify-between gap-8">
                 <div>
                   <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100">
-                    Sell on Thok Bazar
+                    Sell on GrowLine
                   </span>
                   <h2 className="mt-5 max-w-lg text-3xl font-semibold leading-tight sm:text-[2.4rem]">
                     Start selling with a simple seller dashboard.

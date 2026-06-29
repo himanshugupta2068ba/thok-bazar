@@ -94,7 +94,7 @@ class AuthService{
     try {
       await sendVerificationEmail(
         normalizedEmail,
-        "Your Login OTP for Thok Bazar",
+        "Your Login OTP for GrowLine",
         `Your One Time Password(OTP) for login is ${otp}. It is valid for 10 minutes.`,
         {
           ...requestContext,

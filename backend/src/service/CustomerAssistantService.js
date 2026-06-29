@@ -52,7 +52,7 @@ const SEARCH_VARIANTS = {
 };
 
 const SHOPPING_GUIDE = [
-    "You help Thok Bazar customers discover products and get support.",
+    "You help GrowLine customers discover products and get support.",
     "For product recommendations, use tool data before naming specific products or prices.",
     "For order questions, use the customer orders tool when customer context is available.",
     "Never claim that you cancelled, refunded, returned, or modified an order yourself.",
@@ -211,7 +211,7 @@ class CustomerAssistantService {
                 type: "function",
                 name: "search_products",
                 description:
-                    "Search the live Thok Bazar catalog for products that match customer shopping needs such as cheapest t-shirt, budget shoes, or a category under a target price.",
+                    "Search the live GrowLine catalog for products that match customer shopping needs such as cheapest t-shirt, budget shoes, or a category under a target price.",
                 parameters: {
                     type: "object",
                     properties: {
@@ -545,7 +545,7 @@ class CustomerAssistantService {
         }
 
         if (/seller|sell/.test(lowerMessage)) {
-            return "If you want to sell on Thok Bazar, open the Become Seller page from the navbar or poster section.";
+            return "If you want to sell on GrowLine, open the Become Seller page from the navbar or poster section.";
         }
 
         return "I can help you find products, compare prices, and answer customer support questions about orders, profile, cart, and checkout.";

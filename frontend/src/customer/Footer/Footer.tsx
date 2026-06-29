@@ -35,7 +35,7 @@ const highlights = [
   },
   {
     title: "Seller Support",
-    description: "A smoother path for businesses growing on Thok Bazar.",
+    description: "A smoother path for businesses growing on GrowLine.",
     icon: SupportAgent,
   },
 ];
@@ -72,7 +72,7 @@ export const Footer = () => {
         <div className="grid gap-10 md:grid-cols-2 xl:grid-cols-[1.2fr_0.8fr_0.8fr_1.2fr]">
           <section>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
-              About Thok Bazar
+              About GrowLine
             </p>
             <h2 className="mt-4 max-w-sm text-3xl font-black leading-tight text-white">
               A modern marketplace for smarter everyday shopping.
@@ -175,7 +175,7 @@ export const Footer = () => {
 
         <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-slate-400 lg:flex-row lg:items-center lg:justify-between">
           <p>
-            Copyright {currentYear} Thok Bazar. Crafted for a polished ecommerce
+            Copyright {currentYear} GrowLine. Crafted for a polished ecommerce
             experience.
           </p>
           <p>

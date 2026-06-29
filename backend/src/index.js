@@ -61,7 +61,7 @@ app.use(express.json());
 app.use(requestLogger);
 
 app.get('/', (req, res) => {
-  res.send('Werlcome to the backend server of thok-bazar!');
+  res.send('Welcome to the backend server of GrowLine!');
 });
 app.get('/health', (_req, res) => {
   const readyState = mongoose.connection.readyState;

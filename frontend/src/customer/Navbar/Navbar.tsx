@@ -155,7 +155,7 @@ export const Navbar = () => {
                 className="min-w-0 flex-1 text-left"
                 aria-label="Go to home"
               >
-                <h1 className="logo truncate text-xl leading-none">The Bazar</h1>
+                <h1 className="logo truncate text-xl leading-none">GrowLine</h1>
               </button>
             </>
           )}
@@ -241,7 +241,7 @@ export const Navbar = () => {
                 onClick={() => navigate("/")}
                 className="logo cursor-pointer text-lg text-shadow-lg md:text-2xl"
               >
-                Thok Bazar
+                GrowLine
               </h1>
             </div>
             <ul className="hidden items-center font-medium text-gray-800 lg:flex lg:text-sm xl:text-base">
@@ -346,7 +346,7 @@ export const Navbar = () => {
                 },
               }}
             >
-              Sell on Thok Bazar
+              Sell on GrowLine
             </Button>
           </div>
         </div>
@@ -478,7 +478,7 @@ export const Navbar = () => {
                 },
               }}
             >
-              Sell on Thok Bazar
+              Sell on GrowLine
             </Button>
 
             <Button

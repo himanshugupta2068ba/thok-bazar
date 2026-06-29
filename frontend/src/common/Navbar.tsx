@@ -22,7 +22,7 @@ export const Navbar = ({ DrawerList }: any) => {
             onClick={() => navigate("/")}
             className="logo text-xl cursor-pointer"
           >
-            Thok Bazar
+            GrowLine
           </h1>
       </div>
 

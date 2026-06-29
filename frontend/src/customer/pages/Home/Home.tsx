@@ -57,7 +57,7 @@ const Home = () => {
                             <div className='max-w-xl'>
                                 <p className='text-xs font-semibold uppercase tracking-[0.3em] text-teal-700'>Seller Program</p>
                                 <h2 className='mt-3 text-xl font-black text-slate-900 sm:text-4xl'>
-                                    Sell Your Product on Thok Bazar
+                                    Sell Your Product on GrowLine
                                 </h2>
                                 <p className='mt-4 text-sm leading-7 text-slate-600 sm:text-base'>
                                     Reach wholesale buyers faster, manage your catalog in one place, and start growing your business with a cleaner seller flow.
@@ -77,7 +77,7 @@ const Home = () => {
                                             boxShadow: "none",
                                         }}
                                     >
-                                        Sell on Thok Bazar
+                                        Sell on GrowLine
                                     </Button>
                                 </div>
                             </div>
@@ -86,7 +86,7 @@ const Home = () => {
                                 <img
                                     className='h-45 w-full object-cover sm:h-70 lg:h-90'
                                     src={optimizeImageUrl('https://static-assets-web.flixcart.com/fk-sp-static/images/prelogin/banner/Desktop_sell.webp', { width: 1440, quality: 75 })}
-                                    alt='Become a seller with Thok Bazar'
+                                    alt='Become a seller with GrowLine'
                                     loading="lazy"
                                     decoding="async"
                                 />

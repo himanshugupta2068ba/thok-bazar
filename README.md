@@ -1,4 +1,4 @@
-# Thok Bazar
+# GrowLine
 
 Multi-vendor e-commerce platform with:
 
@@ -46,8 +46,8 @@ Before deploying, make sure all of these are ready:
 
 Example env files were added:
 
-- [backend/.env.example](/c:/Users/himan/Projects/thok-bazar2/backend/.env.example)
-- [frontend/.env.example](/c:/Users/himan/Projects/thok-bazar2/frontend/.env.example)
+- [backend/.env.example](backend/.env.example)
+- [frontend/.env.example](frontend/.env.example)
 
 ## Backend deployment on Render
 
@@ -117,7 +117,7 @@ This project uses `BrowserRouter`, so direct route refreshes need rewrites.
 
 A Vercel config was added here:
 
-- [frontend/vercel.json](/c:/Users/himan/Projects/thok-bazar2/frontend/vercel.json)
+- [frontend/vercel.json](frontend/vercel.json)
 
 That rewrite sends all routes to `index.html`, which is required for React Router deep links on Vercel.
 
