@@ -11,6 +11,7 @@ import { RouteLoader } from '../../../common/RouteLoader';
 
 const Deal = lazy(() => import('./Deal/Deal'));
 const HomeCategory = lazy(() => import('./HomeCategory/HomeCategoryard'));
+const HomeProducts = lazy(() => import('./HomeProducts'));
 
 
 const Home = () => {
@@ -51,13 +52,19 @@ const Home = () => {
                     )}
                 </section>
 
+                {shouldLoadCategories ? (
+                    <Suspense fallback={<RouteLoader label="Loading products..." />}>
+                        <HomeProducts/>
+                    </Suspense>
+                ) : null}
+
                 <section className='px-4 pt-12 sm:px-6 sm:pt-16 lg:px-20'>
                     <div className='overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-sm'>
                         <div className='grid gap-5 bg-[linear-gradient(135deg,#ecfeff_0%,#ffffff_48%,#fff7ed_100%)] p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.95fr)] lg:items-center lg:p-10'>
                             <div className='max-w-xl'>
                                 <p className='text-xs font-semibold uppercase tracking-[0.3em] text-teal-700'>Seller Program</p>
                                 <h2 className='mt-3 text-xl font-black text-slate-900 sm:text-4xl'>
-                                    Sell Your Product on GrowLine
+                                    Grow with GrowLine
                                 </h2>
                                 <p className='mt-4 text-sm leading-7 text-slate-600 sm:text-base'>
                                     Reach wholesale buyers faster, manage your catalog in one place, and start growing your business with a cleaner seller flow.
@@ -77,7 +84,7 @@ const Home = () => {
                                             boxShadow: "none",
                                         }}
                                     >
-                                        Sell on GrowLine
+                                        Grow on GrowLine
                                     </Button>
                                 </div>
                             </div>

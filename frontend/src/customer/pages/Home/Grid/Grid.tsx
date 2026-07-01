@@ -1,9 +1,11 @@
 import { useAppSelector } from "../../../../Redux Toolkit/store";
 import { selectGridHomeCategories } from "../../../../Redux Toolkit/featurs/coustomer/homeCategorySlice";
 import { optimizeImageUrl } from "../../../../util/image";
+import { useNavigate } from "react-router";
 
 const Grid=()=>{
     const gridItems = useAppSelector(selectGridHomeCategories);
+    const navigate = useNavigate();
 
     const getGridImage = (index: number, fallback: string) =>
         gridItems[index]?.image || fallback;
@@ -50,23 +52,82 @@ const Grid=()=>{
         },
     ];
 
+    const featuredItem = gridLayout[0];
+    const featuredTitle = getGridName(0, "Fashion forward styles");
+
     return(
-        <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:h-[600px] lg:grid-cols-12 lg:grid-rows-12 lg:px-20">
-            {gridLayout.map((item, index) => (
-                <div
-                    key={item.fallbackAlt}
-                    className={`${item.wrapperClassName} overflow-hidden rounded-[24px] border border-white/60 bg-white shadow-sm`}
-                >
+        <>
+            <div className="px-4 sm:px-6 lg:hidden">
+                <div className="relative h-[min(68vh,540px)] min-h-[390px] overflow-hidden rounded-[32px] bg-slate-950 shadow-[0_22px_55px_rgba(15,23,42,0.22)] sm:h-[min(58vh,560px)] sm:min-h-[430px]">
                     <img
-                        className="h-full w-full object-cover"
-                        src={optimizeImageUrl(getGridImage(index, item.fallbackImage), item.imageOptions)}
-                        alt={getGridName(index, item.fallbackAlt)}
-                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover"
+                        src={optimizeImageUrl(getGridImage(0, featuredItem.fallbackImage), {
+                            width: 920,
+                            height: 1200,
+                            fit: "crop",
+                        })}
+                        alt={featuredTitle}
+                        loading="eager"
                         decoding="async"
                     />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.08)_0%,rgba(15,23,42,0.38)_48%,rgba(15,23,42,0.9)_100%)]" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white sm:p-8">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/80">
+                            Fresh Arrivals
+                        </p>
+                        <h2 className="mt-3 max-w-sm text-3xl font-black leading-tight sm:text-4xl">
+                            {featuredTitle}
+                        </h2>
+                        <p className="mt-4 max-w-md text-sm leading-6 text-white/88 sm:text-base">
+                            Swipe through bold edits built for quick discovery.
+                        </p>
+                        <div className="mt-6 flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => navigate("/products")}
+                                className="rounded-full bg-teal-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-500"
+                            >
+                                Shop
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => navigate("/products")}
+                                className="rounded-full border border-white/65 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+                            >
+                                Explore
+                            </button>
+                        </div>
+                        <div className="mt-5 flex items-center gap-2" aria-hidden="true">
+                            {gridLayout.map((item, index) => (
+                                <span
+                                    key={`${item.fallbackAlt}-dot`}
+                                    className={`h-3 rounded-full ${
+                                        index === 0 ? "w-8 bg-white" : "w-3 bg-white/45"
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
-            ))}
-        </div>
+            </div>
+
+            <div className="hidden gap-4 px-20 lg:grid lg:h-[600px] lg:grid-cols-12 lg:grid-rows-12">
+                {gridLayout.map((item, index) => (
+                    <div
+                        key={item.fallbackAlt}
+                        className={`${item.wrapperClassName} overflow-hidden rounded-[24px] border border-white/60 bg-white shadow-sm`}
+                    >
+                        <img
+                            className="h-full w-full object-cover"
+                            src={optimizeImageUrl(getGridImage(index, item.fallbackImage), item.imageOptions)}
+                            alt={getGridName(index, item.fallbackAlt)}
+                            loading="lazy"
+                            decoding="async"
+                        />
+                    </div>
+                ))}
+            </div>
+        </>
     )
 }
 export default Grid;

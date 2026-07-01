@@ -189,7 +189,7 @@ export const Navbar = () => {
             : "max-h-24 translate-y-0 opacity-100"
         }`}
       >
-        <div className="flex items-stretch gap-1.5 overflow-x-auto px-3 pt-2">
+        <div className="grid w-full grid-cols-5 items-stretch gap-1 px-2 pt-2">
           {mobileCategoryItems.map((item) => {
             const isActive = item.categoryid
               ? location.pathname === `/products/${item.categoryid}`
@@ -204,7 +204,7 @@ export const Navbar = () => {
                     ? handleMainCategoryClick(item.categoryid)
                     : navigate("/products")
                 }
-                className={`mobile-category-item flex min-w-18.5 flex-col items-center gap-1 border-b-[3px] px-2 pb-2 text-xs font-medium transition-all duration-300 ease-out ${
+                className={`mobile-category-item flex min-w-0 flex-col items-center gap-1 border-b-[3px] px-1 pb-2 text-xs font-medium transition-all duration-300 ease-out ${
                   isActive
                     ? "border-teal-600 text-slate-950"
                     : "border-transparent text-slate-700"
@@ -219,7 +219,7 @@ export const Navbar = () => {
                 >
                   <Storefront sx={{ fontSize: 22, color: isActive ? "#0f766e" : "#111827" }} />
                 </span>
-                <span className="max-w-17.5 truncate leading-tight">{item.name}</span>
+                <span className="w-full truncate text-center leading-tight">{item.name}</span>
               </button>
             );
           })}
@@ -346,7 +346,7 @@ export const Navbar = () => {
                 },
               }}
             >
-              Sell on GrowLine
+              Grow on GrowLine
             </Button>
           </div>
         </div>
@@ -478,7 +478,7 @@ export const Navbar = () => {
                 },
               }}
             >
-              Sell on GrowLine
+              Grow on GrowLine
             </Button>
 
             <Button
