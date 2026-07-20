@@ -1,7 +1,10 @@
 import { Box, Button, Grid, TextField } from "@mui/material";
 import { useFormik } from "formik";
 
-export const AddressForm = ({ onSave, onCancel }: any) => {
+type AddressValues = { name: string; address: string; city: string; state: string; pincode: string; mobile: string; locality: string };
+type AddressFormProps = { onSave?: (values: AddressValues) => void | Promise<void>; onCancel?: () => void; initialValues?: Partial<AddressValues>; submitting?: boolean };
+
+export const AddressForm = ({ onSave, onCancel, initialValues, submitting = false }: AddressFormProps) => {
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -11,8 +14,10 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
       pincode: "",
       mobile: "",
       locality: "",
+      ...initialValues,
     },
-    onSubmit: (values) => {
+    enableReinitialize: true,
+    onSubmit: async (values) => {
       const payload = {
         name: values.name?.trim(),
         mobile: values.mobile?.trim(),
@@ -24,7 +29,7 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
       };
 
       if (onSave) {
-        onSave(payload);
+        await onSave(payload);
       }
 
       formik.resetForm();
@@ -44,6 +49,7 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
               variant="outlined"
               value={formik.values.name}
               onChange={formik.handleChange}
+              required
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -54,6 +60,7 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
               variant="outlined"
               value={formik.values.mobile}
               onChange={formik.handleChange}
+              required inputProps={{ inputMode: "numeric", pattern: "[0-9]{10}" }}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -64,6 +71,7 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
               variant="outlined"
               value={formik.values.locality}
               onChange={formik.handleChange}
+              required
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
@@ -76,7 +84,7 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
               onChange={formik.handleChange}
             />
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
               name="city"
@@ -84,9 +92,10 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
               variant="outlined"
               value={formik.values.city}
               onChange={formik.handleChange}
+              required
             />
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
               name="state"
@@ -94,9 +103,10 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
               variant="outlined"
               value={formik.values.state}
               onChange={formik.handleChange}
+              required
             />
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
               name="pincode"
@@ -104,10 +114,11 @@ export const AddressForm = ({ onSave, onCancel }: any) => {
               variant="outlined"
               value={formik.values.pincode}
               onChange={formik.handleChange}
+              required inputProps={{ inputMode: "numeric", pattern: "[0-9]{6}" }}
             />
           </Grid>
           <Grid size={{ xs: 12 }} className="text-center pt-5 flex justify-center gap-3">
-            <Button sx={{ py: "14px" }} type="submit" variant="contained">
+            <Button sx={{ py: "14px" }} type="submit" variant="contained" disabled={submitting}>
               Save Address
             </Button>
             <Button sx={{ py: "14px" }} variant="outlined" onClick={onCancel}>

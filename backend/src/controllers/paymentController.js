@@ -19,18 +19,27 @@ const paymentSucessHandler=async(req,res)=>{
 
         const user=req.user;
         const paymentOrder=await paymentService.getPaymentOrdersByPaymentLinkId(paymentLinkId);
-        const paymentSuccess=await paymentService.proceedPaymentOrder(paymentOrder,paymentLinkId,paymentId);
+        const paymentSuccess=await paymentService.proceedPaymentOrder(
+            paymentOrder,
+            paymentLinkId,
+            paymentId,
+            user._id,
+        );
         if(paymentSuccess){
             for(let orderId of paymentOrder.orders){
                 const order=await OrderService.findOrderById(orderId);
 
-                await TransactionService.createTransaction(
+                const transactionResult=await TransactionService.createTransaction(
                     user._id,
                     order._id,
                     order.seller,
                     paymentId,
                     paymentLinkId,
                 );
+
+                if(!transactionResult.created){
+                    continue;
+                }
 
                 const seller=await SellerService.getSellerById(order.seller);
 
@@ -57,7 +66,9 @@ const paymentSucessHandler=async(req,res)=>{
     }
 } catch(error){
         console.error('Error processing payment success:',error);
-        return res.status(500).json({message:'Internal server error'});
+        return res.status(error.statusCode || 500).json({
+            message:error.statusCode ? error.message : 'Unable to verify and process payment',
+        });
     }
 }
 module.exports={paymentSucessHandler};

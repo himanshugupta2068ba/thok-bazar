@@ -34,6 +34,44 @@ export const deleteUserAddress = createAsyncThunk(
   },
 );
 
+const authHeaders = (jwt: string) => ({ Authorization: `Bearer ${jwt}` });
+
+export const updateUserProfile = createAsyncThunk(
+  "/users/updateUserProfile",
+  async ({ values, jwt }: { values: { name: string; email: string; mobile: string }; jwt: string }, { rejectWithValue }) => {
+    try {
+      return (await api.put('/users/profile', values, { headers: authHeaders(jwt) })).data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data || { message: 'Failed to update profile' });
+    }
+  },
+);
+
+export const changeUserPassword = createAsyncThunk(
+  "/users/changePassword",
+  async ({ values, jwt }: { values: { currentPassword: string; newPassword: string }; jwt: string }, { rejectWithValue }) => {
+    try {
+      return (await api.put('/users/password', values, { headers: authHeaders(jwt) })).data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data || { message: 'Failed to change password' });
+    }
+  },
+);
+
+export const saveUserAddress = createAsyncThunk(
+  "/users/saveAddress",
+  async ({ addressId, values, jwt }: { addressId?: string; values: Record<string, string>; jwt: string }, { rejectWithValue }) => {
+    try {
+      const response = addressId
+        ? await api.put(`/users/address/${addressId}`, values, { headers: authHeaders(jwt) })
+        : await api.post('/users/address', values, { headers: authHeaders(jwt) });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data || { message: 'Failed to save address' });
+    }
+  },
+);
+
 
 interface UserState {
   user: any | null;
@@ -81,6 +119,8 @@ const userSlice = createSlice({
           state.loading = false;
           state.error = action.payload || null;
         });
+        builder.addCase(updateUserProfile.fulfilled, (state, action) => { state.user = action.payload; });
+        builder.addCase(saveUserAddress.fulfilled, (state, action) => { state.user = action.payload; });
     },
 });
 

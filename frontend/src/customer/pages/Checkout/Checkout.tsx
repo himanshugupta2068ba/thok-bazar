@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { AddressCard } from "./AddressCard";
 import { Add } from "@mui/icons-material";
-import { useMemo, useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { AddressForm } from "./AddressForm";
 import React from "react";
 import { PricingCard } from "../Cart/PricingCard";
@@ -21,6 +21,7 @@ import {
   removeManyFromWishlist,
 } from "../../../Redux Toolkit/featurs/coustomer/wishlistSlice";
 import { useNavigate } from "react-router";
+import { deleteUserAddress, saveUserAddress } from "../../../Redux Toolkit/featurs/coustomer/userSlice";
 import {
   clearPurchasedProductIds,
   persistPurchasedProductIds,
@@ -48,6 +49,16 @@ const paymentGatwayList = [
     value: "cod",
   },
 ];
+type CheckoutAddress = { _id?: string; name?: string; mobile?: string; locality?: string; address?: string; city?: string; state?: string; pincode?: string };
+type CheckoutCartItem = { productId?: string; product?: { _id?: string } };
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const value = error as { message?: string; error?: string };
+    return value.message || value.error || fallback;
+  }
+  return fallback;
+};
 
 export const Checkout = () => {
   const dispatch = useAppDispatch();
@@ -56,49 +67,41 @@ export const Checkout = () => {
   const [paymentGateway,setPaymentGateway] = useState(paymentGatwayList[0].value);
   const { cart, auth, user, order } = useAppSelector((state) => state);
   const wishlistUserKey = buildWishlistUserKey(auth.user, user.user);
-  const [addedAddresses, setAddedAddresses] = useState<any[]>([]);
-  const [removedSavedAddressIds, setRemovedSavedAddressIds] = useState<string[]>([]);
   const [checkoutError, setCheckoutError] = useState("");
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [selectedAddress, setSelectedAddress] = useState("0");
 
-  const savedAddresses = useMemo(
-    () =>
-      (Array.isArray(user.user?.address) ? user.user.address : []).filter(
-        (address: any) => !removedSavedAddressIds.includes(String(address?._id)),
-      ),
-    [removedSavedAddressIds, user.user?.address],
-  );
+  const savedAddresses: CheckoutAddress[] = Array.isArray(user.user?.address) ? user.user.address : [];
 
-  const addresses = useMemo(
-    () => [...savedAddresses, ...addedAddresses],
-    [addedAddresses, savedAddresses],
-  );
+  const addresses = savedAddresses;
 
-  const handleChange = (event: any) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSelectedAddress(event.target.value);
   };
 
-  const handleSaveAddress = (addressPayload: any) => {
-    setAddedAddresses((prev) => [...prev, addressPayload]);
-    setSelectedAddress(String(addresses.length));
-    setCheckoutError("");
-    handleClose();
+  const handleSaveAddress = async (addressPayload: Record<string, string>) => {
+    const jwt = auth.jwt?.trim() || localStorage.getItem("jwt") || "";
+    try {
+      const updatedUser = await dispatch(saveUserAddress({ values: addressPayload, jwt })).unwrap();
+      const nextAddresses = Array.isArray(updatedUser?.address) ? updatedUser.address : [];
+      setSelectedAddress(String(Math.max(0, nextAddresses.length - 1)));
+      setCheckoutError(""); handleClose();
+    } catch (error: unknown) {
+      setCheckoutError(getErrorMessage(error, "Unable to save address."));
+    }
   };
 
-  const handleDeleteAddress = (indexToDelete: number) => {
-    if (indexToDelete < savedAddresses.length) {
-      const addressId = savedAddresses[indexToDelete]?._id;
-      if (addressId) {
-        setRemovedSavedAddressIds((prev) => [...prev, String(addressId)]);
-      }
-    } else {
-      const addedIndex = indexToDelete - savedAddresses.length;
-      setAddedAddresses((prev) => prev.filter((_, index) => index !== addedIndex));
+  const handleDeleteAddress = async (indexToDelete: number) => {
+    const addressId = savedAddresses[indexToDelete]?._id;
+    const jwt = auth.jwt?.trim() || localStorage.getItem("jwt") || "";
+    if (!addressId) return;
+    try {
+      await dispatch(deleteUserAddress({ addressId: String(addressId), jwt })).unwrap();
+      setSelectedAddress("0"); setCheckoutError("");
+    } catch (error: unknown) {
+      setCheckoutError(getErrorMessage(error, "Unable to delete address."));
     }
-
-    setSelectedAddress("0");
   };
 
   const handleCheckout = async () => {
@@ -118,9 +121,9 @@ export const Checkout = () => {
 
     setCheckoutError("");
     const purchasedProductIds = (cart.cart?.items || [])
-      .map((item: any) => item?.productId || item?.product?._id)
-      .filter(Boolean)
-      .map((productId: any) => String(productId));
+      .map((item: CheckoutCartItem) => item?.productId || item?.product?._id)
+      .filter((productId: string | undefined): productId is string => Boolean(productId))
+      .map((productId) => String(productId));
 
     persistPurchasedProductIds(purchasedProductIds);
 
@@ -151,13 +154,13 @@ export const Checkout = () => {
       clearPurchasedProductIds();
 
       navigate("/customer/profile/orders", { replace: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       clearPurchasedProductIds();
-      setCheckoutError(error?.message || error?.error || "Unable to place order");
+      setCheckoutError(getErrorMessage(error, "Unable to place order"));
     }
   };
 
-  const handleChangePaymentGateway = (event: any) => {
+  const handleChangePaymentGateway = (event: ChangeEvent<HTMLInputElement>) => {
     setPaymentGateway(event.target.value);
   }
   return (

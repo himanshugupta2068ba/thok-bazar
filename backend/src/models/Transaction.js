@@ -35,5 +35,7 @@ const transactionSchema=new mongoose.Schema({
     }
 },{timestamps:true});
 
+transactionSchema.index({ order: 1, seller: 1 }, { unique: true });
+
 const Transaction=mongoose.model('Transaction',transactionSchema);
 module.exports=Transaction;

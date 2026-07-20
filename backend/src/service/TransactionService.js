@@ -3,6 +3,8 @@ const OrderService = require('./OrderService');
 const SellerService = require('./SellerService');
 const PaymentStatus = require('../domain/PaymentStatus');
 const mongoose = require('mongoose');
+const razorpay = require('../config/razorpayClient');
+const paymentMethodUtils = require('../util/paymentMethod');
 
 
 class TransactionService {
@@ -21,7 +23,7 @@ class TransactionService {
 
         const existingTransaction = await Transaction.findOne({ order: orderId, seller: sellerId });
         if (existingTransaction) {
-            return existingTransaction;
+            return { transaction: existingTransaction, created: false };
         }
 
         const transaction = new Transaction({
@@ -32,7 +34,15 @@ class TransactionService {
             paymentLinkId,
             status: 'RECEIVED',
         });
-        return await transaction.save();
+        try {
+            return { transaction: await transaction.save(), created: true };
+        } catch (error) {
+            if (error?.code === 11000) {
+                const concurrentTransaction = await Transaction.findOne({ order: orderId, seller: sellerId });
+                return { transaction: concurrentTransaction, created: false };
+            }
+            throw error;
+        }
     }
 
     async markTransactionRefunded(orderId) {
@@ -59,6 +69,29 @@ class TransactionService {
 
         if (!transaction.order?._id) {
             throw new Error('Linked order not found for this transaction');
+        }
+
+        if (transaction.status === 'REFUNDED') {
+            return transaction;
+        }
+
+        if (!paymentMethodUtils.isCashOnDelivery(transaction.order.paymentMethod)) {
+            if (!transaction.transactionId) {
+                throw new Error('Payment provider transaction ID is missing');
+            }
+
+            const amount = Math.round(Number(transaction.order.totalSellingPrice || 0) * 100);
+            if (amount <= 0) {
+                throw new Error('Refund amount is invalid');
+            }
+
+            await razorpay.payments.refund(transaction.transactionId, {
+                amount,
+                notes: {
+                    orderId: String(transaction.order._id),
+                    sellerId: String(sellerId),
+                },
+            });
         }
 
         await OrderService.cancelOrderBySeller(transaction.order._id, sellerId, {

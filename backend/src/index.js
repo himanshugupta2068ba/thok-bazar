@@ -8,6 +8,7 @@ const dotenv = require('dotenv');
 const connectDb = require('./db/db');
 const corsOptions = require('./config/corsOptions');
 const { requestLogger, logInfo, logWarn } = require('./util/requestTrace');
+const securityHeaders = require('./middlewares/securityHeaders');
 
 const isHostedRuntime = () =>
   [
@@ -57,7 +58,8 @@ const toPositiveInteger = (value, fallbackValue) => {
 
 app.set('trust proxy', true);
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(securityHeaders);
+app.use(express.json({ limit: '1mb' }));
 app.use(requestLogger);
 
 app.get('/', (req, res) => {
@@ -68,6 +70,13 @@ app.get('/health', (_req, res) => {
 
   res.status(200).json({
     status: readyState === 1 ? 'ok' : 'degraded',
+    database: getDatabaseStatus(),
+  });
+});
+app.get('/ready', (_req, res) => {
+  const ready = mongoose.connection.readyState === 1;
+  res.status(ready ? 200 : 503).json({
+    status: ready ? 'ready' : 'not-ready',
     database: getDatabaseStatus(),
   });
 });
@@ -105,6 +114,17 @@ app.use('/home-categories', HomeCategoryRoutes);
 app.use('/deals', dealRoutes);
 app.use('/coupons', couponRoutes);
 app.use('/ai', customerAssistantRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({ message: `Route ${req.method} ${req.originalUrl} was not found` });
+});
+
+app.use((error, _req, res, _next) => {
+  console.error('Unhandled request error:', error);
+  res.status(Number(error?.statusCode) || 500).json({
+    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : error?.message || 'Internal server error',
+  });
+});
 
 const port = toPositiveInteger(process.env.PORT, 5000);
 const dbRetryDelayMs = toPositiveInteger(process.env.MONGODB_RETRY_DELAY_MS, 5000);

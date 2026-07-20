@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 import { Route, Routes } from "react-router"
 import { RouteLoader } from "../common/RouteLoader"
+import { NotFound } from "../common/NotFound"
 
 const CouponForm = lazy(() =>
     import("../admin/Coupon/couponForm").then((module) => ({
@@ -60,6 +61,7 @@ export const AdminRoutes = () => {
           <Route path="/shop-by-category" element={<ShopByCategory/>}/>
           <Route path="/deal" element={<Deal/>}/>
           <Route path="/account" element={<AdminAccount/>}/>
+          <Route path="*" element={<NotFound area="admin" />}/>
         </Routes>
        </Suspense>
     )

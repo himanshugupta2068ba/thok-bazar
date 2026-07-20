@@ -11,6 +11,10 @@ class UserController {
         this.signin = this.signin.bind(this);
         this.googleSignin = this.googleSignin.bind(this);
         this.getUserProfile = this.getUserProfile.bind(this);
+        this.updateUserProfile = this.updateUserProfile.bind(this);
+        this.changePassword = this.changePassword.bind(this);
+        this.createUserAddress = this.createUserAddress.bind(this);
+        this.updateUserAddress = this.updateUserAddress.bind(this);
         this.deleteUserAddress = this.deleteUserAddress.bind(this);
         this.findUserByEmail = this.findUserByEmail.bind(this);
     }
@@ -75,6 +79,43 @@ class UserController {
             const { addressId } = req.params;
             const updatedUser = await UserService.deleteUserAddress(user._id, addressId);
             res.status(200).json(updatedUser);
+        } catch (error) {
+            this.handelErrors(error, res);
+        }
+    }
+
+    async updateUserProfile(req, res) {
+        try {
+            res.status(200).json(await UserService.updateUserProfile(req.user._id, req.body));
+        } catch (error) {
+            this.handelErrors(error, res);
+        }
+    }
+
+    async changePassword(req, res) {
+        try {
+            await UserService.changePassword(req.user._id, req.body);
+            res.status(200).json({ message: 'Password changed successfully' });
+        } catch (error) {
+            this.handelErrors(error, res);
+        }
+    }
+
+    async createUserAddress(req, res) {
+        try {
+            res.status(201).json(await UserService.createUserAddress(req.user._id, req.body));
+        } catch (error) {
+            this.handelErrors(error, res);
+        }
+    }
+
+    async updateUserAddress(req, res) {
+        try {
+            res.status(200).json(await UserService.updateUserAddress(
+                req.user._id,
+                req.params.addressId,
+                req.body,
+            ));
         } catch (error) {
             this.handelErrors(error, res);
         }

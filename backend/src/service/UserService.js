@@ -165,6 +165,91 @@ class UserService {
 
         return await User.findById(userId).populate('address');
     }
+
+    async updateUserProfile(userId, values = {}) {
+        const name = normalizeName(values.name);
+        const email = normalizeEmail(values.email);
+        const mobile = normalizeMobile(values.mobile);
+
+        if (!name) throw new Error('Name is required');
+        if (!validator.isEmail(email)) throw new Error('Valid email is required');
+        if (!/^\d{10}$/.test(mobile)) throw new Error('Mobile must be 10 digits');
+
+        const currentUser = await User.findById(userId);
+        if (!currentUser) throw new Error('User not found');
+        if (email !== currentUser.email) {
+            throw new Error('Email changes require verification and are not available here');
+        }
+
+        const duplicate = await User.findOne({
+            _id: { $ne: userId },
+            mobile,
+        });
+        if (duplicate) throw new Error('Mobile is already in use');
+
+        return await User.findByIdAndUpdate(
+            userId,
+            { name, email, mobile },
+            { new: true, runValidators: true },
+        ).populate('address');
+    }
+
+    async changePassword(userId, values = {}) {
+        const currentPassword = String(values.currentPassword || '');
+        const newPassword = String(values.newPassword || '');
+        if (!currentPassword) throw new Error('Current password is required');
+        if (newPassword.length < 8) throw new Error('New password must be at least 8 characters');
+        if (currentPassword === newPassword) throw new Error('New password must be different');
+
+        const user = await User.findById(userId).select('+password');
+        if (!user || !(await verifyPasswordAndUpgrade(user, currentPassword))) {
+            throw new Error('Current password is incorrect');
+        }
+        user.password = await hashPassword(newPassword);
+        await user.save();
+    }
+
+    normalizeAddress(values = {}) {
+        const address = {
+            name: normalizeName(values.name),
+            mobile: normalizeMobile(values.mobile),
+            locality: String(values.locality || '').trim(),
+            address: String(values.address || '').trim(),
+            city: String(values.city || '').trim(),
+            state: String(values.state || '').trim(),
+            pincode: String(values.pincode || '').replace(/\D/g, ''),
+        };
+        if (!address.name || !address.address || !address.city || !address.state) {
+            throw new Error('Name, street address, city, and state are required');
+        }
+        if (!/^\d{10}$/.test(address.mobile)) throw new Error('Mobile must be 10 digits');
+        if (!/^\d{6}$/.test(address.pincode)) throw new Error('Pincode must be 6 digits');
+        return address;
+    }
+
+    async createUserAddress(userId, values) {
+        const address = await Address.create(this.normalizeAddress(values));
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { $push: { address: address._id } },
+            { new: true },
+        ).populate('address');
+        if (!user) {
+            await Address.findByIdAndDelete(address._id);
+            throw new Error('User not found');
+        }
+        return user;
+    }
+
+    async updateUserAddress(userId, addressId, values) {
+        if (!mongoose.Types.ObjectId.isValid(addressId)) throw new Error('Invalid address id');
+        const user = await User.findOne({ _id: userId, address: addressId });
+        if (!user) throw new Error('Address does not belong to user');
+        await Address.findByIdAndUpdate(addressId, this.normalizeAddress(values), {
+            runValidators: true,
+        });
+        return await User.findById(userId).populate('address');
+    }
 }
 
 module.exports = new UserService();

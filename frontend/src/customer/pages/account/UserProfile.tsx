@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
+    Alert,
     Button,
     Dialog,
     DialogActions,
@@ -8,42 +9,33 @@ import {
     Stack,
     TextField,
 } from "@mui/material";
-import { useAppSelector } from "../../../Redux Toolkit/store";
+import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/store";
 import { ProfileFieldCart } from "./ProfileFieldCart";
-import { CUSTOMER_PROFILE_OVERRIDES_KEY } from "../../../util/customerSession";
+import { changeUserPassword, updateUserProfile } from "../../../Redux Toolkit/featurs/coustomer/userSlice";
 
 export const UserProfile = () => {
-    const { auth } = useAppSelector((state: any) => state);
+    const dispatch = useAppDispatch();
+    const { auth, user } = useAppSelector((state) => state);
     const [isEditing, setIsEditing] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [saving, setSaving] = useState(false);
     const [formValues, setFormValues] = useState({
         name: "",
         email: "",
         mobile: "",
     });
-    const [overrides, setOverrides] = useState<{ name?: string; email?: string; mobile?: string }>({});
-
-    useEffect(() => {
-        try {
-            const stored = localStorage.getItem(CUSTOMER_PROFILE_OVERRIDES_KEY);
-            if (stored) {
-                setOverrides(JSON.parse(stored));
-            }
-        } catch {
-            setOverrides({});
-        }
-    }, []);
+    const [passwordValues, setPasswordValues] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
     const profile = useMemo(() => {
-        const baseName = auth.user?.fullName || auth.user?.name || "N/A";
-        const baseEmail = auth.user?.email || "N/A";
-        const baseMobile = auth.user?.mobile || "N/A";
+        const source = user.user || auth.user || {};
 
         return {
-            name: overrides.name || baseName,
-            email: overrides.email || baseEmail,
-            mobile: overrides.mobile || baseMobile,
+            name: source.fullName || source.name || "N/A",
+            email: source.email || "N/A",
+            mobile: source.mobile || "N/A",
         };
-    }, [auth.user, overrides]);
+    }, [auth.user, user.user]);
 
     const handleOpenEdit = () => {
         setFormValues({
@@ -54,25 +46,42 @@ export const UserProfile = () => {
         setIsEditing(true);
     };
 
-    const handleSave = () => {
-        const nextOverrides = {
-            name: formValues.name.trim() || undefined,
-            email: formValues.email.trim() || undefined,
-            mobile: formValues.mobile.trim() || undefined,
-        };
+    const getJwt = () => auth.jwt?.trim() || localStorage.getItem("jwt") || "";
+    const handleSave = async () => {
+        setSaving(true); setMessage(null);
+        try {
+            await dispatch(updateUserProfile({ values: formValues, jwt: getJwt() })).unwrap();
+            setMessage({ type: "success", text: "Profile updated successfully." });
+            setIsEditing(false);
+        } catch (error: unknown) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "Unable to update profile." });
+        } finally { setSaving(false); }
+    };
 
-        setOverrides(nextOverrides);
-        localStorage.setItem(CUSTOMER_PROFILE_OVERRIDES_KEY, JSON.stringify(nextOverrides));
-        setIsEditing(false);
+    const handlePasswordSave = async () => {
+        if (passwordValues.newPassword !== passwordValues.confirmPassword) {
+            setMessage({ type: "error", text: "New passwords do not match." }); return;
+        }
+        setSaving(true); setMessage(null);
+        try {
+            await dispatch(changeUserPassword({ values: passwordValues, jwt: getJwt() })).unwrap();
+            setPasswordValues({ currentPassword: "", newPassword: "", confirmPassword: "" });
+            setIsChangingPassword(false);
+            setMessage({ type: "success", text: "Password changed successfully." });
+        } catch (error: unknown) {
+            setMessage({ type: "error", text: error instanceof Error ? error.message : "Unable to change password." });
+        } finally { setSaving(false); }
     };
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-4">
+            {message && <Alert severity={message.type} sx={{ mb: 2 }}>{message.text}</Alert>}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h2 className="text-lg font-semibold">Personal Information</h2>
-                <Button variant="outlined" onClick={handleOpenEdit}>
-                    Edit
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button variant="outlined" onClick={() => setIsChangingPassword(true)}>Change password</Button>
+                    <Button variant="contained" onClick={handleOpenEdit}>Edit profile</Button>
+                </div>
             </div>
 
             <Stack spacing={1.5}>
@@ -98,9 +107,8 @@ export const UserProfile = () => {
                             label="Email"
                             type="email"
                             value={formValues.email}
-                            onChange={(event) =>
-                                setFormValues((prev) => ({ ...prev, email: event.target.value }))
-                            }
+                            disabled
+                            helperText="Email changes require account verification."
                             fullWidth
                         />
                         <TextField
@@ -115,9 +123,23 @@ export const UserProfile = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setIsEditing(false)}>Cancel</Button>
-                    <Button onClick={handleSave} variant="contained">
+                    <Button onClick={handleSave} variant="contained" disabled={saving}>
                         Save
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={isChangingPassword} onClose={() => setIsChangingPassword(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Change password</DialogTitle>
+                <DialogContent><Stack spacing={2} sx={{ pt: 1 }}>
+                    {([['currentPassword', 'Current password'], ['newPassword', 'New password'], ['confirmPassword', 'Confirm new password']] as const).map(([name, label]) => (
+                        <TextField key={name} label={label} type="password" value={passwordValues[name]}
+                            onChange={(event) => setPasswordValues((prev) => ({ ...prev, [name]: event.target.value }))} fullWidth />
+                    ))}
+                </Stack></DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsChangingPassword(false)}>Cancel</Button>
+                    <Button onClick={handlePasswordSave} variant="contained" disabled={saving}>Update password</Button>
                 </DialogActions>
             </Dialog>
         </div>

@@ -185,9 +185,34 @@ class PaymentService {
 
 
   // Process payment result
-  async proceedPaymentOrder(paymentOrder, paymentLinkId, paymentId) {
+  async proceedPaymentOrder(paymentOrder, paymentLinkId, paymentId, userId) {
 
-    // Idempotent behavior: if already completed, treat as success.
+    if (String(paymentOrder.user) !== String(userId)) {
+      const error = new Error("Payment order does not belong to this customer");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (paymentOrder.paymentLinkId && paymentOrder.paymentLinkId !== paymentLinkId) {
+      throw new Error("Payment link does not match the stored payment order");
+    }
+
+    const payment = await razorpay.payments.fetch(paymentId);
+
+    if (payment.payment_link_id && payment.payment_link_id !== paymentLinkId) {
+      throw new Error("Payment does not belong to this payment link");
+    }
+
+    const expectedAmount = Math.round(Number(paymentOrder.amount || 0) * 100);
+    if (Number(payment.amount) !== expectedAmount || payment.currency !== "INR") {
+      throw new Error("Captured payment amount or currency does not match the order");
+    }
+
+    if (payment.status !== "captured") {
+      return false;
+    }
+
+    // A verified retry can safely continue so any interrupted accounting work is repaired.
     if (paymentOrder.status === PaymentStatus.COMPLETED) {
       return true;
     }
@@ -195,8 +220,6 @@ class PaymentService {
     if (paymentOrder.status !== PaymentStatus.PENDING) {
       return false;
     }
-
-    const payment = await razorpay.payments.fetch(paymentId);
 
     if (payment.status === "captured") {
 

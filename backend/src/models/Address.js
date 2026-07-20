@@ -6,6 +6,10 @@ const addressSchema = new mongoose.Schema({
         required: true
     },
     locality: String,
+    city: {
+        type: String,
+        required: true
+    },
     pincode: {
         type: String,
         required: true

@@ -5,6 +5,7 @@ import { Routes } from "react-router"
 import { Navbar } from "../customer/Navbar/Navbar"
 import { CustomerProtectedRoute } from "./CustomerProtectedRoute"
 import { RouteLoader } from "../common/RouteLoader"
+import { NotFound } from "../common/NotFound"
 
 const Home = lazy(() => import("../customer/pages/Home/Home"))
 const Products = lazy(() =>
@@ -63,6 +64,7 @@ export const CustomerRoutes = () => {
           <Route path='/payment/success' element={<CustomerProtectedRoute><PaymentSuccess/></CustomerProtectedRoute>}/>
            <Route path='/checkout/address' element={<CustomerProtectedRoute><Checkout/></CustomerProtectedRoute>}/> 
            <Route path='/customer/profile/*' element={<CustomerProtectedRoute><Profile/></CustomerProtectedRoute>}/>  
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       <Suspense fallback={null}>

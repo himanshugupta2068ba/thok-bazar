@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 import { Route, Routes } from "react-router"
 import { RouteLoader } from "../common/RouteLoader"
+import { NotFound } from "../common/NotFound"
 
 const HomePage = lazy(() =>
     import("../seller/HomePage/HomePage").then((module) => ({
@@ -56,6 +57,7 @@ export const SellerRoutes=()=>{
                 <Route path="/account" element={<Account/>}/>
                 <Route path="/transactions" element={<Transaction/>}/>
                 <Route path="/payments" element={<Payment/>}/>
+                <Route path="*" element={<NotFound area="seller" />}/>
                 {/* <Route path="/dashboard" element={<SellerDashboard/>}/> */}
             </Routes>
         </Suspense>
